@@ -12,10 +12,15 @@ public class Player : MonoBehaviour, ITurnBased
 
         Vector3 nextPos = transform.position + transform.forward * 2.0f;
 
-        // 進行方向が範囲外、またはブロックがあるなら進行方向を反転
+        // 進行方向が範囲外、ブロックがある、または方向変更ギミックがあるなら進行方向を変更
         if (!IsValidPosition(nextPos) || IsBlockedPosition(nextPos))
         {
             transform.forward = -transform.forward;
+            nextPos = transform.position + transform.forward * 2.0f;
+        }
+        else if (IsDirectionChangeTile(nextPos))
+        {
+            transform.forward = Vector3.right; // 方向変更ギミックに対応
             nextPos = transform.position + transform.forward * 2.0f;
         }
 
@@ -46,6 +51,15 @@ public class Player : MonoBehaviour, ITurnBased
         Debug.Log(StageBuilder.Instance.gridData[col, height, row]);
 
         return StageBuilder.Instance.gridData[col, height, row] == 'B';
+    }
+
+    private bool IsDirectionChangeTile(Vector3 pos)
+    {
+        int col = Mathf.RoundToInt(pos.x / StageBuilder.Instance.blockSize);
+        int height = Mathf.RoundToInt(pos.y / StageBuilder.Instance.heightOffset);
+        int row = Mathf.RoundToInt(pos.z / StageBuilder.Instance.blockSize);
+
+        return StageBuilder.Instance.dynamicTiles[col, height, row] == 'Y';
     }
 
     public void UpdateGridData()

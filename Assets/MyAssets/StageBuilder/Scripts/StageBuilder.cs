@@ -16,6 +16,7 @@ public class StageBuilder : MonoBehaviour
     public float heightOffset = 2.0f;
 
     public char[,,] gridData;
+    public char[,,] dynamicTiles;
 
     public static StageBuilder Instance;
     private void Awake()
@@ -73,6 +74,7 @@ public class StageBuilder : MonoBehaviour
 
         // gridData を初期化
         gridData = new char[colCount, heightCount, rowCount];
+        dynamicTiles = new char[colCount, heightCount, rowCount];
 
         for (int height = 0; height < heightCount; height++)
         {
@@ -88,10 +90,10 @@ public class StageBuilder : MonoBehaviour
                     char cellType = cells[col][0]; // 文字列から1文字を取得
                     SpawnBlock(cellType, position);
 
-                    // ★ Z 軸 (row) の計算を修正 (反転させる)
                     int correctedRow = rowCount - 1 - row;
 
                     gridData[col, height, correctedRow] = cellType;
+                    dynamicTiles[col, height, correctedRow] = cellType;
                 }
             }
         }
