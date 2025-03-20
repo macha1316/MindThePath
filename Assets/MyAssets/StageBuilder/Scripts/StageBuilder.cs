@@ -14,8 +14,8 @@ public class StageBuilder : MonoBehaviour
     private float blockSize = 2.0f; // 1マスのサイズ
     private float heightOffset = 2.0f; // 高さの段差
 
-    // gridData を追加（ステージ全体のマス情報を保持する）
-    private string[,,] gridData;
+    // gridData を char[,,] に変更
+    private char[,,] gridData;
 
     void Start()
     {
@@ -66,7 +66,7 @@ public class StageBuilder : MonoBehaviour
         int colCount = layers[0][0].Split(',').Length;
 
         // gridData を初期化
-        gridData = new string[colCount, heightCount, rowCount];
+        gridData = new char[colCount, heightCount, rowCount];
 
         for (int height = 0; height < heightCount; height++)
         {
@@ -79,10 +79,10 @@ public class StageBuilder : MonoBehaviour
                 for (int col = 0; col < colCount; col++)
                 {
                     Vector3 position = new Vector3(col * blockSize, height * heightOffset, (rowCount - 1 - row) * blockSize);
-                    SpawnBlock(cells[col], position);
+                    char cellType = cells[col][0]; // 文字列から1文字を取得
+                    SpawnBlock(cellType, position);
 
-                    gridData[col, height, row] = cells[col];
-
+                    gridData[col, height, row] = cellType;
                 }
             }
         }
@@ -103,24 +103,24 @@ public class StageBuilder : MonoBehaviour
         }
     }
 
-    void SpawnBlock(string cellType, Vector3 position)
+    void SpawnBlock(char cellType, Vector3 position)
     {
         GameObject prefab = null;
         switch (cellType)
         {
-            case "S":
+            case 'S':
                 prefab = startPrefab;
                 break;
-            case "B":
+            case 'B':
                 prefab = blockPrefab;
                 break;
-            case "G":
+            case 'G':
                 prefab = goalPrefab;
                 break;
-            case "N":
+            case 'N':
                 prefab = nonePrefab;
                 break;
-            case "P":
+            case 'P':
                 prefab = playerPrefab;
                 break;
         }
