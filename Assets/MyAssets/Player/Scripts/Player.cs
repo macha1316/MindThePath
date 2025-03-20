@@ -1,16 +1,16 @@
 using UnityEngine;
 
-public class Player : MonoBehaviour
+public class Player : MonoBehaviour, ITurnBased
 {
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
-    void Start()
+    public void OnTurn()
     {
-        
+        Vector3 nextPos = transform.position + transform.forward * 2.0f;
+        transform.position = nextPos;
     }
 
-    // Update is called once per frame
-    void Update()
+    public void UpdateGridData()
     {
-        
+        // gridData にプレイヤーの位置を反映
+        StageBuilder.Instance.UpdatePlayerPosition(this);
     }
 }

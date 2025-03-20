@@ -5,17 +5,23 @@ using UnityEngine;
 
 public class StageBuilder : MonoBehaviour
 {
-    public string csvFileName = "Stages/Stage1"; // Resourcesフォルダ内のパス
+    // デバッグ用
+    public string csvFileName = "Stages/Stage1";
     public GameObject startPrefab;
     public GameObject blockPrefab;
     public GameObject goalPrefab;
     public GameObject nonePrefab;
     public GameObject playerPrefab;
-    private float blockSize = 2.0f; // 1マスのサイズ
-    private float heightOffset = 2.0f; // 高さの段差
+    private float blockSize = 2.0f;
+    private float heightOffset = 2.0f;
 
-    // gridData を char[,,] に変更
-    private char[,,] gridData;
+    public char[,,] gridData;
+
+    public static StageBuilder Instance;
+    private void Awake()
+    {
+        if (Instance == null) Instance = this;
+    }
 
     void Start()
     {
@@ -98,9 +104,12 @@ public class StageBuilder : MonoBehaviour
                 {
                     rowData += gridData[c, h, r] + " ";
                 }
-                Debug.Log($"高さ {h}, 行 {r}: {rowData}");
+                // Debug.Log($"高さ {h}, 行 {r}: {rowData}");
             }
         }
+
+        // デバッグでここにしている
+        StartCoroutine(TurnManager.Instance.TurnLoop());
     }
 
     void SpawnBlock(char cellType, Vector3 position)
@@ -124,10 +133,59 @@ public class StageBuilder : MonoBehaviour
                 prefab = playerPrefab;
                 break;
         }
-
         if (prefab != null)
         {
-            Instantiate(prefab, position, Quaternion.identity);
+            GameObject obj = Instantiate(prefab, position, Quaternion.identity);
+            if (cellType == 'P')
+            {
+                obj.AddComponent<Player>();
+            }
+        }
+    }
+
+    public void UpdatePlayerPosition(Player player)
+    {
+        // 現在のプレイヤー位置を取得（ワールド座標 → グリッド座標に変換）
+        int newCol = Mathf.RoundToInt(player.transform.position.x / blockSize);
+        int newHeight = Mathf.RoundToInt(player.transform.position.y / heightOffset);
+        int newRow = Mathf.RoundToInt(player.transform.position.z / blockSize);
+
+        // 以前のプレイヤー位置を削除
+        for (int h = 0; h < gridData.GetLength(1); h++)
+        {
+            for (int r = 0; r < gridData.GetLength(2); r++)
+            {
+                for (int c = 0; c < gridData.GetLength(0); c++)
+                {
+                    if (gridData[c, h, r] == 'P')
+                    {
+                        gridData[c, h, r] = 'N'; // 以前のプレイヤー位置を空白に
+                    }
+                }
+            }
+        }
+
+        // 新しい位置にプレイヤーを設定
+        gridData[newCol, newHeight, newRow] = 'P';
+    }
+
+
+    public void ResetGridData()
+    {
+        for (int h = 0; h < gridData.GetLength(1); h++)
+        {
+            for (int r = 0; r < gridData.GetLength(2); r++)
+            {
+                for (int c = 0; c < gridData.GetLength(0); c++)
+                {
+                    // ブロック（B）、ゴール（G）、スタート（S）を保持し、それ以外をリセット
+                    if (gridData[c, h, r] != 'B' && gridData[c, h, r] != 'G' && gridData[c, h, r] != 'S')
+                    {
+                        gridData[c, h, r] = 'N'; // 空白にリセット
+                    }
+                }
+            }
         }
     }
 }
+
