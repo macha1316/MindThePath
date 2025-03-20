@@ -14,6 +14,9 @@ public class StageBuilder : MonoBehaviour
     private float blockSize = 2.0f; // 1マスのサイズ
     private float heightOffset = 2.0f; // 高さの段差
 
+    // gridData を追加（ステージ全体のマス情報を保持する）
+    private string[,,] gridData;
+
     void Start()
     {
         LoadStage(csvFileName);
@@ -54,26 +57,48 @@ public class StageBuilder : MonoBehaviour
         }
 
         GenerateStage(layers);
-
     }
 
     void GenerateStage(List<string[]> layers)
     {
-        for (int height = 0; height < layers.Count; height++)
+        int heightCount = layers.Count;
+        int rowCount = layers[0].Length;
+        int colCount = layers[0][0].Split(',').Length;
+
+        // gridData を初期化
+        gridData = new string[colCount, heightCount, rowCount];
+
+        for (int height = 0; height < heightCount; height++)
         {
             string[] layer = layers[height];
-            int rowCount = layer.Length;
 
             for (int row = 0; row < rowCount; row++)
             {
                 string[] cells = layer[row].Split(',');
-                int colCount = cells.Length;
 
                 for (int col = 0; col < colCount; col++)
                 {
                     Vector3 position = new Vector3(col * blockSize, height * heightOffset, (rowCount - 1 - row) * blockSize);
                     SpawnBlock(cells[col], position);
+
+                    gridData[col, height, row] = cells[col];
+
                 }
+            }
+        }
+
+        // gridData の内容をログ出力
+        Debug.Log("gridData 内容:");
+        for (int h = 0; h < heightCount; h++)
+        {
+            for (int r = 0; r < rowCount; r++)
+            {
+                string rowData = "";
+                for (int c = 0; c < colCount; c++)
+                {
+                    rowData += gridData[c, h, r] + " ";
+                }
+                Debug.Log($"高さ {h}, 行 {r}: {rowData}");
             }
         }
     }
