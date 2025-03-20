@@ -145,6 +145,9 @@ public class StageBuilder : MonoBehaviour
             {
                 obj.AddComponent<Player>();
             }
+            // 各タイルに DropZone を追加
+            DropZone dropZone = obj.AddComponent<DropZone>();
+            dropZone.gridPosition = position;
         }
     }
 
@@ -191,6 +194,21 @@ public class StageBuilder : MonoBehaviour
                 }
             }
         }
+    }
+
+    public void SetGimmickAt(Vector3 gridPos, GameObject gimmick)
+    {
+        int col = Mathf.RoundToInt(gridPos.x / blockSize);
+        int height = Mathf.RoundToInt(gridPos.y / heightOffset);
+        int row = Mathf.RoundToInt(gridPos.z / blockSize);
+
+        char gimmickType = 'Y'; // 例: 方向変更ギミック
+
+        // `gridData` を更新（動的ギミックは `N`）
+        gridData[col, height, row] = 'N';
+
+        // `dynamicTiles` を更新
+        dynamicTiles[col, height, row] = gimmickType;
     }
 }
 
