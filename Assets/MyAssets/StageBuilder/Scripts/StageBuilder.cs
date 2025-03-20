@@ -179,7 +179,7 @@ public class StageBuilder : MonoBehaviour
                 for (int c = 0; c < gridData.GetLength(0); c++)
                 {
                     // ブロック（B）、ゴール（G）、スタート（S）を保持し、それ以外をリセット
-                    if (gridData[c, h, r] != 'B' && gridData[c, h, r] != 'G' && gridData[c, h, r] != 'S')
+                    if (gridData[c, h, r] != 'B' && gridData[c, h, r] != 'G' && gridData[c, h, r] != 'S' && gridData[c, h, r] != 'P')
                     {
                         gridData[c, h, r] = 'N'; // 空白にリセット
                     }

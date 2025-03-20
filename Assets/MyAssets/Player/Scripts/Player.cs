@@ -12,8 +12,8 @@ public class Player : MonoBehaviour, ITurnBased
 
         Vector3 nextPos = transform.position + transform.forward * 2.0f;
 
-        // 進行方向が範囲外なら進行方向を反転
-        if (!IsValidPosition(nextPos))
+        // 進行方向が範囲外、またはブロックがあるなら進行方向を反転
+        if (!IsValidPosition(nextPos) || IsBlockedPosition(nextPos))
         {
             transform.forward = -transform.forward;
             nextPos = transform.position + transform.forward * 2.0f;
@@ -35,6 +35,17 @@ public class Player : MonoBehaviour, ITurnBased
         return col >= 0 && col < StageBuilder.Instance.gridData.GetLength(0) &&
                height >= 0 && height < StageBuilder.Instance.gridData.GetLength(1) &&
                row >= 0 && row < StageBuilder.Instance.gridData.GetLength(2);
+    }
+
+    private bool IsBlockedPosition(Vector3 pos)
+    {
+        int col = Mathf.RoundToInt(pos.x / StageBuilder.Instance.blockSize);
+        int height = Mathf.RoundToInt(pos.y / StageBuilder.Instance.heightOffset);
+        int row = Mathf.RoundToInt(pos.z / StageBuilder.Instance.blockSize);
+
+        Debug.Log(StageBuilder.Instance.gridData[col, height, row]);
+
+        return StageBuilder.Instance.gridData[col, height, row] == 'B';
     }
 
     public void UpdateGridData()
