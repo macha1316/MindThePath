@@ -88,7 +88,10 @@ public class StageBuilder : MonoBehaviour
                     char cellType = cells[col][0]; // 文字列から1文字を取得
                     SpawnBlock(cellType, position);
 
-                    gridData[col, height, row] = cellType;
+                    // ★ Z 軸 (row) の計算を修正 (反転させる)
+                    int correctedRow = rowCount - 1 - row;
+
+                    gridData[col, height, correctedRow] = cellType;
                 }
             }
         }
