@@ -12,8 +12,8 @@ public class StageBuilder : MonoBehaviour
     public GameObject goalPrefab;
     public GameObject nonePrefab;
     public GameObject playerPrefab;
-    private float blockSize = 2.0f;
-    private float heightOffset = 2.0f;
+    public float blockSize = 2.0f;
+    public float heightOffset = 2.0f;
 
     public char[,,] gridData;
 
