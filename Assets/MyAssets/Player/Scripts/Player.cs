@@ -12,15 +12,10 @@ public class Player : MonoBehaviour, ITurnBased
 
         Vector3 nextPos = transform.position + transform.forward * 2.0f;
 
-        // 進行方向が範囲外、ブロックがある、または方向変更ギミックがあるなら進行方向を変更
+        // 範囲外 or ブロック → 反転
         if (!IsValidPosition(nextPos) || IsBlockedPosition(nextPos))
         {
             transform.forward = -transform.forward;
-            nextPos = transform.position + transform.forward * 2.0f;
-        }
-        else if (IsDirectionChangeTile(nextPos))
-        {
-            transform.forward = Vector3.right; // 方向変更ギミックに対応
             nextPos = transform.position + transform.forward * 2.0f;
         }
 
@@ -28,7 +23,16 @@ public class Player : MonoBehaviour, ITurnBased
 
         transform.DOMove(nextPos, moveDuration)
             .SetEase(Ease.Linear)
-            .OnComplete(() => isMoving = false);
+            .OnComplete(() =>
+            {
+                isMoving = false;
+
+                // nextPos に到達した後で方向変更ギミックをチェック
+                if (IsDirectionChangeTile(transform.position))
+                {
+                    transform.forward = Vector3.right;
+                }
+            });
     }
 
     private bool IsValidPosition(Vector3 pos)

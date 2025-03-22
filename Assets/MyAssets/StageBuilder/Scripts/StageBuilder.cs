@@ -16,6 +16,7 @@ public class StageBuilder : MonoBehaviour
     [SerializeField] GameObject goalPrefab;
     [SerializeField] GameObject nonePrefab;
     [SerializeField] GameObject playerPrefab;
+    [SerializeField] GameObject arrowPrefab;
 
     private char[,,] gridData;
     private char[,,] dynamicTiles;
@@ -138,6 +139,9 @@ public class StageBuilder : MonoBehaviour
                 break;
             case 'P':
                 prefab = playerPrefab;
+                break;
+            case 'Y':
+                prefab = arrowPrefab;
                 break;
         }
         if (prefab != null)
