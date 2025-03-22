@@ -33,9 +33,9 @@ public class Player : MonoBehaviour, ITurnBased
 
     private bool IsValidPosition(Vector3 pos)
     {
-        int col = Mathf.RoundToInt(pos.x / StageBuilder.Instance.blockSize);
-        int height = Mathf.RoundToInt(pos.y / StageBuilder.Instance.heightOffset);
-        int row = Mathf.RoundToInt(pos.z / StageBuilder.Instance.blockSize);
+        int col = Mathf.RoundToInt(pos.x / StageBuilder.BLOCK_SIZE);
+        int height = Mathf.RoundToInt(pos.y / StageBuilder.HEIGHT_OFFSET);
+        int row = Mathf.RoundToInt(pos.z / StageBuilder.BLOCK_SIZE);
 
         return col >= 0 && col < StageBuilder.Instance.GetGridData().GetLength(0) &&
                height >= 0 && height < StageBuilder.Instance.GetGridData().GetLength(1) &&
@@ -44,20 +44,18 @@ public class Player : MonoBehaviour, ITurnBased
 
     private bool IsBlockedPosition(Vector3 pos)
     {
-        int col = Mathf.RoundToInt(pos.x / StageBuilder.Instance.blockSize);
-        int height = Mathf.RoundToInt(pos.y / StageBuilder.Instance.heightOffset);
-        int row = Mathf.RoundToInt(pos.z / StageBuilder.Instance.blockSize);
-
-        // Debug.Log(StageBuilder.Instance.gridData[col, height, row]);
+        int col = Mathf.RoundToInt(pos.x / StageBuilder.BLOCK_SIZE);
+        int height = Mathf.RoundToInt(pos.y / StageBuilder.HEIGHT_OFFSET);
+        int row = Mathf.RoundToInt(pos.z / StageBuilder.BLOCK_SIZE);
 
         return StageBuilder.Instance.GetGridData()[col, height, row] == 'B';
     }
 
     private bool IsDirectionChangeTile(Vector3 pos)
     {
-        int col = Mathf.RoundToInt(pos.x / StageBuilder.Instance.blockSize);
-        int height = Mathf.RoundToInt(pos.y / StageBuilder.Instance.heightOffset);
-        int row = Mathf.RoundToInt(pos.z / StageBuilder.Instance.blockSize);
+        int col = Mathf.RoundToInt(pos.x / StageBuilder.BLOCK_SIZE);
+        int height = Mathf.RoundToInt(pos.y / StageBuilder.HEIGHT_OFFSET);
+        int row = Mathf.RoundToInt(pos.z / StageBuilder.BLOCK_SIZE);
 
         return StageBuilder.Instance.GetDynamicGridData()[col, height, row] == 'Y';
     }

@@ -5,15 +5,17 @@ using UnityEngine;
 
 public class StageBuilder : MonoBehaviour
 {
+    // 定数
+    public const float BLOCK_SIZE = 2.0f;
+    public const float HEIGHT_OFFSET = 2.0f;
+
     // デバッグ用
-    public string csvFileName = "Stages/Stage1";
-    public GameObject startPrefab;
-    public GameObject blockPrefab;
-    public GameObject goalPrefab;
-    public GameObject nonePrefab;
-    public GameObject playerPrefab;
-    public float blockSize = 2.0f;
-    public float heightOffset = 2.0f;
+    [SerializeField] string csvFileName = "Stages/Stage1";
+    [SerializeField] GameObject startPrefab;
+    [SerializeField] GameObject blockPrefab;
+    [SerializeField] GameObject goalPrefab;
+    [SerializeField] GameObject nonePrefab;
+    [SerializeField] GameObject playerPrefab;
 
     private char[,,] gridData;
     private char[,,] dynamicTiles;
@@ -86,7 +88,7 @@ public class StageBuilder : MonoBehaviour
 
                 for (int col = 0; col < colCount; col++)
                 {
-                    Vector3 position = new Vector3(col * blockSize, height * heightOffset, (rowCount - 1 - row) * blockSize);
+                    Vector3 position = new Vector3(col * BLOCK_SIZE, height * HEIGHT_OFFSET, (rowCount - 1 - row) * BLOCK_SIZE);
                     char cellType = cells[col][0]; // 文字列から1文字を取得
                     SpawnBlock(cellType, position);
 
@@ -151,9 +153,9 @@ public class StageBuilder : MonoBehaviour
     public void UpdatePlayerPosition(Player player)
     {
         // 現在のプレイヤー位置を取得（ワールド座標 → グリッド座標に変換）
-        int newCol = Mathf.RoundToInt(player.transform.position.x / blockSize);
-        int newHeight = Mathf.RoundToInt(player.transform.position.y / heightOffset);
-        int newRow = Mathf.RoundToInt(player.transform.position.z / blockSize);
+        int newCol = Mathf.RoundToInt(player.transform.position.x / BLOCK_SIZE);
+        int newHeight = Mathf.RoundToInt(player.transform.position.y / HEIGHT_OFFSET);
+        int newRow = Mathf.RoundToInt(player.transform.position.z / BLOCK_SIZE);
 
         // 以前のプレイヤー位置を削除
         for (int h = 0; h < gridData.GetLength(1); h++)
@@ -201,9 +203,9 @@ public class StageBuilder : MonoBehaviour
     // setメソッド
     public void UpdateGridAtPosition(Vector3 worldPosition, char type)
     {
-        int col = Mathf.RoundToInt(worldPosition.x / blockSize);
-        int height = Mathf.RoundToInt(worldPosition.y / blockSize);
-        int row = Mathf.RoundToInt(worldPosition.z / blockSize);
+        int col = Mathf.RoundToInt(worldPosition.x / BLOCK_SIZE);
+        int height = Mathf.RoundToInt(worldPosition.y / HEIGHT_OFFSET);
+        int row = Mathf.RoundToInt(worldPosition.z / BLOCK_SIZE);
 
         gridData[col, height, row] = 'N';
         dynamicTiles[col, height, row] = type;
