@@ -9,9 +9,8 @@ public class DragAndDrop : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndD
     private bool hasSpawnedObject = false;
     private GameObject gimmickInstance;
 
-    public GameObject gimmickPrefab; // ギミックのプレハブ
-    public RectTransform spawnBoundary; // ドラッグして脱出したい境界パネル
-    private float blockSize = 2f; // グリッドサイズに合わせて変更
+    [SerializeField] GameObject gimmickPrefab; // ギミックのプレハブ
+    [SerializeField] RectTransform spawnBoundary; // ドラッグして脱出したい境界パネル
 
     private void Awake()
     {
@@ -66,9 +65,9 @@ public class DragAndDrop : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndD
 
     private Vector3 SnapToGrid(Vector3 worldPos)
     {
-        float snappedX = Mathf.Round(worldPos.x / blockSize) * blockSize;
-        float snappedY = Mathf.Round(worldPos.y / blockSize) * blockSize;
-        float snappedZ = Mathf.Round(worldPos.z / blockSize) * blockSize;
+        float snappedX = Mathf.Round(worldPos.x / StageBuilder.BLOCK_SIZE) * StageBuilder.BLOCK_SIZE;
+        float snappedY = Mathf.Round(worldPos.y / StageBuilder.BLOCK_SIZE) * StageBuilder.BLOCK_SIZE;
+        float snappedZ = Mathf.Round(worldPos.z / StageBuilder.BLOCK_SIZE) * StageBuilder.BLOCK_SIZE;
         return new Vector3(snappedX, snappedY, snappedZ);
     }
 

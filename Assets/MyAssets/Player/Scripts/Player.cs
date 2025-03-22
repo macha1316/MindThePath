@@ -3,7 +3,7 @@ using DG.Tweening;
 
 public class Player : MonoBehaviour, ITurnBased
 {
-    public float moveDuration = 1f;
+    private float moveDuration = 1f;
     private bool isMoving = false;
 
     public void OnTurn()
