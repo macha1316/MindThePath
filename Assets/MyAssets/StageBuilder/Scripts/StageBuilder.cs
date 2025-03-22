@@ -145,9 +145,6 @@ public class StageBuilder : MonoBehaviour
             {
                 obj.AddComponent<Player>();
             }
-            // 各タイルに DropZone を追加
-            DropZone dropZone = obj.AddComponent<DropZone>();
-            dropZone.gridPosition = position;
         }
     }
 
