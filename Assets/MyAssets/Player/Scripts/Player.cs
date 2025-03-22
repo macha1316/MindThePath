@@ -37,9 +37,9 @@ public class Player : MonoBehaviour, ITurnBased
         int height = Mathf.RoundToInt(pos.y / StageBuilder.Instance.heightOffset);
         int row = Mathf.RoundToInt(pos.z / StageBuilder.Instance.blockSize);
 
-        return col >= 0 && col < StageBuilder.Instance.gridData.GetLength(0) &&
-               height >= 0 && height < StageBuilder.Instance.gridData.GetLength(1) &&
-               row >= 0 && row < StageBuilder.Instance.gridData.GetLength(2);
+        return col >= 0 && col < StageBuilder.Instance.GetGridData().GetLength(0) &&
+               height >= 0 && height < StageBuilder.Instance.GetGridData().GetLength(1) &&
+               row >= 0 && row < StageBuilder.Instance.GetGridData().GetLength(2);
     }
 
     private bool IsBlockedPosition(Vector3 pos)
@@ -48,9 +48,9 @@ public class Player : MonoBehaviour, ITurnBased
         int height = Mathf.RoundToInt(pos.y / StageBuilder.Instance.heightOffset);
         int row = Mathf.RoundToInt(pos.z / StageBuilder.Instance.blockSize);
 
-        Debug.Log(StageBuilder.Instance.gridData[col, height, row]);
+        // Debug.Log(StageBuilder.Instance.gridData[col, height, row]);
 
-        return StageBuilder.Instance.gridData[col, height, row] == 'B';
+        return StageBuilder.Instance.GetGridData()[col, height, row] == 'B';
     }
 
     private bool IsDirectionChangeTile(Vector3 pos)
@@ -59,7 +59,7 @@ public class Player : MonoBehaviour, ITurnBased
         int height = Mathf.RoundToInt(pos.y / StageBuilder.Instance.heightOffset);
         int row = Mathf.RoundToInt(pos.z / StageBuilder.Instance.blockSize);
 
-        return StageBuilder.Instance.dynamicTiles[col, height, row] == 'Y';
+        return StageBuilder.Instance.GetDynamicGridData()[col, height, row] == 'Y';
     }
 
     public void UpdateGridData()

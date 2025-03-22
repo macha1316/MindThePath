@@ -78,6 +78,7 @@ public class DragAndDrop : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndD
         transform.localPosition = Vector3.zero;
         canvasGroup.blocksRaycasts = true;
         canvasGroup.alpha = 1f;
+        StageBuilder.Instance.UpdateGridAtPosition(gimmickInstance.transform.position, 'Y');
 
         if (hasSpawnedObject)
         {

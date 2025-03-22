@@ -15,8 +15,8 @@ public class StageBuilder : MonoBehaviour
     public float blockSize = 2.0f;
     public float heightOffset = 2.0f;
 
-    public char[,,] gridData;
-    public char[,,] dynamicTiles;
+    private char[,,] gridData;
+    private char[,,] dynamicTiles;
 
     public static StageBuilder Instance;
     private void Awake()
@@ -193,19 +193,20 @@ public class StageBuilder : MonoBehaviour
         }
     }
 
-    public void SetGimmickAt(Vector3 gridPos, GameObject gimmick)
+
+    // getメソッド
+    public char[,,] GetGridData() => gridData;
+    public char[,,] GetDynamicGridData() => dynamicTiles;
+
+    // setメソッド
+    public void UpdateGridAtPosition(Vector3 worldPosition, char type)
     {
-        int col = Mathf.RoundToInt(gridPos.x / blockSize);
-        int height = Mathf.RoundToInt(gridPos.y / heightOffset);
-        int row = Mathf.RoundToInt(gridPos.z / blockSize);
+        int col = Mathf.RoundToInt(worldPosition.x / blockSize);
+        int height = Mathf.RoundToInt(worldPosition.y / blockSize);
+        int row = Mathf.RoundToInt(worldPosition.z / blockSize);
 
-        char gimmickType = 'Y'; // 例: 方向変更ギミック
-
-        // `gridData` を更新（動的ギミックは `N`）
         gridData[col, height, row] = 'N';
-
-        // `dynamicTiles` を更新
-        dynamicTiles[col, height, row] = gimmickType;
+        dynamicTiles[col, height, row] = type;
     }
 }
 
