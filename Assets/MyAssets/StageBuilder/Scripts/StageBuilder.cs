@@ -117,9 +117,6 @@ public class StageBuilder : MonoBehaviour
                 // Debug.Log($"高さ {h}, 行 {r}: {rowData}");
             }
         }
-
-        // デバッグでここにしている
-        StartCoroutine(TurnManager.Instance.TurnLoop());
     }
 
     void SpawnBlock(char cellType, Vector3 position)
