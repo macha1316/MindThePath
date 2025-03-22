@@ -11,6 +11,7 @@ public class DragAndDrop : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndD
 
     [SerializeField] GameObject gimmickPrefab; // ギミックのプレハブ
     [SerializeField] RectTransform spawnBoundary; // ドラッグして脱出したい境界パネル
+    [SerializeField] char cellType;
 
     private void Awake()
     {
@@ -77,7 +78,7 @@ public class DragAndDrop : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndD
         transform.localPosition = Vector3.zero;
         canvasGroup.blocksRaycasts = true;
         canvasGroup.alpha = 1f;
-        StageBuilder.Instance.UpdateGridAtPosition(gimmickInstance.transform.position, 'Y');
+        StageBuilder.Instance.UpdateGridAtPosition(gimmickInstance.transform.position, cellType);
 
         if (hasSpawnedObject)
         {

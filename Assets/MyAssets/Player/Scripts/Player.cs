@@ -28,9 +28,21 @@ public class Player : MonoBehaviour, ITurnBased
                 isMoving = false;
 
                 // Dynamic
-                if (IsMatchingDynamicCellType(transform.position, 'Y'))
+                if (IsMatchingDynamicCellType(transform.position, 'U'))
+                {
+                    transform.forward = Vector3.forward;
+                }
+                if (IsMatchingDynamicCellType(transform.position, 'D'))
+                {
+                    transform.forward = Vector3.back;
+                }
+                if (IsMatchingDynamicCellType(transform.position, 'R'))
                 {
                     transform.forward = Vector3.right;
+                }
+                if (IsMatchingDynamicCellType(transform.position, 'L'))
+                {
+                    transform.forward = Vector3.left;
                 }
                 // 通常
                 if (IsMatchingCellType(transform.position, 'G'))

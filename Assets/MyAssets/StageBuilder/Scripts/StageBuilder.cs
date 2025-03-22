@@ -11,12 +11,14 @@ public class StageBuilder : MonoBehaviour
 
     // デバッグ用
     [SerializeField] string csvFileName = "Stages/Stage1";
-    [SerializeField] GameObject startPrefab;
     [SerializeField] GameObject blockPrefab;
     [SerializeField] GameObject goalPrefab;
     [SerializeField] GameObject nonePrefab;
     [SerializeField] GameObject playerPrefab;
-    [SerializeField] GameObject arrowPrefab;
+    [SerializeField] GameObject upPrefab;
+    [SerializeField] GameObject downPrefab;
+    [SerializeField] GameObject rightPrefab;
+    [SerializeField] GameObject leftPrefab;
 
     private char[,,] gridData;
     private char[,,] dynamicTiles;
@@ -125,9 +127,6 @@ public class StageBuilder : MonoBehaviour
         GameObject prefab = null;
         switch (cellType)
         {
-            case 'S':
-                prefab = startPrefab;
-                break;
             case 'B':
                 prefab = blockPrefab;
                 break;
@@ -140,8 +139,17 @@ public class StageBuilder : MonoBehaviour
             case 'P':
                 prefab = playerPrefab;
                 break;
-            case 'Y':
-                prefab = arrowPrefab;
+            case 'U':
+                prefab = upPrefab;
+                break;
+            case 'D':
+                prefab = downPrefab;
+                break;
+            case 'R':
+                prefab = rightPrefab;
+                break;
+            case 'L':
+                prefab = leftPrefab;
                 break;
         }
         if (prefab != null)
@@ -190,7 +198,7 @@ public class StageBuilder : MonoBehaviour
                 for (int c = 0; c < gridData.GetLength(0); c++)
                 {
                     // ブロック（B）、ゴール（G）、スタート（S）を保持し、それ以外をリセット
-                    if (gridData[c, h, r] != 'B' && gridData[c, h, r] != 'G' && gridData[c, h, r] != 'S' && gridData[c, h, r] != 'P')
+                    if (gridData[c, h, r] != 'B' && gridData[c, h, r] != 'G' && gridData[c, h, r] != 'P')
                     {
                         gridData[c, h, r] = 'N'; // 空白にリセット
                     }
