@@ -43,6 +43,7 @@ public class DragAndDrop : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndD
 
             Vector3 worldPos = GetWorldPosition();
             gimmickInstance = Instantiate(gimmickPrefab, SnapToGrid(worldPos), Quaternion.identity);
+            gimmickInstance.GetComponent<BoxCollider>().enabled = false;
         }
 
         if (hasSpawnedObject && gimmickInstance != null)
@@ -80,9 +81,8 @@ public class DragAndDrop : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndD
         canvasGroup.alpha = 1f;
         StageBuilder.Instance.UpdateGridAtPosition(gimmickInstance.transform.position, cellType);
 
-        if (hasSpawnedObject)
-        {
-            return;
-        }
+        gimmickInstance.GetComponent<BoxCollider>().enabled = true;
+        gimmickInstance.AddComponent<DraggableGimmic>();
+        gimmickInstance.GetComponent<DraggableGimmic>().cellType = cellType;
     }
 }
