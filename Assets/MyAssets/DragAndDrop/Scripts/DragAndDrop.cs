@@ -30,6 +30,7 @@ public class DragAndDrop : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndD
         transform.SetParent(transform.root);
         canvasGroup.blocksRaycasts = false;
         hasSpawnedObject = false;
+        InputStateManager.IsDragging = true;
     }
 
     public void OnDrag(PointerEventData eventData)
@@ -85,6 +86,7 @@ public class DragAndDrop : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndD
             gimmickInstance.GetComponent<BoxCollider>().enabled = true;
             gimmickInstance.AddComponent<DraggableGimmic>();
             gimmickInstance.GetComponent<DraggableGimmic>().cellType = cellType;
+            InputStateManager.IsDragging = false;
         }
     }
 }

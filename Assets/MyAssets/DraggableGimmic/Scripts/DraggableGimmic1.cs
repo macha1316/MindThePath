@@ -28,6 +28,7 @@ public class DraggableGimmic : MonoBehaviour
 
         boxCollider = GetComponent<BoxCollider>();
         boxCollider.enabled = false;
+        InputStateManager.IsDragging = true;
     }
 
     private void OnMouseDrag()
@@ -49,6 +50,7 @@ public class DraggableGimmic : MonoBehaviour
         {
             StageBuilder.Instance.UpdateGridAtPosition(transform.position, cellType);
         }
+        InputStateManager.IsDragging = false;
     }
 
     private Vector3 GetMouseWorldPosition()
