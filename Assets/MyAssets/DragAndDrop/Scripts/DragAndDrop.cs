@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.EventSystems;
+using UnityEngine.UI;
 
 public class DragAndDrop : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHandler
 {
@@ -37,7 +38,9 @@ public class DragAndDrop : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndD
     {
         rectTransform.position = Input.mousePosition;
 
-        if (!hasSpawnedObject && !RectTransformUtility.RectangleContainsScreenPoint(spawnBoundary, Input.mousePosition))
+        bool isOutside = !RectTransformUtility.RectangleContainsScreenPoint(spawnBoundary, Input.mousePosition);
+
+        if (!hasSpawnedObject && isOutside)
         {
             hasSpawnedObject = true;
             canvasGroup.alpha = 0;
@@ -45,6 +48,18 @@ public class DragAndDrop : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndD
             Vector3 worldPos = GetWorldPosition();
             gimmickInstance = Instantiate(gimmickPrefab, SnapToGrid(worldPos), Quaternion.identity);
             gimmickInstance.GetComponent<BoxCollider>().enabled = false;
+        }
+
+        else if (hasSpawnedObject && !isOutside)
+        {
+            // 戻ってきたときは削除
+            Destroy(gimmickInstance);
+            gimmickInstance = null;
+            hasSpawnedObject = false;
+            canvasGroup.alpha = 1;
+            canvasGroup.blocksRaycasts = true;
+            // spawnBoundary の子に設定
+            transform.SetParent(spawnBoundary);
         }
 
         if (hasSpawnedObject && gimmickInstance != null)
@@ -78,6 +93,17 @@ public class DragAndDrop : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndD
     {
         // オブジェクトを置いたあとのUI復元処理を削除
         // UIを戻さずに非表示のままにしておくことで再度表示しない
+        if (!hasSpawnedObject)
+        {
+            transform.SetParent(spawnBoundary);
+            canvasGroup.alpha = 1;
+            canvasGroup.blocksRaycasts = true;
+            InputStateManager.IsDragging = false;
+
+            // 🔥 LayoutGroupの再構築
+            LayoutRebuilder.ForceRebuildLayoutImmediate(spawnBoundary);
+            return;
+        }
 
         if (gimmickInstance != null)
         {
