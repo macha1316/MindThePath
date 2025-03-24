@@ -14,6 +14,18 @@ public class DraggableGimmic : MonoBehaviour
         Vector3 mouseWorldPos = GetMouseWorldPosition();
         offset = transform.position - mouseWorldPos;
 
+        // 現在位置のgridDataをNに更新
+        if (StageBuilder.Instance != null)
+        {
+            Vector3 currentPos = SnapToGrid(transform.position);
+            int col = Mathf.RoundToInt(currentPos.x / StageBuilder.BLOCK_SIZE);
+            int height = Mathf.RoundToInt(currentPos.y / StageBuilder.BLOCK_SIZE);
+            int row = Mathf.RoundToInt(currentPos.z / StageBuilder.BLOCK_SIZE);
+
+            StageBuilder.Instance.GetGridData()[col, height, row] = 'N';
+            StageBuilder.Instance.GetDynamicGridData()[col, height, row] = 'N';
+        }
+
         boxCollider = GetComponent<BoxCollider>();
         boxCollider.enabled = false;
     }

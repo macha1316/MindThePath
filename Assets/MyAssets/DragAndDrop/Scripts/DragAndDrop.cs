@@ -75,14 +75,16 @@ public class DragAndDrop : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndD
 
     public void OnEndDrag(PointerEventData eventData)
     {
-        transform.SetParent(parentBeforeDrag);
-        transform.localPosition = Vector3.zero;
-        canvasGroup.blocksRaycasts = true;
-        canvasGroup.alpha = 1f;
-        StageBuilder.Instance.UpdateGridAtPosition(gimmickInstance.transform.position, cellType);
+        // オブジェクトを置いたあとのUI復元処理を削除
+        // UIを戻さずに非表示のままにしておくことで再度表示しない
 
-        gimmickInstance.GetComponent<BoxCollider>().enabled = true;
-        gimmickInstance.AddComponent<DraggableGimmic>();
-        gimmickInstance.GetComponent<DraggableGimmic>().cellType = cellType;
+        if (gimmickInstance != null)
+        {
+            StageBuilder.Instance.UpdateGridAtPosition(gimmickInstance.transform.position, cellType);
+
+            gimmickInstance.GetComponent<BoxCollider>().enabled = true;
+            gimmickInstance.AddComponent<DraggableGimmic>();
+            gimmickInstance.GetComponent<DraggableGimmic>().cellType = cellType;
+        }
     }
 }

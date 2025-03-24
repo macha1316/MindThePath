@@ -156,6 +156,10 @@ public class StageBuilder : MonoBehaviour
             {
                 obj.AddComponent<Player>();
             }
+            if (cellType == 'B')
+            {
+                obj.AddComponent<MakeTransparentURP>();
+            }
         }
     }
 
