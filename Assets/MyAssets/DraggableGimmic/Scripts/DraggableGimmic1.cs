@@ -37,7 +37,20 @@ public class DraggableGimmic : MonoBehaviour
 
         Vector3 mouseWorldPos = GetMouseWorldPosition();
         Vector3 targetPos = mouseWorldPos + offset;
-        transform.position = SnapToGrid(targetPos);
+        Vector3 snappedPos = SnapToGrid(targetPos);
+
+        int col = Mathf.RoundToInt(snappedPos.x / StageBuilder.BLOCK_SIZE);
+        int height = Mathf.RoundToInt(snappedPos.y / StageBuilder.BLOCK_SIZE);
+        int row = Mathf.RoundToInt(snappedPos.z / StageBuilder.BLOCK_SIZE);
+
+        // Nでないなら1つ上へ
+        if (StageBuilder.Instance.GetGridData()[col, height, row] != 'N')
+        {
+            height += 1;
+            snappedPos.y = height * StageBuilder.BLOCK_SIZE;
+        }
+
+        transform.position = snappedPos;
     }
 
     private void OnMouseUp()
@@ -45,9 +58,22 @@ public class DraggableGimmic : MonoBehaviour
         isDragging = false;
         boxCollider.enabled = true;
 
-        // グリッド情報を更新
+        Vector3 snappedPos = SnapToGrid(transform.position);
+
         if (StageBuilder.Instance != null)
         {
+            int col = Mathf.RoundToInt(snappedPos.x / StageBuilder.BLOCK_SIZE);
+            int height = Mathf.RoundToInt(snappedPos.y / StageBuilder.BLOCK_SIZE);
+            int row = Mathf.RoundToInt(snappedPos.z / StageBuilder.BLOCK_SIZE);
+
+            // Nでないなら1つ上へ
+            if (StageBuilder.Instance.GetGridData()[col, height, row] != 'N')
+            {
+                height += 1;
+                snappedPos.y = height * StageBuilder.BLOCK_SIZE;
+            }
+
+            transform.position = snappedPos;
             StageBuilder.Instance.UpdateGridAtPosition(transform.position, cellType);
         }
         InputStateManager.IsDragging = false;
