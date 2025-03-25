@@ -5,6 +5,14 @@ public class Player : MonoBehaviour, ITurnBased
 {
     private float moveDuration = 1f;
     private bool isMoving = false;
+    private Animator animator;
+
+    void Start()
+    {
+        animator = GetComponent<Animator>();
+        // とりまここ
+        animator.SetTrigger("walk");
+    }
 
     public void OnTurn()
     {
