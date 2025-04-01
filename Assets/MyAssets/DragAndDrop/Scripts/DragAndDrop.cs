@@ -128,8 +128,8 @@ public class DragAndDrop : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndD
 
         if (gimmickInstance != null)
         {
-            bool a = StageBuilder.Instance.UpdateGridAtPosition(gimmickInstance.transform.position, cellType);
-            if (!a)
+            bool isGridRang = StageBuilder.Instance.IsValidGridPosition(gimmickInstance.transform.position);
+            if (!isGridRang)
             {
                 // 範囲外 → 削除＆UI復活
                 Destroy(gimmickInstance);
@@ -140,6 +140,8 @@ public class DragAndDrop : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndD
                 LayoutRebuilder.ForceRebuildLayoutImmediate(spawnBoundary);
                 return;
             }
+
+            StageBuilder.Instance.UpdateGridAtPosition(gimmickInstance.transform.position, cellType);
 
             gimmickInstance.GetComponent<BoxCollider>().enabled = true;
             gimmickInstance.AddComponent<DraggableGimmic>();

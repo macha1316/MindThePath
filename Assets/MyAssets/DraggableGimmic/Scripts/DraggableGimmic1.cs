@@ -6,7 +6,7 @@ public class DraggableGimmic : MonoBehaviour
     private Vector3 offset;
     private bool isDragging = false;
 
-    public char cellType = 'G';
+    public char cellType = 'N';
 
     private void OnMouseDown()
     {
