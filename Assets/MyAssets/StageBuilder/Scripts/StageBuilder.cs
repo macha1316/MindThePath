@@ -210,14 +210,34 @@ public class StageBuilder : MonoBehaviour
     public char[,,] GetDynamicGridData() => dynamicTiles;
 
     // setメソッド
-    public void UpdateGridAtPosition(Vector3 worldPosition, char type)
+    public bool UpdateGridAtPosition(Vector3 worldPosition, char type)
     {
         int col = Mathf.RoundToInt(worldPosition.x / BLOCK_SIZE);
         int height = Mathf.RoundToInt(worldPosition.y / HEIGHT_OFFSET);
         int row = Mathf.RoundToInt(worldPosition.z / BLOCK_SIZE);
 
+        // 範囲外なら false を返す
+        if (col < 0 || col >= gridData.GetLength(0) ||
+            height < 0 || height >= gridData.GetLength(1) ||
+            row < 0 || row >= gridData.GetLength(2))
+        {
+            return false;
+        }
+
         gridData[col, height, row] = 'N';
         dynamicTiles[col, height, row] = type;
+        return true;
+    }
+
+    public bool IsValidGridPosition(Vector3 worldPosition)
+    {
+        int col = Mathf.RoundToInt(worldPosition.x / BLOCK_SIZE);
+        int height = Mathf.RoundToInt(worldPosition.y / HEIGHT_OFFSET);
+        int row = Mathf.RoundToInt(worldPosition.z / BLOCK_SIZE);
+
+        return col >= 0 && col < gridData.GetLength(0) &&
+               height >= 0 && height < gridData.GetLength(1) &&
+               row >= 0 && row < gridData.GetLength(2);
     }
 }
 

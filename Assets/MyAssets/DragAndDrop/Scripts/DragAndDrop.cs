@@ -65,7 +65,28 @@ public class DragAndDrop : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndD
         if (hasSpawnedObject && gimmickInstance != null)
         {
             Vector3 worldPos = GetWorldPosition();
-            gimmickInstance.transform.position = SnapToGrid(worldPos);
+            Vector3 snappedPos = SnapToGrid(worldPos);
+
+            // グリッド座標計算
+            int col = Mathf.RoundToInt(snappedPos.x / StageBuilder.BLOCK_SIZE);
+            int height = Mathf.RoundToInt(snappedPos.y / StageBuilder.HEIGHT_OFFSET);
+            int row = Mathf.RoundToInt(snappedPos.z / StageBuilder.BLOCK_SIZE);
+
+            // 有効範囲か確認
+            if (col >= 0 && col < StageBuilder.Instance.GetGridData().GetLength(0) &&
+                height >= 0 && height < StageBuilder.Instance.GetGridData().GetLength(1) &&
+                row >= 0 && row < StageBuilder.Instance.GetGridData().GetLength(2))
+            {
+                char cell = StageBuilder.Instance.GetGridData()[col, height, row];
+
+                // すでに何か置かれていたら1つ上に置く
+                if (cell != 'N')
+                {
+                    snappedPos.y += StageBuilder.HEIGHT_OFFSET;
+                }
+            }
+
+            gimmickInstance.transform.position = snappedPos;
         }
     }
 
@@ -107,7 +128,18 @@ public class DragAndDrop : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndD
 
         if (gimmickInstance != null)
         {
-            StageBuilder.Instance.UpdateGridAtPosition(gimmickInstance.transform.position, cellType);
+            bool a = StageBuilder.Instance.UpdateGridAtPosition(gimmickInstance.transform.position, cellType);
+            if (!a)
+            {
+                // 範囲外 → 削除＆UI復活
+                Destroy(gimmickInstance);
+                transform.SetParent(spawnBoundary);
+                canvasGroup.alpha = 1;
+                canvasGroup.blocksRaycasts = true;
+                InputStateManager.IsDragging = false;
+                LayoutRebuilder.ForceRebuildLayoutImmediate(spawnBoundary);
+                return;
+            }
 
             gimmickInstance.GetComponent<BoxCollider>().enabled = true;
             gimmickInstance.AddComponent<DraggableGimmic>();

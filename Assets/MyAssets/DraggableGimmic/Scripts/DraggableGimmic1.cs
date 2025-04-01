@@ -39,6 +39,12 @@ public class DraggableGimmic : MonoBehaviour
         Vector3 targetPos = mouseWorldPos + offset;
         Vector3 snappedPos = SnapToGrid(targetPos);
 
+        if (!StageBuilder.Instance.IsValidGridPosition(snappedPos))
+        {
+            transform.position = snappedPos;
+            return;
+        }
+
         int col = Mathf.RoundToInt(snappedPos.x / StageBuilder.BLOCK_SIZE);
         int height = Mathf.RoundToInt(snappedPos.y / StageBuilder.BLOCK_SIZE);
         int row = Mathf.RoundToInt(snappedPos.z / StageBuilder.BLOCK_SIZE);
@@ -65,6 +71,13 @@ public class DraggableGimmic : MonoBehaviour
             int col = Mathf.RoundToInt(snappedPos.x / StageBuilder.BLOCK_SIZE);
             int height = Mathf.RoundToInt(snappedPos.y / StageBuilder.BLOCK_SIZE);
             int row = Mathf.RoundToInt(snappedPos.z / StageBuilder.BLOCK_SIZE);
+
+            if (!StageBuilder.Instance.IsValidGridPosition(snappedPos))
+            {
+                Destroy(gameObject);
+                // 必要に応じて UI を復元する処理をここに記述
+                return;
+            }
 
             // Nでないなら1つ上へ
             if (StageBuilder.Instance.GetGridData()[col, height, row] != 'N')
