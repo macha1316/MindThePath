@@ -49,12 +49,13 @@ public class DraggableGimmic : MonoBehaviour
         int height = Mathf.RoundToInt(snappedPos.y / StageBuilder.BLOCK_SIZE);
         int row = Mathf.RoundToInt(snappedPos.z / StageBuilder.BLOCK_SIZE);
 
-        // Nでないなら1つ上へ
-        if (StageBuilder.Instance.GetGridData()[col, height, row] != 'N')
+        // Nが出るまで上へ再帰的に確認
+        while (height < StageBuilder.Instance.GetGridData().GetLength(1) &&
+               StageBuilder.Instance.GetGridData()[col, height, row] != 'N')
         {
             height += 1;
-            snappedPos.y = height * StageBuilder.BLOCK_SIZE;
         }
+        snappedPos.y = height * StageBuilder.BLOCK_SIZE;
 
         transform.position = snappedPos;
     }
@@ -64,31 +65,7 @@ public class DraggableGimmic : MonoBehaviour
         isDragging = false;
         boxCollider.enabled = true;
 
-        Vector3 snappedPos = SnapToGrid(transform.position);
-
-        if (StageBuilder.Instance != null)
-        {
-            int col = Mathf.RoundToInt(snappedPos.x / StageBuilder.BLOCK_SIZE);
-            int height = Mathf.RoundToInt(snappedPos.y / StageBuilder.BLOCK_SIZE);
-            int row = Mathf.RoundToInt(snappedPos.z / StageBuilder.BLOCK_SIZE);
-
-            if (!StageBuilder.Instance.IsValidGridPosition(snappedPos))
-            {
-                Destroy(gameObject);
-                // 必要に応じて UI を復元する処理をここに記述
-                return;
-            }
-
-            // Nでないなら1つ上へ
-            if (StageBuilder.Instance.GetGridData()[col, height, row] != 'N')
-            {
-                height += 1;
-                snappedPos.y = height * StageBuilder.BLOCK_SIZE;
-            }
-
-            transform.position = snappedPos;
-            StageBuilder.Instance.UpdateGridAtPosition(transform.position, cellType);
-        }
+        StageBuilder.Instance.UpdateGridAtPosition(transform.position, cellType);
         InputStateManager.IsDragging = false;
     }
 

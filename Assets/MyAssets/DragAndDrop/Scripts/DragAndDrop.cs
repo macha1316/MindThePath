@@ -77,13 +77,13 @@ public class DragAndDrop : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndD
                 height >= 0 && height < StageBuilder.Instance.GetGridData().GetLength(1) &&
                 row >= 0 && row < StageBuilder.Instance.GetGridData().GetLength(2))
             {
-                char cell = StageBuilder.Instance.GetGridData()[col, height, row];
-
-                // すでに何か置かれていたら1つ上に置く
-                if (cell != 'N')
+                // Nが出るまで上へ再帰的に確認
+                while (height < StageBuilder.Instance.GetGridData().GetLength(1) &&
+                       StageBuilder.Instance.GetGridData()[col, height, row] != 'N')
                 {
-                    snappedPos.y += StageBuilder.HEIGHT_OFFSET;
+                    height += 1;
                 }
+                snappedPos.y = height * StageBuilder.BLOCK_SIZE;
             }
 
             gimmickInstance.transform.position = snappedPos;
