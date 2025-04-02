@@ -159,7 +159,8 @@ public class StageBuilder : MonoBehaviour
             GameObject obj = Instantiate(prefab, position, Quaternion.identity);
             if (cellType == 'P')
             {
-                obj.AddComponent<Player>();
+                Player newP = obj.AddComponent<Player>();
+                GameManager.Instance.GetPlayer(newP);
             }
         }
     }

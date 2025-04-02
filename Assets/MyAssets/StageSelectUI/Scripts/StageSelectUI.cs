@@ -14,6 +14,7 @@ public class StageSelectUI : MonoBehaviour
     [SerializeField] GameObject stageSelectUI;
     [SerializeField] GameObject startUI;
     [SerializeField] GameObject stageUI;
+    [SerializeField] GameObject clearUI;
 
     public GameObject[] gimmickUIList;
 
@@ -32,6 +33,7 @@ public class StageSelectUI : MonoBehaviour
 
         startUI.SetActive(false);
         stageUI.SetActive(false);
+        clearUI.SetActive(false);
         stageSelectUI.SetActive(true);
     }
 
@@ -70,5 +72,14 @@ public class StageSelectUI : MonoBehaviour
         startUI.SetActive(true);
         stageUI.SetActive(true);
         stageSelectUI.SetActive(false);
+        clearUI.SetActive(false);
+    }
+
+    public void SetClearUI()
+    {
+        startUI.SetActive(false);
+        stageUI.SetActive(false);
+        stageSelectUI.SetActive(false);
+        clearUI.SetActive(true);
     }
 }

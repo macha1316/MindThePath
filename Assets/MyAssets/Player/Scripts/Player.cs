@@ -5,6 +5,7 @@ public class Player : MonoBehaviour, ITurnBased
 {
     private float moveDuration = 1f;
     private bool isMoving = false;
+    private bool isComplete = false;
     private Animator animator;
 
     void Start()
@@ -16,7 +17,7 @@ public class Player : MonoBehaviour, ITurnBased
 
     public void OnTurn()
     {
-        if (isMoving) return;
+        if (isMoving || isComplete) return;
 
         Vector3 nextPos = transform.position + transform.forward * 2.0f;
 
@@ -73,6 +74,7 @@ public class Player : MonoBehaviour, ITurnBased
                 // 通常
                 if (IsMatchingCellType(transform.position, 'G'))
                 {
+                    isComplete = true;
                     Debug.Log("GGGGGGGoal");
                 }
             });
@@ -109,6 +111,9 @@ public class Player : MonoBehaviour, ITurnBased
 
     public void UpdateGridData()
     {
+        if (isComplete) return;
         StageBuilder.Instance.UpdatePlayerPosition(this);
     }
+
+    public bool GetIsComplete() => isComplete;
 }

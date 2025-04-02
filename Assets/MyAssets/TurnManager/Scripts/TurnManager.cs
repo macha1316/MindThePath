@@ -28,6 +28,12 @@ public class TurnManager : MonoBehaviour
         }
 
         UpdateGridData();
+
+        // Goal判定
+        if (GameManager.Instance.IsComplete())
+        {
+            StageSelectUI.Instance.SetClearUI();
+        }
     }
 
     private void UpdateGridData()
