@@ -20,6 +20,16 @@ public class StageBuilder : MonoBehaviour
     [SerializeField] GameObject rightPrefab;
     [SerializeField] GameObject leftPrefab;
 
+    // UIPrefab
+    [SerializeField] string[] textAssets;
+
+    // Stage情報をロード & UIをStage情報に合わせて出す
+    public void CreateStage(int stageNumber)
+    {
+        LoadStage(textAssets[stageNumber]);
+        StageSelectUI.Instance.SelectStageUI(stageNumber);
+    }
+
     private char[,,] gridData;
     private char[,,] dynamicTiles;
 
@@ -27,11 +37,6 @@ public class StageBuilder : MonoBehaviour
     private void Awake()
     {
         if (Instance == null) Instance = this;
-    }
-
-    void Start()
-    {
-        LoadStage(csvFileName);
     }
 
     void LoadStage(string filePath)
