@@ -9,6 +9,7 @@ public class DragAndDrop : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndD
     private Transform parentBeforeDrag;
     private bool hasSpawnedObject = false;
     private GameObject gimmickInstance;
+    private Vector3 lastGridPosition;
 
     [SerializeField] GameObject gimmickPrefab; // ギミックのプレハブ
     [SerializeField] RectTransform spawnBoundary; // ドラッグして脱出したい境界パネル
@@ -22,6 +23,7 @@ public class DragAndDrop : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndD
         {
             canvasGroup = gameObject.AddComponent<CanvasGroup>();
         }
+        lastGridPosition = Vector3.zero;
     }
 
     public void OnBeginDrag(PointerEventData eventData)
@@ -86,6 +88,13 @@ public class DragAndDrop : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndD
                 snappedPos.y = height * StageBuilder.BLOCK_SIZE;
             }
 
+            Vector3 currentGridPos = new Vector3(col, height, row);
+            if (currentGridPos != lastGridPosition)
+            {
+                AudioManager.Instance.PlayDragSound();
+                lastGridPosition = currentGridPos;
+            }
+
             gimmickInstance.transform.position = snappedPos;
         }
     }
@@ -147,6 +156,7 @@ public class DragAndDrop : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndD
             gimmickInstance.AddComponent<DraggableGimmic>();
             gimmickInstance.GetComponent<DraggableGimmic>().cellType = cellType;
             InputStateManager.IsDragging = false;
+            AudioManager.Instance.PlayDropSound();
         }
     }
 }

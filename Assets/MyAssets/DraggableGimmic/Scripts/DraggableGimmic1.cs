@@ -5,8 +5,13 @@ public class DraggableGimmic : MonoBehaviour
     private BoxCollider boxCollider;
     private Vector3 offset;
     private bool isDragging = false;
-
+    private Vector3 lastGridPosition;
     public char cellType = 'N';
+
+    void Start()
+    {
+        lastGridPosition = Vector3.zero;
+    }
 
     private void OnMouseDown()
     {
@@ -58,6 +63,13 @@ public class DraggableGimmic : MonoBehaviour
         snappedPos.y = height * StageBuilder.BLOCK_SIZE;
 
         transform.position = snappedPos;
+
+        Vector3 currentGridPos = new Vector3(col, height, row);
+        if (currentGridPos != lastGridPosition)
+        {
+            AudioManager.Instance.PlayDragSound();
+            lastGridPosition = currentGridPos;
+        }
     }
 
     private void OnMouseUp()
@@ -67,6 +79,8 @@ public class DraggableGimmic : MonoBehaviour
 
         StageBuilder.Instance.UpdateGridAtPosition(transform.position, cellType);
         InputStateManager.IsDragging = false;
+        AudioManager.Instance.PlayDropSound();
+
     }
 
     private Vector3 GetMouseWorldPosition()
