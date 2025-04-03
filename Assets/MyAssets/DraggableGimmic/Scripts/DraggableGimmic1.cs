@@ -15,6 +15,7 @@ public class DraggableGimmic : MonoBehaviour
 
     private void OnMouseDown()
     {
+        if (GameManager.Instance.GetIsStart()) return;
         isDragging = true;
         Vector3 mouseWorldPos = GetMouseWorldPosition();
         offset = transform.position - mouseWorldPos;
@@ -74,6 +75,7 @@ public class DraggableGimmic : MonoBehaviour
 
     private void OnMouseUp()
     {
+        if (GameManager.Instance.GetIsStart()) return;
         isDragging = false;
         boxCollider.enabled = true;
 

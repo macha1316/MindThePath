@@ -61,6 +61,7 @@ public class TurnManager : MonoBehaviour
 
     public void StartMove()
     {
+        GameManager.Instance.SetIsStart();
         StartCoroutine(TurnLoop());
     }
 }

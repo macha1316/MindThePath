@@ -28,6 +28,7 @@ public class DragAndDrop : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndD
 
     public void OnBeginDrag(PointerEventData eventData)
     {
+        if (GameManager.Instance.GetIsStart()) return;
         eventData.pointerDrag = gameObject;
         parentBeforeDrag = transform.parent;
         transform.SetParent(transform.root);
@@ -121,6 +122,7 @@ public class DragAndDrop : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndD
 
     public void OnEndDrag(PointerEventData eventData)
     {
+        if (GameManager.Instance.GetIsStart()) return;
         // オブジェクトを置いたあとのUI復元処理を削除
         // UIを戻さずに非表示のままにしておくことで再度表示しない
         if (!hasSpawnedObject)

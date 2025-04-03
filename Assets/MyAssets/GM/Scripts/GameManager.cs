@@ -6,6 +6,7 @@ public class GameManager : MonoBehaviour
     public static GameManager Instance;
 
     private List<Player> players;
+    private bool isStart = false;
 
     private void Awake()
     {
@@ -25,5 +26,12 @@ public class GameManager : MonoBehaviour
             if (!player.GetIsComplete()) return false;
         }
         return true;
+    }
+
+    public bool GetIsStart() => isStart;
+
+    public void SetIsStart()
+    {
+        isStart = true;
     }
 }
