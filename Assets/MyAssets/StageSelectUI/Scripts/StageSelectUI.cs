@@ -24,7 +24,7 @@ public class StageSelectUI : MonoBehaviour
     {
         { 0, new List<GimmickType> { GimmickType.Left } },
         { 1, new List<GimmickType> { GimmickType.Left, GimmickType.Down } },
-        { 2, new List<GimmickType> { GimmickType.Wall} }
+        { 2, new List<GimmickType> { GimmickType.Wall, GimmickType.Up} }
     };
 
     public static StageSelectUI Instance;

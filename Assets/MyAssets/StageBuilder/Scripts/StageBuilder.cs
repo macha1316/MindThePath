@@ -241,6 +241,7 @@ public class StageBuilder : MonoBehaviour
                     {
                         gridData[c, h, r] = 'N';
                     }
+                    // Dynamicの方のリセットいるかも
                 }
             }
         }
@@ -257,7 +258,7 @@ public class StageBuilder : MonoBehaviour
         int height = Mathf.RoundToInt(worldPosition.y / HEIGHT_OFFSET);
         int row = Mathf.RoundToInt(worldPosition.z / BLOCK_SIZE);
 
-        gridData[col, height, row] = 'N';
+        gridData[col, height, row] = type;
         dynamicTiles[col, height, row] = type;
     }
 

@@ -6,7 +6,6 @@ public class DragAndDrop : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndD
 {
     private RectTransform rectTransform;
     private CanvasGroup canvasGroup;
-    private Transform parentBeforeDrag;
     private bool hasSpawnedObject = false;
     private GameObject gimmickInstance;
     private Vector3 lastGridPosition;
@@ -30,7 +29,6 @@ public class DragAndDrop : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndD
     {
         if (GameManager.Instance.GetIsStart()) return;
         eventData.pointerDrag = gameObject;
-        parentBeforeDrag = transform.parent;
         transform.SetParent(transform.root);
         canvasGroup.blocksRaycasts = false;
         hasSpawnedObject = false;
