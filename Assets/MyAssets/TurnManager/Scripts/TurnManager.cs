@@ -52,7 +52,7 @@ public class TurnManager : MonoBehaviour
     {
         // 一旦ここ
         turnObjects.AddRange(FindObjectsOfType<MonoBehaviour>().OfType<ITurnBased>());
-        while (true)
+        while (GameManager.Instance.GetIsSart())
         {
             ExecuteTurn();
             yield return new WaitForSeconds(1f);
@@ -61,6 +61,7 @@ public class TurnManager : MonoBehaviour
 
     public void StartMove()
     {
+        turnObjects = new List<ITurnBased>();
         GameManager.Instance.SetIsStart();
         StartCoroutine(TurnLoop());
     }

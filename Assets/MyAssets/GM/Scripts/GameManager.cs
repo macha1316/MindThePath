@@ -36,6 +36,9 @@ public class GameManager : MonoBehaviour
     }
     public void SetGameStop()
     {
+        players = new List<Player>();
         isStart = false;
     }
+
+    public bool GetIsSart() => isStart;
 }
