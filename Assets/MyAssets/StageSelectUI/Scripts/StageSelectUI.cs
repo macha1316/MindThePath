@@ -6,7 +6,8 @@ public enum GimmickType
     Up,
     Down,
     Right,
-    Left
+    Left,
+    Wall
 }
 
 public class StageSelectUI : MonoBehaviour
@@ -22,7 +23,8 @@ public class StageSelectUI : MonoBehaviour
     private Dictionary<int, List<GimmickType>> stageGimmickMap = new Dictionary<int, List<GimmickType>>
     {
         { 0, new List<GimmickType> { GimmickType.Left } },
-        { 1, new List<GimmickType> { GimmickType.Left, GimmickType.Down } }
+        { 1, new List<GimmickType> { GimmickType.Left, GimmickType.Down } },
+        { 2, new List<GimmickType> { GimmickType.Wall} }
     };
 
     public static StageSelectUI Instance;
@@ -43,6 +45,7 @@ public class StageSelectUI : MonoBehaviour
         gimmickUIPrefabMap[GimmickType.Down] = gimmickUIList[1];
         gimmickUIPrefabMap[GimmickType.Right] = gimmickUIList[2];
         gimmickUIPrefabMap[GimmickType.Left] = gimmickUIList[3];
+        gimmickUIPrefabMap[GimmickType.Wall] = gimmickUIList[4];
     }
 
     public void SelectStageUI(int stageNumber)
