@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.IO;
 using UnityEngine;
 
 public class StageBuilder : MonoBehaviour
@@ -22,12 +21,15 @@ public class StageBuilder : MonoBehaviour
 
     // UIPrefab
     [SerializeField] string[] textAssets;
+    public GameObject stageRoot; // ステージ親
 
     // Stage情報をロード & UIをStage情報に合わせて出す
     public void CreateStage(int stageNumber)
     {
         LoadStage(textAssets[stageNumber]);
         StageSelectUI.Instance.SelectStageUI(stageNumber);
+        GameManager.Instance.SetGameStop();
+        // gridData dynamicTiles初期化いるかな
     }
 
     private char[,,] gridData;
@@ -156,7 +158,7 @@ public class StageBuilder : MonoBehaviour
         }
         if (prefab != null)
         {
-            GameObject obj = Instantiate(prefab, position, Quaternion.identity);
+            GameObject obj = Instantiate(prefab, position, Quaternion.identity, stageRoot != null ? stageRoot.transform : null);
             if (cellType == 'P')
             {
                 Player newP = obj.AddComponent<Player>();
@@ -190,7 +192,6 @@ public class StageBuilder : MonoBehaviour
         // 新しい位置にプレイヤーを設定
         gridData[newCol, newHeight, newRow] = 'P';
     }
-
 
     public void ResetGridData()
     {
@@ -236,5 +237,19 @@ public class StageBuilder : MonoBehaviour
                height >= 0 && height < gridData.GetLength(1) &&
                row >= 0 && row < gridData.GetLength(2);
     }
-}
 
+    public void BuildNextStage()
+    {
+        if (stageRoot != null)
+        {
+            foreach (Transform child in stageRoot.transform)
+            {
+                Destroy(child.gameObject);
+            }
+        }
+
+        // 現在のステージ番号などに応じて再生成する処理
+        // ここでは仮に0番ステージを再生成
+        CreateStage(1);
+    }
+}

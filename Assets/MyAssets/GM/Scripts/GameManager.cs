@@ -34,4 +34,8 @@ public class GameManager : MonoBehaviour
     {
         isStart = true;
     }
+    public void SetGameStop()
+    {
+        isStart = false;
+    }
 }

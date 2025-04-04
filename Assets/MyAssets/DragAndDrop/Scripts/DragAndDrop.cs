@@ -49,7 +49,7 @@ public class DragAndDrop : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndD
             canvasGroup.alpha = 0;
 
             Vector3 worldPos = GetWorldPosition();
-            gimmickInstance = Instantiate(gimmickPrefab, SnapToGrid(worldPos), Quaternion.identity);
+            gimmickInstance = Instantiate(gimmickPrefab, SnapToGrid(worldPos), Quaternion.identity, StageBuilder.Instance.stageRoot.transform);
             gimmickInstance.GetComponent<BoxCollider>().enabled = false;
         }
 

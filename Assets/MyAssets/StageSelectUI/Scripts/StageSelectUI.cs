@@ -48,6 +48,7 @@ public class StageSelectUI : MonoBehaviour
     public void SelectStageUI(int stageNumber)
     {
         SelectStageUI();
+        SetGimmickUIParents();
 
         // ステージごとのstageUIを変更する
         foreach (var ui in gimmickUIPrefabMap.Values)
@@ -81,5 +82,18 @@ public class StageSelectUI : MonoBehaviour
         stageUI.SetActive(false);
         stageSelectUI.SetActive(false);
         clearUI.SetActive(true);
+    }
+
+    private void SetGimmickUIParents()
+    {
+        foreach (var ui in gimmickUIList)
+        {
+            if (ui != null)
+            {
+                ui.GetComponent<CanvasGroup>().alpha = 1;
+                ui.GetComponent<CanvasGroup>().blocksRaycasts = true;
+                ui.transform.SetParent(stageUI.transform, false);
+            }
+        }
     }
 }
