@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+using DG.Tweening;
+using System.Collections;
 
 public class StageBuilder : MonoBehaviour
 {
@@ -88,6 +90,8 @@ public class StageBuilder : MonoBehaviour
         gridData = new char[colCount, heightCount, rowCount];
         dynamicTiles = new char[colCount, heightCount, rowCount];
 
+        int delayCounter = 0;
+
         for (int height = 0; height < heightCount; height++)
         {
             string[] layer = layers[height];
@@ -98,9 +102,18 @@ public class StageBuilder : MonoBehaviour
 
                 for (int col = 0; col < colCount; col++)
                 {
+                    char cellType = cells[col][0];
                     Vector3 position = new Vector3(col * BLOCK_SIZE, height * HEIGHT_OFFSET, (rowCount - 1 - row) * BLOCK_SIZE);
-                    char cellType = cells[col][0]; // 文字列から1文字を取得
-                    SpawnBlock(cellType, position);
+
+                    if (cellType != 'N')
+                    {
+                        StartCoroutine(SpawnBlockWithDelay(cellType, position, delayCounter * 0.01f));
+                        delayCounter++;
+                    }
+                    else
+                    {
+                        StartCoroutine(SpawnBlockWithDelay(cellType, position, 0f));
+                    }
 
                     int correctedRow = rowCount - 1 - row;
 
@@ -124,6 +137,12 @@ public class StageBuilder : MonoBehaviour
                 // Debug.Log($"高さ {h}, 行 {r}: {rowData}");
             }
         }
+    }
+
+    IEnumerator SpawnBlockWithDelay(char cellType, Vector3 position, float delay)
+    {
+        yield return new WaitForSeconds(delay);
+        SpawnBlock(cellType, position);
     }
 
     void SpawnBlock(char cellType, Vector3 position)
@@ -159,6 +178,9 @@ public class StageBuilder : MonoBehaviour
         if (prefab != null)
         {
             GameObject obj = Instantiate(prefab, position, Quaternion.identity, stageRoot != null ? stageRoot.transform : null);
+            obj.transform.localScale = Vector3.zero;
+            obj.transform.DOScale(Vector3.one, 0.3f).SetEase(Ease.OutBack);
+
             if (cellType == 'P')
             {
                 Player newP = obj.AddComponent<Player>();
