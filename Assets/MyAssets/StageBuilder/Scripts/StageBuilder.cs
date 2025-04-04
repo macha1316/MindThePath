@@ -30,6 +30,7 @@ public class StageBuilder : MonoBehaviour
     // Stage情報をロード & UIをStage情報に合わせて出す
     public void CreateStage(int stageNumber)
     {
+        GameManager.Instance.SetStageNumber(stageNumber);
         StageSelectUI.Instance.SelectStageUI(stageNumber);
         GameManager.Instance.SetGameStop();
         gridData = new char[0, 0, 0];
@@ -281,9 +282,6 @@ public class StageBuilder : MonoBehaviour
                 Destroy(child.gameObject);
             }
         }
-
-        // 現在のステージ番号などに応じて再生成する処理
-        // ここでは仮に0番ステージを再生成
-        CreateStage(1);
+        CreateStage(GameManager.Instance.SetStageNumber(1));
     }
 }

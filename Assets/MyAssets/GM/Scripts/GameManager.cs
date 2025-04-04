@@ -7,6 +7,7 @@ public class GameManager : MonoBehaviour
 
     private List<Player> players;
     private bool isStart = false;
+    private int stageNumber;
 
     private void Awake()
     {
@@ -40,5 +41,10 @@ public class GameManager : MonoBehaviour
         isStart = false;
     }
 
-    public bool GetIsSart() => isStart;
+    public int GetStageNumber() => stageNumber;
+    public int SetStageNumber(int num)
+    {
+        stageNumber = stageNumber += num;
+        return stageNumber;
+    }
 }

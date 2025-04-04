@@ -52,7 +52,7 @@ public class TurnManager : MonoBehaviour
     {
         // 一旦ここ
         turnObjects.AddRange(FindObjectsOfType<MonoBehaviour>().OfType<ITurnBased>());
-        while (GameManager.Instance.GetIsSart())
+        while (GameManager.Instance.GetIsStart())
         {
             ExecuteTurn();
             yield return new WaitForSeconds(1f);
