@@ -102,17 +102,18 @@ public class StageBuilder : MonoBehaviour
 
                 for (int col = 0; col < colCount; col++)
                 {
-                    char cellType = cells[col][0];
+                    string cellTypeString = cells[col];
+                    char cellType = cellTypeString[0];
                     Vector3 position = new Vector3(col * BLOCK_SIZE, height * HEIGHT_OFFSET, (rowCount - 1 - row) * BLOCK_SIZE);
 
-                    if (cellType != 'N')
+                    if (cellTypeString[0] != 'N')
                     {
-                        StartCoroutine(SpawnBlockWithDelay(cellType, position, delayCounter * 0.01f));
+                        StartCoroutine(SpawnBlockWithDelay(cellTypeString, position, delayCounter * 0.01f));
                         delayCounter++;
                     }
                     else
                     {
-                        StartCoroutine(SpawnBlockWithDelay(cellType, position, 0f));
+                        StartCoroutine(SpawnBlockWithDelay(cellTypeString, position, 0f));
                     }
 
                     int correctedRow = rowCount - 1 - row;
@@ -139,14 +140,16 @@ public class StageBuilder : MonoBehaviour
         }
     }
 
-    IEnumerator SpawnBlockWithDelay(char cellType, Vector3 position, float delay)
+    IEnumerator SpawnBlockWithDelay(string cellTypeString, Vector3 position, float delay)
     {
         yield return new WaitForSeconds(delay);
-        SpawnBlock(cellType, position);
+        SpawnBlock(cellTypeString, position);
     }
 
-    void SpawnBlock(char cellType, Vector3 position)
+    void SpawnBlock(string cellTypeString, Vector3 position)
     {
+        char cellType = cellTypeString[0];
+        char dirChar = cellTypeString.Length > 1 ? cellTypeString[1] : ' ';
         GameObject prefab = null;
         switch (cellType)
         {
@@ -186,6 +189,15 @@ public class StageBuilder : MonoBehaviour
                 Player newP = obj.AddComponent<Player>();
                 GameManager.Instance.GetPlayer(newP);
             }
+            Vector3 dir = Vector3.forward;
+            switch (dirChar)
+            {
+                case '^': dir = Vector3.forward; break;
+                case 'v': dir = Vector3.back; break;
+                case '<': dir = Vector3.left; break;
+                case '>': dir = Vector3.right; break;
+            }
+            obj.transform.forward = dir;
         }
     }
 
