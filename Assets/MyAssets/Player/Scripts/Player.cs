@@ -27,13 +27,14 @@ public class Player : MonoBehaviour, ITurnBased
 
         Vector3 nextPos = transform.position + transform.forward * 2.0f;
 
-        // 範囲外 or ブロック → 反転
+        // 範囲外 or ブロック → すぐ折り返し
         if (!IsValidPosition(nextPos) || IsMatchingCellType(nextPos, 'B'))
         {
             transform.forward = -transform.forward;
             nextPos = transform.position + transform.forward * 2.0f;
         }
 
+        // 1段下の位置を計算
         Vector3 oneDown = nextPos + Vector3.down * StageBuilder.HEIGHT_OFFSET;
         Vector3 twoDown = nextPos + Vector3.down * StageBuilder.HEIGHT_OFFSET * 2;
 
@@ -84,6 +85,33 @@ public class Player : MonoBehaviour, ITurnBased
 
         isMoving = true;
 
+        // リファクタいる
+        Vector3 frontPos = transform.position + transform.forward * 2.0f;
+        int col = Mathf.RoundToInt(frontPos.x / StageBuilder.BLOCK_SIZE);
+        int height = Mathf.RoundToInt(frontPos.y / StageBuilder.HEIGHT_OFFSET);
+        int row = Mathf.RoundToInt(frontPos.z / StageBuilder.BLOCK_SIZE);
+
+        char[,,] grid = StageBuilder.Instance.GetGridData();
+        if (StageBuilder.Instance.IsValidGridPosition(frontPos) && grid[col, height, row] == 'M')
+        {
+            // foreach回す必要ある？
+            foreach (var box in FindObjectsOfType<MoveBox>())
+            {
+                Vector3 boxPos = box.transform.position;
+                int bCol = Mathf.RoundToInt(boxPos.x / StageBuilder.BLOCK_SIZE);
+                int bHeight = Mathf.RoundToInt(boxPos.y / StageBuilder.HEIGHT_OFFSET);
+                int bRow = Mathf.RoundToInt(boxPos.z / StageBuilder.BLOCK_SIZE);
+
+                if (bCol == col && bHeight == height && bRow == row)
+                {
+                    // onTurnでする
+                    box.TryPush(transform.forward);
+                    break;
+                }
+            }
+        }
+
+        // 現在位置に基づいての行動
         transform.DOMove(nextPos, moveDuration)
             .SetEase(Ease.Linear)
             .OnComplete(() =>

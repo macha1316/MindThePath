@@ -6,6 +6,7 @@ public class GameManager : MonoBehaviour
     public static GameManager Instance;
 
     private List<Player> players;
+    private List<MoveBox> boxes;
     private bool isStart = false;
     private int stageNumber;
 
@@ -18,6 +19,11 @@ public class GameManager : MonoBehaviour
     public void GetPlayer(Player newP)
     {
         players.Add(newP);
+    }
+
+    public void GetMoveBox(MoveBox newM)
+    {
+        boxes.Add(newM);
     }
 
     public bool IsComplete()
@@ -38,6 +44,7 @@ public class GameManager : MonoBehaviour
     public void SetGameStop()
     {
         players = new List<Player>();
+        boxes = new List<MoveBox>();
         isStart = false;
     }
 

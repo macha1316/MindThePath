@@ -7,7 +7,8 @@ public enum GimmickType
     Down,
     Right,
     Left,
-    Wall
+    Wall,
+    MoveBox
 }
 
 public class StageSelectUI : MonoBehaviour
@@ -25,7 +26,8 @@ public class StageSelectUI : MonoBehaviour
         { 0, new List<GimmickType> { GimmickType.Left } },
         { 1, new List<GimmickType> { GimmickType.Left, GimmickType.Down } },
         { 2, new List<GimmickType> { GimmickType.Wall, GimmickType.Up} },
-        { 3, new List<GimmickType> { GimmickType.Wall, GimmickType.Up, GimmickType.Right} }
+        { 3, new List<GimmickType> { GimmickType.Wall, GimmickType.Up, GimmickType.Right} },
+        { 4, new List<GimmickType> { GimmickType.Wall, GimmickType.MoveBox, GimmickType.Up} }
     };
 
     public static StageSelectUI Instance;
@@ -47,6 +49,7 @@ public class StageSelectUI : MonoBehaviour
         gimmickUIPrefabMap[GimmickType.Right] = gimmickUIList[2];
         gimmickUIPrefabMap[GimmickType.Left] = gimmickUIList[3];
         gimmickUIPrefabMap[GimmickType.Wall] = gimmickUIList[4];
+        gimmickUIPrefabMap[GimmickType.MoveBox] = gimmickUIList[5];
     }
 
     public void SelectStageUI(int stageNumber)

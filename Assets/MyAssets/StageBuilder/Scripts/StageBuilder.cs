@@ -20,6 +20,7 @@ public class StageBuilder : MonoBehaviour
     [SerializeField] GameObject downPrefab;
     [SerializeField] GameObject rightPrefab;
     [SerializeField] GameObject leftPrefab;
+    [SerializeField] GameObject moveBoxPrefab;
     private char[,,] gridData;
     private char[,,] dynamicTiles;
 
@@ -178,6 +179,9 @@ public class StageBuilder : MonoBehaviour
             case 'L':
                 prefab = leftPrefab;
                 break;
+            case 'M':
+                prefab = moveBoxPrefab;
+                break;
         }
         if (prefab != null)
         {
@@ -189,6 +193,11 @@ public class StageBuilder : MonoBehaviour
             {
                 Player newP = obj.AddComponent<Player>();
                 GameManager.Instance.GetPlayer(newP);
+            }
+            if (cellType == 'M')
+            {
+                MoveBox newM = obj.AddComponent<MoveBox>();
+                GameManager.Instance.GetMoveBox(newM);
             }
             Vector3 dir = Vector3.forward;
             switch (dirChar)
@@ -237,7 +246,7 @@ public class StageBuilder : MonoBehaviour
                 for (int c = 0; c < gridData.GetLength(0); c++)
                 {
                     // ブロック（B）、ゴール（G）、プレイヤー（P）を保持し、それ以外をリセット
-                    if (gridData[c, h, r] != 'B' && gridData[c, h, r] != 'G' && gridData[c, h, r] != 'P')
+                    if (gridData[c, h, r] != 'B' && gridData[c, h, r] != 'G' && gridData[c, h, r] != 'P' && gridData[c, h, r] != 'M')
                     {
                         gridData[c, h, r] = 'N';
                     }
