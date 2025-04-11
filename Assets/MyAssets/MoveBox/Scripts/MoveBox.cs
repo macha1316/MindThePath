@@ -1,6 +1,5 @@
 using UnityEngine;
 using DG.Tweening;
-using System;
 
 public class MoveBox : MonoBehaviour, ITurnBased
 {
@@ -8,11 +7,16 @@ public class MoveBox : MonoBehaviour, ITurnBased
     private float moveDuration = 1f;
     private Vector3 targetPos;
 
+    void Start()
+    {
+        targetPos = transform.position;
+    }
+
     public void TryPush(Vector3 direction)
     {
         if (isMoving) return;
 
-        targetPos = transform.position + direction * StageBuilder.BLOCK_SIZE;
+        targetPos = targetPos + direction * StageBuilder.BLOCK_SIZE;
 
         if (!StageBuilder.Instance.IsValidGridPosition(targetPos)) return;
 
@@ -23,22 +27,41 @@ public class MoveBox : MonoBehaviour, ITurnBased
 
         if (grid[col, height, row] != 'N') return;
 
-        isMoving = true;
+        Vector3 oneDown = targetPos + Vector3.down * StageBuilder.HEIGHT_OFFSET;
 
-        transform.DOMove(targetPos, moveDuration).SetEase(Ease.Linear).OnComplete(() =>
+        if (StageBuilder.Instance.IsValidGridPosition(oneDown))
         {
-            FallIfNeeded();
-        });
+            int oneDownCol = Mathf.RoundToInt(oneDown.x / StageBuilder.BLOCK_SIZE);
+            int oneDownHeight = Mathf.RoundToInt(oneDown.y / StageBuilder.HEIGHT_OFFSET);
+            int oneDownRow = Mathf.RoundToInt(oneDown.z / StageBuilder.BLOCK_SIZE);
+
+            if (grid[oneDownCol, oneDownHeight, oneDownRow] != 'N')
+            {
+                isMoving = true;
+                transform.DOMove(targetPos, moveDuration).SetEase(Ease.Linear).OnComplete(() =>
+                {
+                    isMoving = false;
+                });
+                return;
+            }
+
+            isMoving = true;
+            targetPos = oneDown;
+
+            transform.DOMove(targetPos, moveDuration).SetEase(Ease.Linear).OnComplete(() =>
+            {
+                isMoving = false;
+            });
+        }
     }
 
     public void OnTurn()
     {
-        // Do nothing by default
+        // 自らの下を見てNなら毎ターン下がるようにする
     }
 
     public void UpdateGridData()
     {
-        // いきなりtargetPosに合わせるの問題になる？かも
         StageBuilder.Instance.UpdateGridAtPosition(targetPos, 'M');
     }
 

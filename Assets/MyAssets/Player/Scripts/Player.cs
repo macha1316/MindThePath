@@ -34,14 +34,80 @@ public class Player : MonoBehaviour, ITurnBased
             nextPos = transform.position + transform.forward * 2.0f;
         }
 
+        // リファクタいる
+        Vector3 frontPos = transform.position + transform.forward * 2.0f;
+        int col = Mathf.RoundToInt(frontPos.x / StageBuilder.BLOCK_SIZE);
+        int height = Mathf.RoundToInt(frontPos.y / StageBuilder.HEIGHT_OFFSET);
+        int row = Mathf.RoundToInt(frontPos.z / StageBuilder.BLOCK_SIZE);
+
+        char[,,] grid = StageBuilder.Instance.GetGridData();
+        if (StageBuilder.Instance.IsValidGridPosition(frontPos) && grid[col, height, row] == 'M')
+        {
+            // Boxの先がNじゃなかったら引き返す
+            foreach (var box in FindObjectsOfType<MoveBox>())
+            {
+                Vector3 boxPos = box.transform.position;
+                int bCol = Mathf.RoundToInt(boxPos.x / StageBuilder.BLOCK_SIZE);
+                int bHeight = Mathf.RoundToInt(boxPos.y / StageBuilder.HEIGHT_OFFSET);
+                int bRow = Mathf.RoundToInt(boxPos.z / StageBuilder.BLOCK_SIZE);
+
+                if (bCol == col && bHeight == height && bRow == row)
+                {
+                    Vector3 boxNextPos = boxPos + transform.forward * StageBuilder.BLOCK_SIZE;
+                    if (!StageBuilder.Instance.IsValidGridPosition(boxNextPos) || !IsMatchingCellType(boxNextPos, 'N'))
+                    {
+                        transform.forward = -transform.forward;
+                        nextPos = transform.position + transform.forward * 2.0f;
+
+                        isMoving = true;
+
+                        // 現在位置に基づいての行動
+                        transform.DOMove(nextPos, moveDuration)
+                            .SetEase(Ease.Linear)
+                            .OnComplete(() =>
+                            {
+                                isMoving = false;
+
+                                // Dynamic
+                                if (IsMatchingDynamicCellType(transform.position, 'U'))
+                                {
+                                    transform.forward = Vector3.forward;
+                                }
+                                if (IsMatchingDynamicCellType(transform.position, 'D'))
+                                {
+                                    transform.forward = Vector3.back;
+                                }
+                                if (IsMatchingDynamicCellType(transform.position, 'R'))
+                                {
+                                    transform.forward = Vector3.right;
+                                }
+                                if (IsMatchingDynamicCellType(transform.position, 'L'))
+                                {
+                                    transform.forward = Vector3.left;
+                                }
+                                // 通常
+                                if (IsMatchingCellType(transform.position, 'G'))
+                                {
+                                    isComplete = true;
+                                }
+                            });
+                        return;
+                    }
+
+                    box.TryPush(transform.forward);
+                    break;
+                }
+            }
+        }
+
         // 1段下の位置を計算
         Vector3 oneDown = nextPos + Vector3.down * StageBuilder.HEIGHT_OFFSET;
         Vector3 twoDown = nextPos + Vector3.down * StageBuilder.HEIGHT_OFFSET * 2;
 
         // 下に下がれる場合の処理
-        if (IsValidPosition(oneDown) && !IsMatchingCellType(oneDown, 'B'))
+        if (IsValidPosition(oneDown) && !IsMatchingCellType(oneDown, 'B') && !IsMatchingCellType(oneDown, 'M'))
         {
-            if (!IsValidPosition(twoDown) || IsMatchingCellType(twoDown, 'B'))
+            if (!IsValidPosition(twoDown) || IsMatchingCellType(twoDown, 'B') || IsMatchingCellType(twoDown, 'M'))
             {
                 // 1段だけ下なら進む
                 animator.SetTrigger("jump");
@@ -84,32 +150,6 @@ public class Player : MonoBehaviour, ITurnBased
         }
 
         isMoving = true;
-
-        // リファクタいる
-        Vector3 frontPos = transform.position + transform.forward * 2.0f;
-        int col = Mathf.RoundToInt(frontPos.x / StageBuilder.BLOCK_SIZE);
-        int height = Mathf.RoundToInt(frontPos.y / StageBuilder.HEIGHT_OFFSET);
-        int row = Mathf.RoundToInt(frontPos.z / StageBuilder.BLOCK_SIZE);
-
-        char[,,] grid = StageBuilder.Instance.GetGridData();
-        if (StageBuilder.Instance.IsValidGridPosition(frontPos) && grid[col, height, row] == 'M')
-        {
-            // foreach回す必要ある？
-            foreach (var box in FindObjectsOfType<MoveBox>())
-            {
-                Vector3 boxPos = box.transform.position;
-                int bCol = Mathf.RoundToInt(boxPos.x / StageBuilder.BLOCK_SIZE);
-                int bHeight = Mathf.RoundToInt(boxPos.y / StageBuilder.HEIGHT_OFFSET);
-                int bRow = Mathf.RoundToInt(boxPos.z / StageBuilder.BLOCK_SIZE);
-
-                if (bCol == col && bHeight == height && bRow == row)
-                {
-                    // onTurnでする
-                    box.TryPush(transform.forward);
-                    break;
-                }
-            }
-        }
 
         // 現在位置に基づいての行動
         transform.DOMove(nextPos, moveDuration)
