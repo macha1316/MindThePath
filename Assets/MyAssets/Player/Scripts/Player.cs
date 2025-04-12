@@ -32,6 +32,11 @@ public class Player : MonoBehaviour, ITurnBased
         {
             transform.forward = -transform.forward;
             nextPos = transform.position + transform.forward * 2.0f;
+
+            if (!IsValidPosition(nextPos) || IsMatchingCellType(nextPos, 'B'))
+            {
+                return;
+            }
         }
 
         // リファクタいる
