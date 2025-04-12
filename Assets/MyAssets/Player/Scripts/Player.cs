@@ -7,6 +7,7 @@ public class Player : MonoBehaviour, ITurnBased
     private bool isMoving = false;
     private bool isComplete = false;
     private Animator animator;
+    private Vector3 nextPos;
 
     void Start()
     {
@@ -25,10 +26,12 @@ public class Player : MonoBehaviour, ITurnBased
             animator.SetTrigger("walk");
         }
 
-        Vector3 nextPos = transform.position + transform.forward * 2.0f;
+        nextPos = transform.position + transform.forward * 2.0f;
 
         // 範囲外 or ブロック → すぐ折り返し
-        if (!IsValidPosition(nextPos) || IsMatchingCellType(nextPos, 'B'))
+        if (!StageBuilder.Instance.IsValidGridPosition(nextPos) ||
+            IsMatchingCellType(nextPos, 'B') ||
+            IsMatchingCellType(nextPos, 'P'))
         {
             if (!TryFlipDirection(ref nextPos))
             {
@@ -43,15 +46,20 @@ public class Player : MonoBehaviour, ITurnBased
         Vector3 twoDown = nextPos + Vector3.down * StageBuilder.HEIGHT_OFFSET * 2;
 
         // 下に下がれる場合の処理
-        if (IsValidPosition(oneDown) && !IsMatchingCellType(oneDown, 'B') && !IsMatchingCellType(oneDown, 'M'))
+        if (StageBuilder.Instance.IsValidGridPosition(oneDown) &&
+            !IsMatchingCellType(oneDown, 'B') &&
+            !IsMatchingCellType(oneDown, 'M'))
         {
-            if (!IsValidPosition(twoDown) || IsMatchingCellType(twoDown, 'B') || IsMatchingCellType(twoDown, 'M'))
+            if (!StageBuilder.Instance.IsValidGridPosition(twoDown) ||
+                IsMatchingCellType(twoDown, 'B') ||
+                IsMatchingCellType(twoDown, 'M'))
             {
                 // 1段だけ下なら進む
                 animator.SetTrigger("jump");
                 isMoving = true;
+                nextPos = oneDown;
 
-                transform.DOJump(oneDown, 2f, 1, moveDuration)
+                transform.DOJump(nextPos, 2f, 1, moveDuration)
                     .SetEase(Ease.OutQuad)
                     .OnComplete(() =>
                     {
@@ -78,13 +86,23 @@ public class Player : MonoBehaviour, ITurnBased
             });
     }
 
+    // 共通関数にすると思う(StageBuilder?)
     private bool TryFlipDirection(ref Vector3 nextPos)
     {
         transform.forward = -transform.forward;
         nextPos = transform.position + transform.forward * 2.0f;
-        return IsValidPosition(nextPos) && !IsMatchingCellType(nextPos, 'B');
+        if (StageBuilder.Instance.IsValidGridPosition(nextPos))
+        {
+            if (IsMatchingCellType(nextPos, 'B') || IsMatchingCellType(nextPos, 'P'))
+            {
+                return false;
+            }
+            return true;
+        }
+        return false;
     }
 
+    // 共通関数にすると思う(StageBuilder?)
     private void UpdateForwardFromDynamic()
     {
         if (IsMatchingDynamicCellType(transform.position, 'U')) transform.forward = Vector3.forward;
@@ -143,17 +161,7 @@ public class Player : MonoBehaviour, ITurnBased
         return false;
     }
 
-    private bool IsValidPosition(Vector3 pos)
-    {
-        int col = Mathf.RoundToInt(pos.x / StageBuilder.BLOCK_SIZE);
-        int height = Mathf.RoundToInt(pos.y / StageBuilder.HEIGHT_OFFSET);
-        int row = Mathf.RoundToInt(pos.z / StageBuilder.BLOCK_SIZE);
-
-        return col >= 0 && col < StageBuilder.Instance.GetGridData().GetLength(0) &&
-               height >= 0 && height < StageBuilder.Instance.GetGridData().GetLength(1) &&
-               row >= 0 && row < StageBuilder.Instance.GetGridData().GetLength(2);
-    }
-
+    // 共通関数にすると思う(StageBuilder?)
     private bool IsMatchingCellType(Vector3 pos, char cellType)
     {
         int col = Mathf.RoundToInt(pos.x / StageBuilder.BLOCK_SIZE);
@@ -163,6 +171,7 @@ public class Player : MonoBehaviour, ITurnBased
         return StageBuilder.Instance.GetGridData()[col, height, row] == cellType;
     }
 
+    // 共通関数にすると思う(StageBuilder?)
     private bool IsMatchingDynamicCellType(Vector3 pos, char cellType)
     {
         int col = Mathf.RoundToInt(pos.x / StageBuilder.BLOCK_SIZE);
@@ -175,7 +184,22 @@ public class Player : MonoBehaviour, ITurnBased
     public void UpdateGridData()
     {
         if (isComplete) return;
-        StageBuilder.Instance.UpdatePlayerPosition(this);
+
+        if (!StageBuilder.Instance.IsValidGridPosition(nextPos) ||
+            IsMatchingCellType(nextPos, 'B') ||
+            IsMatchingCellType(nextPos, 'P'))
+        {
+            return;
+        }
+
+        // 自分の現在位置をグリッドとして取得して N にする
+        int col = Mathf.RoundToInt(transform.position.x / StageBuilder.BLOCK_SIZE);
+        int height = Mathf.RoundToInt(transform.position.y / StageBuilder.HEIGHT_OFFSET);
+        int row = Mathf.RoundToInt(transform.position.z / StageBuilder.BLOCK_SIZE);
+
+        StageBuilder.Instance.GetGridData()[col, height, row] = 'N';
+
+        StageBuilder.Instance.UpdateGridAtPosition(nextPos, 'P');
     }
 
     public bool GetIsComplete() => isComplete;

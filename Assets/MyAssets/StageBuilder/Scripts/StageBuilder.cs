@@ -126,8 +126,6 @@ public class StageBuilder : MonoBehaviour
             }
         }
 
-        // gridData の内容をログ出力
-        Debug.Log("gridData 内容:");
         for (int h = 0; h < heightCount; h++)
         {
             for (int r = 0; r < rowCount; r++)
@@ -137,7 +135,6 @@ public class StageBuilder : MonoBehaviour
                 {
                     rowData += gridData[c, h, r] + " ";
                 }
-                // Debug.Log($"高さ {h}, 行 {r}: {rowData}");
             }
         }
     }
@@ -211,32 +208,6 @@ public class StageBuilder : MonoBehaviour
         }
     }
 
-    public void UpdatePlayerPosition(Player player)
-    {
-        // 現在のプレイヤー位置を取得（ワールド座標 → グリッド座標に変換）
-        int newCol = Mathf.RoundToInt(player.transform.position.x / BLOCK_SIZE);
-        int newHeight = Mathf.RoundToInt(player.transform.position.y / HEIGHT_OFFSET);
-        int newRow = Mathf.RoundToInt(player.transform.position.z / BLOCK_SIZE);
-
-        // 以前のプレイヤー位置を削除
-        for (int h = 0; h < gridData.GetLength(1); h++)
-        {
-            for (int r = 0; r < gridData.GetLength(2); r++)
-            {
-                for (int c = 0; c < gridData.GetLength(0); c++)
-                {
-                    if (gridData[c, h, r] == 'P')
-                    {
-                        gridData[c, h, r] = 'N'; // 以前のプレイヤー位置を空白に
-                    }
-                }
-            }
-        }
-
-        // 新しい位置にプレイヤーを設定
-        gridData[newCol, newHeight, newRow] = 'P';
-    }
-
     public void ResetGridData()
     {
         for (int h = 0; h < gridData.GetLength(1); h++)
@@ -293,5 +264,31 @@ public class StageBuilder : MonoBehaviour
             }
         }
         CreateStage(GameManager.Instance.SetStageNumber(1));
+    }
+
+    private void OnDrawGizmos()
+    {
+        if (gridData == null) return;
+
+        for (int x = 0; x < gridData.GetLength(0); x++)
+        {
+            for (int y = 0; y < gridData.GetLength(1); y++)
+            {
+                for (int z = 0; z < gridData.GetLength(2); z++)
+                {
+                    char cell = gridData[x, y, z];
+                    if (cell == 'N') continue;
+
+                    Vector3 pos = new Vector3(x * BLOCK_SIZE, y * HEIGHT_OFFSET + 0.5f, z * BLOCK_SIZE);
+
+                    Gizmos.color = (cell == 'P') ? Color.green : (cell == 'M') ? Color.yellow : Color.white;
+                    Gizmos.DrawWireCube(pos, Vector3.one * 1.0f);
+
+#if UNITY_EDITOR
+                    UnityEditor.Handles.Label(pos + Vector3.up * 0.3f, cell.ToString());
+#endif
+                }
+            }
+        }
     }
 }
