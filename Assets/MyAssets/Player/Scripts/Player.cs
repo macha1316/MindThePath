@@ -206,13 +206,6 @@ public class Player : MonoBehaviour, ITurnBased
             return;
         }
 
-        // 自分の現在位置をグリッドとして取得して N にする
-        int col = Mathf.RoundToInt(transform.position.x / StageBuilder.BLOCK_SIZE);
-        int height = Mathf.RoundToInt(transform.position.y / StageBuilder.HEIGHT_OFFSET);
-        int row = Mathf.RoundToInt(transform.position.z / StageBuilder.BLOCK_SIZE);
-
-        StageBuilder.Instance.GetGridData()[col, height, row] = 'N';
-
         StageBuilder.Instance.UpdateGridAtPosition(nextPos, 'P');
     }
 

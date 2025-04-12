@@ -16,7 +16,7 @@ public class MoveBox : MonoBehaviour, ITurnBased
     {
         if (isMoving) return;
 
-        targetPos = targetPos + direction * StageBuilder.BLOCK_SIZE;
+        targetPos += direction * StageBuilder.BLOCK_SIZE;
 
         if (!StageBuilder.Instance.IsValidGridPosition(targetPos)) return;
 
@@ -27,37 +27,37 @@ public class MoveBox : MonoBehaviour, ITurnBased
 
         if (grid[col, height, row] != 'N') return;
 
-        Vector3 oneDown = targetPos + Vector3.down * StageBuilder.HEIGHT_OFFSET;
+        isMoving = true;
+        transform.DOMove(targetPos, moveDuration).SetEase(Ease.Linear).OnComplete(() =>
+        {
+            isMoving = false;
+        });
+        return;
+    }
 
+    public void OnTurn()
+    {
+        if (isMoving) return;
+        // 自らの下を見てNなら毎ターン下がるようにする
+        Vector3 oneDown = targetPos + Vector3.down * StageBuilder.HEIGHT_OFFSET;
         if (StageBuilder.Instance.IsValidGridPosition(oneDown))
         {
             int oneDownCol = Mathf.RoundToInt(oneDown.x / StageBuilder.BLOCK_SIZE);
             int oneDownHeight = Mathf.RoundToInt(oneDown.y / StageBuilder.HEIGHT_OFFSET);
             int oneDownRow = Mathf.RoundToInt(oneDown.z / StageBuilder.BLOCK_SIZE);
 
-            if (grid[oneDownCol, oneDownHeight, oneDownRow] != 'N')
+            char[,,] grid = StageBuilder.Instance.GetGridData();
+
+            if (grid[oneDownCol, oneDownHeight, oneDownRow] == 'N')
             {
+                targetPos = oneDown;
                 isMoving = true;
                 transform.DOMove(targetPos, moveDuration).SetEase(Ease.Linear).OnComplete(() =>
                 {
                     isMoving = false;
                 });
-                return;
             }
-
-            isMoving = true;
-            targetPos = oneDown;
-
-            transform.DOMove(targetPos, moveDuration).SetEase(Ease.Linear).OnComplete(() =>
-            {
-                isMoving = false;
-            });
         }
-    }
-
-    public void OnTurn()
-    {
-        // 自らの下を見てNなら毎ターン下がるようにする
     }
 
     public void UpdateGridData()
