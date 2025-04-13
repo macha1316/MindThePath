@@ -19,13 +19,7 @@ public class MoveBox : MonoBehaviour, ITurnBased
         targetPos += direction * StageBuilder.BLOCK_SIZE;
 
         if (!StageBuilder.Instance.IsValidGridPosition(targetPos)) return;
-
-        char[,,] grid = StageBuilder.Instance.GetGridData();
-        int col = Mathf.RoundToInt(targetPos.x / StageBuilder.BLOCK_SIZE);
-        int height = Mathf.RoundToInt(targetPos.y / StageBuilder.HEIGHT_OFFSET);
-        int row = Mathf.RoundToInt(targetPos.z / StageBuilder.BLOCK_SIZE);
-
-        if (grid[col, height, row] != 'N') return;
+        if (!StageBuilder.Instance.IsMatchingCellType(targetPos, 'N')) return;
 
         isMoving = true;
         transform.DOMove(targetPos, moveDuration).SetEase(Ease.Linear).OnComplete(() =>
@@ -42,13 +36,7 @@ public class MoveBox : MonoBehaviour, ITurnBased
         Vector3 oneDown = targetPos + Vector3.down * StageBuilder.HEIGHT_OFFSET;
         if (StageBuilder.Instance.IsValidGridPosition(oneDown))
         {
-            int oneDownCol = Mathf.RoundToInt(oneDown.x / StageBuilder.BLOCK_SIZE);
-            int oneDownHeight = Mathf.RoundToInt(oneDown.y / StageBuilder.HEIGHT_OFFSET);
-            int oneDownRow = Mathf.RoundToInt(oneDown.z / StageBuilder.BLOCK_SIZE);
-
-            char[,,] grid = StageBuilder.Instance.GetGridData();
-
-            if (grid[oneDownCol, oneDownHeight, oneDownRow] == 'N')
+            if (!StageBuilder.Instance.IsMatchingCellType(oneDown, 'B') && !StageBuilder.Instance.IsMatchingCellType(oneDown, 'M'))
             {
                 targetPos = oneDown;
                 isMoving = true;

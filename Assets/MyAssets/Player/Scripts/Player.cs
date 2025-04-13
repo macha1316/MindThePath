@@ -41,8 +41,8 @@ public class Player : MonoBehaviour, ITurnBased
     private bool TryHandleImmediateFlip()
     {
         if (!StageBuilder.Instance.IsValidGridPosition(nextPos) ||
-            IsMatchingCellType(nextPos, 'B') ||
-            IsMatchingCellType(nextPos, 'P'))
+            StageBuilder.Instance.IsMatchingCellType(nextPos, 'B') ||
+            StageBuilder.Instance.IsMatchingCellType(nextPos, 'P'))
         {
             return !TryFlipDirection(ref nextPos);
         }
@@ -60,12 +60,12 @@ public class Player : MonoBehaviour, ITurnBased
         Vector3 twoDown = nextPos + Vector3.down * StageBuilder.HEIGHT_OFFSET * 2;
 
         if (StageBuilder.Instance.IsValidGridPosition(oneDown) &&
-            !IsMatchingCellType(oneDown, 'B') &&
-            !IsMatchingCellType(oneDown, 'M'))
+            !StageBuilder.Instance.IsMatchingCellType(oneDown, 'B') &&
+            !StageBuilder.Instance.IsMatchingCellType(oneDown, 'M'))
         {
             if (!StageBuilder.Instance.IsValidGridPosition(twoDown) ||
-                IsMatchingCellType(twoDown, 'B') ||
-                IsMatchingCellType(twoDown, 'M'))
+                StageBuilder.Instance.IsMatchingCellType(twoDown, 'B') ||
+                StageBuilder.Instance.IsMatchingCellType(twoDown, 'M'))
             {
                 animator.SetTrigger("jump");
                 isMoving = true;
@@ -107,7 +107,7 @@ public class Player : MonoBehaviour, ITurnBased
         nextPos = transform.position + transform.forward * 2.0f;
         if (StageBuilder.Instance.IsValidGridPosition(nextPos))
         {
-            if (IsMatchingCellType(nextPos, 'B') || IsMatchingCellType(nextPos, 'P'))
+            if (StageBuilder.Instance.IsMatchingCellType(nextPos, 'B') || StageBuilder.Instance.IsMatchingCellType(nextPos, 'P'))
             {
                 return false;
             }
@@ -127,7 +127,7 @@ public class Player : MonoBehaviour, ITurnBased
 
     private void CheckGoal()
     {
-        if (IsMatchingCellType(transform.position, 'G')) isComplete = true;
+        if (StageBuilder.Instance.IsMatchingCellType(transform.position, 'G')) isComplete = true;
     }
 
     private bool TryHandleMoveBox()
@@ -152,7 +152,7 @@ public class Player : MonoBehaviour, ITurnBased
             if (bCol == col && bHeight == height && bRow == row)
             {
                 Vector3 boxNextPos = boxPos + transform.forward * StageBuilder.BLOCK_SIZE;
-                if (!StageBuilder.Instance.IsValidGridPosition(boxNextPos) || !IsMatchingCellType(boxNextPos, 'N'))
+                if (!StageBuilder.Instance.IsValidGridPosition(boxNextPos) || !StageBuilder.Instance.IsMatchingCellType(boxNextPos, 'N'))
                 {
                     if (!TryFlipDirection(ref nextPos)) return true;
 
@@ -176,16 +176,6 @@ public class Player : MonoBehaviour, ITurnBased
     }
 
     // 共通関数にすると思う(StageBuilder?)
-    private bool IsMatchingCellType(Vector3 pos, char cellType)
-    {
-        int col = Mathf.RoundToInt(pos.x / StageBuilder.BLOCK_SIZE);
-        int height = Mathf.RoundToInt(pos.y / StageBuilder.HEIGHT_OFFSET);
-        int row = Mathf.RoundToInt(pos.z / StageBuilder.BLOCK_SIZE);
-
-        return StageBuilder.Instance.GetGridData()[col, height, row] == cellType;
-    }
-
-    // 共通関数にすると思う(StageBuilder?)
     private bool IsMatchingDynamicCellType(Vector3 pos, char cellType)
     {
         int col = Mathf.RoundToInt(pos.x / StageBuilder.BLOCK_SIZE);
@@ -200,8 +190,8 @@ public class Player : MonoBehaviour, ITurnBased
         if (isComplete) return;
 
         if (!StageBuilder.Instance.IsValidGridPosition(nextPos) ||
-            IsMatchingCellType(nextPos, 'B') ||
-            IsMatchingCellType(nextPos, 'P'))
+            StageBuilder.Instance.IsMatchingCellType(nextPos, 'B') ||
+            StageBuilder.Instance.IsMatchingCellType(nextPos, 'P'))
         {
             return;
         }

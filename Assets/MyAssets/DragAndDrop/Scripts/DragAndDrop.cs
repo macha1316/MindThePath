@@ -155,6 +155,11 @@ public class DragAndDrop : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndD
             gimmickInstance.GetComponent<BoxCollider>().enabled = true;
             gimmickInstance.AddComponent<DraggableGimmic>();
             gimmickInstance.GetComponent<DraggableGimmic>().cellType = cellType;
+
+            if (cellType == 'M')
+            {
+                gimmickInstance.AddComponent<MoveBox>();
+            }
             InputStateManager.IsDragging = false;
             AudioManager.Instance.PlayDropSound();
         }

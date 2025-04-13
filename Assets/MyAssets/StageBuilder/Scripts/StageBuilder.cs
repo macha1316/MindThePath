@@ -254,6 +254,15 @@ public class StageBuilder : MonoBehaviour
                row >= 0 && row < gridData.GetLength(2);
     }
 
+    public bool IsMatchingCellType(Vector3 pos, char cellType)
+    {
+        int col = Mathf.RoundToInt(pos.x / BLOCK_SIZE);
+        int height = Mathf.RoundToInt(pos.y / HEIGHT_OFFSET);
+        int row = Mathf.RoundToInt(pos.z / BLOCK_SIZE);
+
+        return GetGridData()[col, height, row] == cellType;
+    }
+
     public void BuildNextStage()
     {
         if (stageRoot != null)
