@@ -9,6 +9,7 @@ public class GameManager : MonoBehaviour
     private List<MoveBox> boxes;
     private bool isStart = false;
     private int stageNumber;
+    public Dictionary<Vector3Int, Player> reservedPositions = new();
 
     private void Awake()
     {

@@ -1,5 +1,6 @@
 using UnityEngine;
 using DG.Tweening;
+using System.Collections.Generic;
 
 public class Player : MonoBehaviour, ITurnBased
 {
@@ -25,6 +26,15 @@ public class Player : MonoBehaviour, ITurnBased
         if (TryHandleMoveBox()) return;
         if (TryHandleJumpDown()) return;
 
+        Vector3Int targetGrid = new Vector3Int(
+            Mathf.RoundToInt(nextPos.x / StageBuilder.BLOCK_SIZE),
+            Mathf.RoundToInt(nextPos.y / StageBuilder.HEIGHT_OFFSET),
+            Mathf.RoundToInt(nextPos.z / StageBuilder.BLOCK_SIZE)
+        );
+
+        if (GameManager.Instance.reservedPositions.ContainsKey(targetGrid)) return;
+        GameManager.Instance.reservedPositions[targetGrid] = this;
+
         MoveForward();
     }
 
@@ -40,12 +50,26 @@ public class Player : MonoBehaviour, ITurnBased
 
     private bool TryHandleImmediateFlip()
     {
+        Vector3Int targetGrid = new Vector3Int(
+            Mathf.RoundToInt(nextPos.x / StageBuilder.BLOCK_SIZE),
+            Mathf.RoundToInt(nextPos.y / StageBuilder.HEIGHT_OFFSET),
+            Mathf.RoundToInt(nextPos.z / StageBuilder.BLOCK_SIZE)
+        );
+
+        if (GameManager.Instance.reservedPositions.TryGetValue(targetGrid, out var otherPlayer))
+        {
+            if (otherPlayer != this)
+            {
+                return !TryFlipDirection(ref nextPos); // 即折り返す
+            }
+        }
+
         if (!StageBuilder.Instance.IsValidGridPosition(nextPos) ||
-            StageBuilder.Instance.IsMatchingCellType(nextPos, 'B') ||
-            StageBuilder.Instance.IsMatchingCellType(nextPos, 'P'))
+            StageBuilder.Instance.IsMatchingCellType(nextPos, 'B'))
         {
             return !TryFlipDirection(ref nextPos);
         }
+
         return false;
     }
 
@@ -73,6 +97,7 @@ public class Player : MonoBehaviour, ITurnBased
                         isMoving = false;
                         UpdateForwardFromDynamic();
                         CheckGoal();
+                        GameManager.Instance.reservedPositions.Remove(GridFromPosition(transform.position));
                     });
                 return true;
             }
@@ -92,17 +117,17 @@ public class Player : MonoBehaviour, ITurnBased
                 isMoving = false;
                 UpdateForwardFromDynamic();
                 CheckGoal();
+                GameManager.Instance.reservedPositions.Remove(GridFromPosition(transform.position));
             });
     }
 
-    // 共通関数にすると思う(StageBuilder?)
     private bool TryFlipDirection(ref Vector3 nextPos)
     {
         transform.forward = -transform.forward;
         nextPos = transform.position + transform.forward * 2.0f;
         if (StageBuilder.Instance.IsValidGridPosition(nextPos))
         {
-            if (StageBuilder.Instance.IsMatchingCellType(nextPos, 'B') || StageBuilder.Instance.IsMatchingCellType(nextPos, 'P'))
+            if (StageBuilder.Instance.IsMatchingCellType(nextPos, 'B'))
             {
                 return false;
             }
@@ -111,7 +136,6 @@ public class Player : MonoBehaviour, ITurnBased
         return false;
     }
 
-    // 共通関数にすると思う(StageBuilder?)
     private void UpdateForwardFromDynamic()
     {
         if (IsMatchingDynamicCellType(nextPos, 'U')) transform.forward = Vector3.forward;
@@ -159,6 +183,7 @@ public class Player : MonoBehaviour, ITurnBased
                             isMoving = false;
                             UpdateForwardFromDynamic();
                             CheckGoal();
+                            GameManager.Instance.reservedPositions.Remove(GridFromPosition(transform.position));
                         });
                     return true;
                 }
@@ -170,16 +195,23 @@ public class Player : MonoBehaviour, ITurnBased
         return false;
     }
 
-    // 共通関数にすると思う(StageBuilder?)
     private bool IsMatchingDynamicCellType(Vector3 pos, char cellType)
     {
         int col = Mathf.RoundToInt(pos.x / StageBuilder.BLOCK_SIZE);
         int height = Mathf.RoundToInt(pos.y / StageBuilder.HEIGHT_OFFSET);
         int row = Mathf.RoundToInt(pos.z / StageBuilder.BLOCK_SIZE);
 
-        Debug.Log("celltype" + StageBuilder.Instance.GetDynamicGridData()[col, height, row]);
-
         return StageBuilder.Instance.GetDynamicGridData()[col, height, row] == cellType;
+    }
+
+    // これ消したい
+    private Vector3Int GridFromPosition(Vector3 pos)
+    {
+        return new Vector3Int(
+            Mathf.RoundToInt(pos.x / StageBuilder.BLOCK_SIZE),
+            Mathf.RoundToInt(pos.y / StageBuilder.HEIGHT_OFFSET),
+            Mathf.RoundToInt(pos.z / StageBuilder.BLOCK_SIZE)
+        );
     }
 
     public void UpdateGridData()
