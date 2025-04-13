@@ -80,9 +80,7 @@ public class DraggableGimmic : MonoBehaviour
         boxCollider.enabled = true;
 
         // Grid
-        if (StageBuilder.Instance.IsMatchingCellType(transform.position, 'B') ||
-            StageBuilder.Instance.IsMatchingCellType(transform.position, 'M') ||
-            StageBuilder.Instance.IsMatchingCellType(transform.position, 'P'))
+        if (cellType == 'B' || cellType == 'M' || cellType == 'P')
         {
             StageBuilder.Instance.UpdateGridAtPosition(transform.position, cellType);
         }

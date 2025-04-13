@@ -151,9 +151,7 @@ public class DragAndDrop : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndD
             }
 
             // Grid
-            if (StageBuilder.Instance.IsMatchingCellType(gimmickInstance.transform.position, 'B') ||
-                StageBuilder.Instance.IsMatchingCellType(gimmickInstance.transform.position, 'M') ||
-                StageBuilder.Instance.IsMatchingCellType(gimmickInstance.transform.position, 'P'))
+            if (cellType == 'B' || cellType == 'M' || cellType == 'P')
             {
                 StageBuilder.Instance.UpdateGridAtPosition(gimmickInstance.transform.position, cellType);
             }
