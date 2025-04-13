@@ -79,7 +79,19 @@ public class DraggableGimmic : MonoBehaviour
         isDragging = false;
         boxCollider.enabled = true;
 
-        StageBuilder.Instance.UpdateGridAtPosition(transform.position, cellType);
+        // Grid
+        if (StageBuilder.Instance.IsMatchingCellType(transform.position, 'B') ||
+            StageBuilder.Instance.IsMatchingCellType(transform.position, 'M') ||
+            StageBuilder.Instance.IsMatchingCellType(transform.position, 'P'))
+        {
+            StageBuilder.Instance.UpdateGridAtPosition(transform.position, cellType);
+        }
+        // Dynamic
+        else
+        {
+            StageBuilder.Instance.UpdateDynamicTileAtPosition(transform.position, cellType);
+        }
+
         InputStateManager.IsDragging = false;
         AudioManager.Instance.PlayDropSound();
 

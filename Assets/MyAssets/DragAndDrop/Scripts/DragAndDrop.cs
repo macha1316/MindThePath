@@ -150,7 +150,18 @@ public class DragAndDrop : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndD
                 return;
             }
 
-            StageBuilder.Instance.UpdateGridAtPosition(gimmickInstance.transform.position, cellType);
+            // Grid
+            if (StageBuilder.Instance.IsMatchingCellType(gimmickInstance.transform.position, 'B') ||
+                StageBuilder.Instance.IsMatchingCellType(gimmickInstance.transform.position, 'M') ||
+                StageBuilder.Instance.IsMatchingCellType(gimmickInstance.transform.position, 'P'))
+            {
+                StageBuilder.Instance.UpdateGridAtPosition(gimmickInstance.transform.position, cellType);
+            }
+            // Dynamic
+            else
+            {
+                StageBuilder.Instance.UpdateDynamicTileAtPosition(gimmickInstance.transform.position, cellType);
+            }
 
             gimmickInstance.GetComponent<BoxCollider>().enabled = true;
             gimmickInstance.AddComponent<DraggableGimmic>();

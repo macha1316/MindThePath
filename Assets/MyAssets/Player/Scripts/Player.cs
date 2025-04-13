@@ -114,10 +114,10 @@ public class Player : MonoBehaviour, ITurnBased
     // 共通関数にすると思う(StageBuilder?)
     private void UpdateForwardFromDynamic()
     {
-        if (IsMatchingDynamicCellType(transform.position, 'U')) transform.forward = Vector3.forward;
-        if (IsMatchingDynamicCellType(transform.position, 'D')) transform.forward = Vector3.back;
-        if (IsMatchingDynamicCellType(transform.position, 'R')) transform.forward = Vector3.right;
-        if (IsMatchingDynamicCellType(transform.position, 'L')) transform.forward = Vector3.left;
+        if (IsMatchingDynamicCellType(nextPos, 'U')) transform.forward = Vector3.forward;
+        if (IsMatchingDynamicCellType(nextPos, 'D')) transform.forward = Vector3.back;
+        if (IsMatchingDynamicCellType(nextPos, 'R')) transform.forward = Vector3.right;
+        if (IsMatchingDynamicCellType(nextPos, 'L')) transform.forward = Vector3.left;
     }
 
     private void CheckGoal()
@@ -176,6 +176,8 @@ public class Player : MonoBehaviour, ITurnBased
         int col = Mathf.RoundToInt(pos.x / StageBuilder.BLOCK_SIZE);
         int height = Mathf.RoundToInt(pos.y / StageBuilder.HEIGHT_OFFSET);
         int row = Mathf.RoundToInt(pos.z / StageBuilder.BLOCK_SIZE);
+
+        Debug.Log("celltype" + StageBuilder.Instance.GetDynamicGridData()[col, height, row]);
 
         return StageBuilder.Instance.GetDynamicGridData()[col, height, row] == cellType;
     }

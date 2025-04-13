@@ -239,6 +239,15 @@ public class StageBuilder : MonoBehaviour
         int row = Mathf.RoundToInt(worldPosition.z / BLOCK_SIZE);
 
         gridData[col, height, row] = type;
+    }
+
+    // setメソッド
+    public void UpdateDynamicTileAtPosition(Vector3 worldPosition, char type)
+    {
+        int col = Mathf.RoundToInt(worldPosition.x / BLOCK_SIZE);
+        int height = Mathf.RoundToInt(worldPosition.y / HEIGHT_OFFSET);
+        int row = Mathf.RoundToInt(worldPosition.z / BLOCK_SIZE);
+
         dynamicTiles[col, height, row] = type;
     }
 
