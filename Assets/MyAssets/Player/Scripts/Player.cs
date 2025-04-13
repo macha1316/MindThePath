@@ -49,11 +49,6 @@ public class Player : MonoBehaviour, ITurnBased
         return false;
     }
 
-    // private bool TryHandleMoveBox()
-    // {
-    //     return HandleMoveBoxIfPresent(ref nextPos);
-    // }
-
     private bool TryHandleJumpDown()
     {
         Vector3 oneDown = nextPos + Vector3.down * StageBuilder.HEIGHT_OFFSET;
