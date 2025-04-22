@@ -47,6 +47,8 @@ public class GameManager : MonoBehaviour
         players = new List<Player>();
         boxes = new List<MoveBox>();
         isStart = false;
+        reservedPositions = new Dictionary<Vector3Int, Player>();
+        Debug.Log("players" + players);
     }
 
     public int GetStageNumber() => stageNumber;
@@ -54,5 +56,11 @@ public class GameManager : MonoBehaviour
     {
         stageNumber = stageNumber += num;
         return stageNumber;
+    }
+
+    public void SetGameSpeedFast()
+    {
+        Time.timeScale = Time.timeScale == 1f ? 2f : 1f;
+        StageSelectUI.Instance.SetGameSpeedText(Time.timeScale == 2f ? "2x" : "1x");
     }
 }

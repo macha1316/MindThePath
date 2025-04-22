@@ -1,24 +1,25 @@
 using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
-
-public enum GimmickType
-{
-    Up,
-    Down,
-    Right,
-    Left,
-    Wall,
-    MoveBox
-}
 
 public class StageSelectUI : MonoBehaviour
 {
+    private enum GimmickType
+    {
+        Up,
+        Down,
+        Right,
+        Left,
+        Wall,
+        MoveBox
+    }
     [SerializeField] GameObject stageSelectUI;
     [SerializeField] GameObject startUI;
     [SerializeField] GameObject stageUI;
     [SerializeField] GameObject clearUI;
+    [SerializeField] TextMeshProUGUI speedText;
 
-    public GameObject[] gimmickUIList;
+    [SerializeField] GameObject[] gimmickUIList;
 
     private Dictionary<GimmickType, GameObject> gimmickUIPrefabMap = new Dictionary<GimmickType, GameObject>();
     private Dictionary<int, List<GimmickType>> stageGimmickMap = new Dictionary<int, List<GimmickType>>
@@ -92,6 +93,11 @@ public class StageSelectUI : MonoBehaviour
         clearUI.SetActive(true);
     }
 
+    public void GameStartUI()
+    {
+        stageUI.SetActive(false);
+    }
+
     private void SetGimmickUIParents()
     {
         foreach (var ui in gimmickUIList)
@@ -103,5 +109,10 @@ public class StageSelectUI : MonoBehaviour
                 ui.transform.SetParent(stageUI.transform, false);
             }
         }
+    }
+
+    public void SetGameSpeedText(string txt)
+    {
+        speedText.text = txt;
     }
 }

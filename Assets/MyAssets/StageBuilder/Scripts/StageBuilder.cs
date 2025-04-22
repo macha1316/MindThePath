@@ -23,20 +23,34 @@ public class StageBuilder : MonoBehaviour
     [SerializeField] GameObject moveBoxPrefab;
     private char[,,] gridData;
     private char[,,] dynamicTiles;
+    private int stageNumber = 0;
 
     // UIPrefab
     [SerializeField] string[] textAssets;
     public GameObject stageRoot; // ステージ親
 
     // Stage情報をロード & UIをStage情報に合わせて出す
-    public void CreateStage(int stageNumber)
+    public void CreateStage(int stageNumberProp)
     {
+        stageNumber = stageNumberProp;
         GameManager.Instance.SetStageNumber(stageNumber);
         StageSelectUI.Instance.SelectStageUI(stageNumber);
         GameManager.Instance.SetGameStop();
-        gridData = new char[0, 0, 0];
-        dynamicTiles = new char[0, 0, 0];
+        gridData = null;
+        dynamicTiles = null;
         LoadStage(textAssets[stageNumber]);
+    }
+
+    public void ReCreateStage()
+    {
+        if (stageRoot != null)
+        {
+            foreach (Transform child in stageRoot.transform)
+            {
+                Destroy(child.gameObject);
+            }
+        }
+        CreateStage(stageNumber);
     }
 
     public static StageBuilder Instance;

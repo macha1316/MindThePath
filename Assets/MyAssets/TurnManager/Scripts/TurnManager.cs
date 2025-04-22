@@ -63,6 +63,7 @@ public class TurnManager : MonoBehaviour
     {
         turnObjects = new List<ITurnBased>();
         GameManager.Instance.SetIsStart();
+        StageSelectUI.Instance.GameStartUI();
         StartCoroutine(TurnLoop());
     }
 }
