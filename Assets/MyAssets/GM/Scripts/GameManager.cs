@@ -48,7 +48,6 @@ public class GameManager : MonoBehaviour
         boxes = new List<MoveBox>();
         isStart = false;
         reservedPositions = new Dictionary<Vector3Int, Player>();
-        Debug.Log("players" + players);
     }
 
     public int GetStageNumber() => stageNumber;

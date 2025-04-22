@@ -61,6 +61,7 @@ public class TurnManager : MonoBehaviour
 
     public void StartMove()
     {
+        if (GameManager.Instance.GetIsStart()) return;
         turnObjects = new List<ITurnBased>();
         GameManager.Instance.SetIsStart();
         StageSelectUI.Instance.GameStartUI();

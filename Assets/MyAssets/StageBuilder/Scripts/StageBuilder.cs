@@ -29,6 +29,10 @@ public class StageBuilder : MonoBehaviour
     [SerializeField] string[] textAssets;
     public GameObject stageRoot; // ステージ親
 
+    // コルーチンによるブロック生成管理用
+    private int remainingBlocksToSpawn = 0;
+    private bool isGenerating = false;
+
     // Stage情報をロード & UIをStage情報に合わせて出す
     public void CreateStage(int stageNumberProp)
     {
@@ -38,11 +42,13 @@ public class StageBuilder : MonoBehaviour
         GameManager.Instance.SetGameStop();
         gridData = null;
         dynamicTiles = null;
+        isGenerating = true;
         LoadStage(textAssets[stageNumber]);
     }
 
     public void ReCreateStage()
     {
+        if (isGenerating) return;
         if (stageRoot != null)
         {
             foreach (Transform child in stageRoot.transform)
@@ -107,6 +113,7 @@ public class StageBuilder : MonoBehaviour
         dynamicTiles = new char[colCount, heightCount, rowCount];
 
         int delayCounter = 0;
+        remainingBlocksToSpawn = 0;
 
         for (int height = 0; height < heightCount; height++)
         {
@@ -124,6 +131,7 @@ public class StageBuilder : MonoBehaviour
 
                     if (cellTypeString[0] != 'N')
                     {
+                        remainingBlocksToSpawn++;
                         StartCoroutine(SpawnBlockWithDelay(cellTypeString, position, delayCounter * 0.01f));
                         delayCounter++;
                     }
@@ -151,12 +159,22 @@ public class StageBuilder : MonoBehaviour
                 }
             }
         }
+        // ステージ生成完了イベントの発火はコルーチン完了時に行う
     }
 
     IEnumerator SpawnBlockWithDelay(string cellTypeString, Vector3 position, float delay)
     {
         yield return new WaitForSeconds(delay);
         SpawnBlock(cellTypeString, position);
+
+        if (cellTypeString[0] != 'N')
+        {
+            remainingBlocksToSpawn--;
+            if (remainingBlocksToSpawn == 0)
+            {
+                isGenerating = false;
+            }
+        }
     }
 
     void SpawnBlock(string cellTypeString, Vector3 position)
