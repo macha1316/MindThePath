@@ -90,13 +90,13 @@ public class Player : MonoBehaviour, ITurnBased
                 isMoving = true;
                 nextPos = oneDown;
 
+                CheckGoal();
                 transform.DOJump(nextPos, 2f, 1, moveDuration)
                     .SetEase(Ease.OutQuad)
                     .OnComplete(() =>
                     {
                         isMoving = false;
                         UpdateForwardFromDynamic();
-                        CheckGoal();
                         GameManager.Instance.reservedPositions.Remove(GridFromPosition(transform.position));
                     });
                 return true;
@@ -110,13 +110,13 @@ public class Player : MonoBehaviour, ITurnBased
     private void MoveForward()
     {
         isMoving = true;
+        CheckGoal();
         transform.DOMove(nextPos, moveDuration)
             .SetEase(Ease.Linear)
             .OnComplete(() =>
             {
                 isMoving = false;
                 UpdateForwardFromDynamic();
-                CheckGoal();
                 GameManager.Instance.reservedPositions.Remove(GridFromPosition(transform.position));
             });
     }
@@ -146,7 +146,11 @@ public class Player : MonoBehaviour, ITurnBased
 
     private void CheckGoal()
     {
-        if (StageBuilder.Instance.IsMatchingCellType(transform.position, 'G')) isComplete = true;
+        if (StageBuilder.Instance.IsMatchingCellType(nextPos, 'G'))
+        {
+            Debug.Log("Goal Reached!");
+            isComplete = true;
+        }
     }
 
     private bool TryHandleMoveBox()
@@ -176,13 +180,13 @@ public class Player : MonoBehaviour, ITurnBased
                     if (!TryFlipDirection(ref nextPos)) return true;
 
                     isMoving = true;
+                    CheckGoal();
                     transform.DOMove(nextPos, moveDuration)
                         .SetEase(Ease.Linear)
                         .OnComplete(() =>
                         {
                             isMoving = false;
                             UpdateForwardFromDynamic();
-                            CheckGoal();
                             GameManager.Instance.reservedPositions.Remove(GridFromPosition(transform.position));
                         });
                     return true;

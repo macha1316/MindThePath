@@ -23,7 +23,7 @@ public class StageBuilder : MonoBehaviour
     [SerializeField] GameObject moveBoxPrefab;
     private char[,,] gridData;
     private char[,,] dynamicTiles;
-    private int stageNumber = 0;
+    public int stageNumber = 0;
 
     // UIPrefab
     [SerializeField] string[] textAssets;
@@ -37,7 +37,7 @@ public class StageBuilder : MonoBehaviour
     public void CreateStage(int stageNumberProp)
     {
         stageNumber = stageNumberProp;
-        GameManager.Instance.SetStageNumber(stageNumber);
+        // GameManager.Instance.GetStageNumber();
         StageSelectUI.Instance.SelectStageUI(stageNumber);
         GameManager.Instance.SetGameStop();
         gridData = null;
@@ -313,7 +313,7 @@ public class StageBuilder : MonoBehaviour
                 Destroy(child.gameObject);
             }
         }
-        CreateStage(GameManager.Instance.SetStageNumber(1));
+        CreateStage(stageNumber + 1);
     }
 
     private void OnDrawGizmos()

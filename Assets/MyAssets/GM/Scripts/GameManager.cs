@@ -8,7 +8,6 @@ public class GameManager : MonoBehaviour
     private List<Player> players;
     private List<MoveBox> boxes;
     private bool isStart = false;
-    private int stageNumber;
     public Dictionary<Vector3Int, Player> reservedPositions = new();
 
     private void Awake()
@@ -48,13 +47,6 @@ public class GameManager : MonoBehaviour
         boxes = new List<MoveBox>();
         isStart = false;
         reservedPositions = new Dictionary<Vector3Int, Player>();
-    }
-
-    public int GetStageNumber() => stageNumber;
-    public int SetStageNumber(int num)
-    {
-        stageNumber = stageNumber += num;
-        return stageNumber;
     }
 
     public void SetGameSpeedFast()
