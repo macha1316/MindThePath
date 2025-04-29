@@ -65,36 +65,44 @@ public class DragAndDrop : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndD
 
         if (hasSpawnedObject && gimmickInstance != null)
         {
-            Vector3 worldPos = GetWorldPosition();
-            Vector3 snappedPos = SnapToGrid(worldPos);
-
-            // グリッド座標計算
-            int col = Mathf.RoundToInt(snappedPos.x / StageBuilder.BLOCK_SIZE);
-            int height = Mathf.RoundToInt(snappedPos.y / StageBuilder.HEIGHT_OFFSET);
-            int row = Mathf.RoundToInt(snappedPos.z / StageBuilder.BLOCK_SIZE);
-
-            // 有効範囲か確認
-            if (col >= 0 && col < StageBuilder.Instance.GetGridData().GetLength(0) &&
-                height >= 0 && height < StageBuilder.Instance.GetGridData().GetLength(1) &&
-                row >= 0 && row < StageBuilder.Instance.GetGridData().GetLength(2))
+            if (Physics.Raycast(Camera.main.ScreenPointToRay(Input.mousePosition), out RaycastHit hit, 100f))
             {
-                // Nが出るまで上へ再帰的に確認
-                while (height < StageBuilder.Instance.GetGridData().GetLength(1) &&
-                       StageBuilder.Instance.GetGridData()[col, height, row] != 'N')
+                Vector3 offsetPos = hit.point;
+                Vector3 normal = hit.normal;
+
+                const float HALF_BLOCK = StageBuilder.BLOCK_SIZE * 0.5f;
+
+                if (normal == Vector3.right)
                 {
-                    height += 1;
+                    offsetPos.x += HALF_BLOCK;
                 }
-                snappedPos.y = height * StageBuilder.BLOCK_SIZE;
-            }
+                else if (normal == Vector3.left)
+                {
+                    offsetPos.x -= HALF_BLOCK;
+                }
+                else if (normal == Vector3.forward)
+                {
+                    offsetPos.z += HALF_BLOCK;
+                }
+                else if (normal == Vector3.back)
+                {
+                    offsetPos.z -= HALF_BLOCK;
+                }
 
-            Vector3 currentGridPos = new Vector3(col, height, row);
-            if (currentGridPos != lastGridPosition)
-            {
-                AudioManager.Instance.PlayDragSound();
-                lastGridPosition = currentGridPos;
-            }
+                Vector3 snappedPos = SnapToGrid(offsetPos);
+                gimmickInstance.transform.position = snappedPos;
 
-            gimmickInstance.transform.position = snappedPos;
+                int col = Mathf.RoundToInt(snappedPos.x / StageBuilder.BLOCK_SIZE);
+                int height = Mathf.RoundToInt(snappedPos.y / StageBuilder.HEIGHT_OFFSET);
+                int row = Mathf.RoundToInt(snappedPos.z / StageBuilder.BLOCK_SIZE);
+
+                Vector3 currentGridPos = new Vector3(col, height, row);
+                if (currentGridPos != lastGridPosition)
+                {
+                    AudioManager.Instance.PlayDragSound();
+                    lastGridPosition = currentGridPos;
+                }
+            }
         }
     }
 

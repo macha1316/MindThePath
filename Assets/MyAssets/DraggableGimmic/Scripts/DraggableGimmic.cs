@@ -41,35 +41,42 @@ public class DraggableGimmic : MonoBehaviour
     {
         if (!isDragging) return;
 
-        Vector3 mouseWorldPos = GetMouseWorldPosition();
-        Vector3 targetPos = mouseWorldPos + offset;
-        Vector3 snappedPos = SnapToGrid(targetPos);
-
-        if (!StageBuilder.Instance.IsValidGridPosition(snappedPos))
+        Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+        if (Physics.Raycast(ray, out RaycastHit hit, 100f))
         {
+            Vector3 offsetPos = hit.point;
+            Vector3 normal = hit.normal;
+            float halfBlock = StageBuilder.BLOCK_SIZE * 0.5f;
+
+            if (normal == Vector3.right)
+                offsetPos.x += halfBlock;
+            else if (normal == Vector3.left)
+                offsetPos.x -= halfBlock;
+            else if (normal == Vector3.forward)
+                offsetPos.z += halfBlock;
+            else if (normal == Vector3.back)
+                offsetPos.z -= halfBlock;
+
+            Vector3 snappedPos = SnapToGrid(offsetPos);
+
+            if (!StageBuilder.Instance.IsValidGridPosition(snappedPos))
+            {
+                transform.position = snappedPos;
+                return;
+            }
+
+            int col = Mathf.RoundToInt(snappedPos.x / StageBuilder.BLOCK_SIZE);
+            int height = Mathf.RoundToInt(snappedPos.y / StageBuilder.BLOCK_SIZE);
+            int row = Mathf.RoundToInt(snappedPos.z / StageBuilder.BLOCK_SIZE);
+
             transform.position = snappedPos;
-            return;
-        }
 
-        int col = Mathf.RoundToInt(snappedPos.x / StageBuilder.BLOCK_SIZE);
-        int height = Mathf.RoundToInt(snappedPos.y / StageBuilder.BLOCK_SIZE);
-        int row = Mathf.RoundToInt(snappedPos.z / StageBuilder.BLOCK_SIZE);
-
-        // Nが出るまで上へ再帰的に確認
-        while (height < StageBuilder.Instance.GetGridData().GetLength(1) &&
-               StageBuilder.Instance.GetGridData()[col, height, row] != 'N')
-        {
-            height += 1;
-        }
-        snappedPos.y = height * StageBuilder.BLOCK_SIZE;
-
-        transform.position = snappedPos;
-
-        Vector3 currentGridPos = new Vector3(col, height, row);
-        if (currentGridPos != lastGridPosition)
-        {
-            AudioManager.Instance.PlayDragSound();
-            lastGridPosition = currentGridPos;
+            Vector3 currentGridPos = new Vector3(col, height, row);
+            if (currentGridPos != lastGridPosition)
+            {
+                AudioManager.Instance.PlayDragSound();
+                lastGridPosition = currentGridPos;
+            }
         }
     }
 
