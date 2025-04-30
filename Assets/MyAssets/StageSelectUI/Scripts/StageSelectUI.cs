@@ -7,9 +7,6 @@ public class StageSelectUI : MonoBehaviour
     private enum GimmickType
     {
         Up,
-        Down,
-        Right,
-        Left,
         Wall,
         MoveBox
     }
@@ -21,18 +18,19 @@ public class StageSelectUI : MonoBehaviour
 
     [SerializeField] GameObject[] gimmickUIList;
 
-    private Dictionary<GimmickType, GameObject> gimmickUIPrefabMap = new Dictionary<GimmickType, GameObject>();
     private Dictionary<int, List<GimmickType>> stageGimmickMap = new Dictionary<int, List<GimmickType>>
     {
-        { 0, new List<GimmickType> { GimmickType.Left } },
-        { 1, new List<GimmickType> { GimmickType.Left, GimmickType.Down } },
+        { 0, new List<GimmickType> { GimmickType.Up } },
+        { 1, new List<GimmickType> { GimmickType.Up, GimmickType.Up } },
         { 2, new List<GimmickType> { GimmickType.Wall, GimmickType.Up} },
-        { 3, new List<GimmickType> { GimmickType.Wall, GimmickType.Up, GimmickType.Right} },
+        { 3, new List<GimmickType> { GimmickType.Wall, GimmickType.Up, GimmickType.Up} },
         { 4, new List<GimmickType> { GimmickType.Wall, GimmickType.MoveBox, GimmickType.Up} },
         { 5, new List<GimmickType> { GimmickType.Wall, GimmickType.MoveBox, GimmickType.Up} }
     };
 
     public static StageSelectUI Instance;
+
+    private List<GameObject> activeGimmickUIs = new List<GameObject>();
 
     private void Awake()
     {
@@ -44,37 +42,37 @@ public class StageSelectUI : MonoBehaviour
         stageSelectUI.SetActive(true);
     }
 
-    void Start()
-    {
-        gimmickUIPrefabMap[GimmickType.Up] = gimmickUIList[0];
-        gimmickUIPrefabMap[GimmickType.Down] = gimmickUIList[1];
-        gimmickUIPrefabMap[GimmickType.Right] = gimmickUIList[2];
-        gimmickUIPrefabMap[GimmickType.Left] = gimmickUIList[3];
-        gimmickUIPrefabMap[GimmickType.Wall] = gimmickUIList[4];
-        gimmickUIPrefabMap[GimmickType.MoveBox] = gimmickUIList[5];
-    }
-
     public void SelectStageUI(int stageNumber)
     {
         SelectStageUI();
-        SetGimmickUIParents();
-
-        // ステージごとのstageUIを変更する
-        foreach (var ui in gimmickUIPrefabMap.Values)
-        {
-            ui.SetActive(false);
-        }
+        ClearGimmickUIs();
 
         if (stageGimmickMap.ContainsKey(stageNumber))
         {
             foreach (var gimmick in stageGimmickMap[stageNumber])
             {
-                if (gimmickUIPrefabMap.ContainsKey(gimmick))
+                int index = (int)gimmick;
+                if (index >= 0 && index < gimmickUIList.Length && gimmickUIList[index] != null)
                 {
-                    gimmickUIPrefabMap[gimmick].SetActive(true);
+                    GameObject newUI = Instantiate(gimmickUIList[index], stageUI.transform);
+                    newUI.GetComponent<CanvasGroup>().alpha = 1;
+                    newUI.GetComponent<CanvasGroup>().blocksRaycasts = true;
+                    activeGimmickUIs.Add(newUI);
                 }
             }
         }
+    }
+
+    private void ClearGimmickUIs()
+    {
+        foreach (var ui in activeGimmickUIs)
+        {
+            if (ui != null)
+            {
+                Destroy(ui);
+            }
+        }
+        activeGimmickUIs.Clear();
     }
 
     private void SelectStageUI()
@@ -96,19 +94,6 @@ public class StageSelectUI : MonoBehaviour
     public void GameStartUI()
     {
         stageUI.SetActive(false);
-    }
-
-    private void SetGimmickUIParents()
-    {
-        foreach (var ui in gimmickUIList)
-        {
-            if (ui != null)
-            {
-                ui.GetComponent<CanvasGroup>().alpha = 1;
-                ui.GetComponent<CanvasGroup>().blocksRaycasts = true;
-                ui.transform.SetParent(stageUI.transform, false);
-            }
-        }
     }
 
     public void SetGameSpeedText(string txt)

@@ -99,7 +99,6 @@ public class DraggableGimmic : MonoBehaviour
 
         InputStateManager.IsDragging = false;
         AudioManager.Instance.PlayDropSound();
-
     }
 
     private Vector3 GetMouseWorldPosition()
@@ -120,5 +119,20 @@ public class DraggableGimmic : MonoBehaviour
             Mathf.Round(worldPos.y / size) * size,
             Mathf.Round(worldPos.z / size) * size
         );
+    }
+
+    public void SetCellTypeFromArrow(char type)
+    {
+        cellType = type;
+        // Grid
+        if (cellType == 'B' || cellType == 'M' || cellType == 'P')
+        {
+            StageBuilder.Instance.UpdateGridAtPosition(transform.position, cellType);
+        }
+        // Dynamic
+        else
+        {
+            StageBuilder.Instance.UpdateDynamicTileAtPosition(transform.position, cellType);
+        }
     }
 }
