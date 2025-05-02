@@ -218,6 +218,12 @@ public class StageBuilder : MonoBehaviour
             obj.transform.localScale = Vector3.zero;
             obj.transform.DOScale(Vector3.one, 0.3f).SetEase(Ease.OutBack);
 
+            Transform marker = obj.transform.Find("Marker");
+            if (marker != null)
+            {
+                marker.gameObject.SetActive(false);
+            }
+
             if (cellType == 'P')
             {
                 Player newP = obj.AddComponent<Player>();

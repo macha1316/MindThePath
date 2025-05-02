@@ -67,6 +67,8 @@ public class DragAndDrop : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndD
         {
             if (Physics.Raycast(Camera.main.ScreenPointToRay(Input.mousePosition), out RaycastHit hit, 100f))
             {
+                if (hit.collider.gameObject.layer == LayerMask.NameToLayer("UI")) return;
+
                 Vector3 offsetPos = hit.point;
                 Vector3 normal = hit.normal;
 

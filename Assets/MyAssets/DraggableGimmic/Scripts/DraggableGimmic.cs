@@ -44,6 +44,8 @@ public class DraggableGimmic : MonoBehaviour
         Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
         if (Physics.Raycast(ray, out RaycastHit hit, 100f))
         {
+            if (hit.collider.gameObject.layer == LayerMask.NameToLayer("UI")) return;
+
             Vector3 offsetPos = hit.point;
             Vector3 normal = hit.normal;
             float halfBlock = StageBuilder.BLOCK_SIZE * 0.5f;
