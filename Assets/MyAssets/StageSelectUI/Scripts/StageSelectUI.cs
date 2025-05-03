@@ -63,6 +63,27 @@ public class StageSelectUI : MonoBehaviour
         }
     }
 
+    public GameObject CreateGimmickUI(char cellType)
+    {
+        int index = cellType switch
+        {
+            'U' => (int)GimmickType.Up,
+            'B' => (int)GimmickType.Wall,
+            'M' => (int)GimmickType.MoveBox,
+            _ => -1
+        };
+
+        if (index >= 0 && index < gimmickUIList.Length && gimmickUIList[index] != null)
+        {
+            GameObject newUI = Instantiate(gimmickUIList[index], stageUI.transform);
+            newUI.GetComponent<CanvasGroup>().alpha = 1;
+            newUI.GetComponent<CanvasGroup>().blocksRaycasts = true;
+            activeGimmickUIs.Add(newUI);
+            return newUI;
+        }
+        return null;
+    }
+
     private void ClearGimmickUIs()
     {
         foreach (var ui in activeGimmickUIs)

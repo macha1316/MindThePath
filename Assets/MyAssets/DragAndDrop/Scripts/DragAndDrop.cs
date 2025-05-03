@@ -152,7 +152,11 @@ public class DragAndDrop : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndD
             {
                 // 範囲外 → 削除＆UI復活
                 Destroy(gimmickInstance);
-                transform.SetParent(spawnBoundary);
+
+                StageSelectUI.Instance.CreateGimmickUI(cellType);
+                // 持っているUIの削除処理も行う
+                Destroy(gameObject);
+
                 canvasGroup.alpha = 1;
                 canvasGroup.blocksRaycasts = true;
                 InputStateManager.IsDragging = false;

@@ -91,9 +91,10 @@ public class DraggableGimmic : MonoBehaviour
         bool isValidPos = StageBuilder.Instance.IsValidGridPosition(transform.position);
         if (!isValidPos)
         {
-            // Debug.Log("Valid Position");
             Destroy(gameObject);
-
+            // UI 再構築のコードを書く
+            StageSelectUI.Instance.CreateGimmickUI(cellType);
+            InputStateManager.IsDragging = false;
             return;
         }
 
