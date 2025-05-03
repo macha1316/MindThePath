@@ -310,6 +310,15 @@ public class StageBuilder : MonoBehaviour
         return GetGridData()[col, height, row] == cellType;
     }
 
+    public Vector3Int GridFromPosition(Vector3 pos)
+    {
+        return new Vector3Int(
+            Mathf.RoundToInt(pos.x / BLOCK_SIZE),
+            Mathf.RoundToInt(pos.y / HEIGHT_OFFSET),
+            Mathf.RoundToInt(pos.z / BLOCK_SIZE)
+        );
+    }
+
     public void BuildNextStage()
     {
         if (stageRoot != null)

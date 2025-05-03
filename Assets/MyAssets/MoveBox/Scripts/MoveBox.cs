@@ -40,9 +40,16 @@ public class MoveBox : MonoBehaviour, ITurnBased
             {
                 targetPos = oneDown;
                 isMoving = true;
+                Vector3Int targetGrid = new Vector3Int(
+                    Mathf.RoundToInt(targetPos.x / StageBuilder.BLOCK_SIZE),
+                    Mathf.RoundToInt(targetPos.y / StageBuilder.HEIGHT_OFFSET),
+                    Mathf.RoundToInt(targetPos.z / StageBuilder.BLOCK_SIZE)
+                );
+                GameManager.Instance.reservedPositions[targetGrid] = this;
                 transform.DOMove(targetPos, moveDuration).SetEase(Ease.Linear).OnComplete(() =>
                 {
                     isMoving = false;
+                    GameManager.Instance.reservedPositions.Remove(StageBuilder.Instance.GridFromPosition(transform.position));
                 });
             }
         }

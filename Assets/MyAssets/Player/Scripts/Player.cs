@@ -1,6 +1,5 @@
 using UnityEngine;
 using DG.Tweening;
-using System.Collections.Generic;
 
 public class Player : MonoBehaviour, ITurnBased
 {
@@ -97,7 +96,7 @@ public class Player : MonoBehaviour, ITurnBased
                     {
                         isMoving = false;
                         UpdateForwardFromDynamic();
-                        GameManager.Instance.reservedPositions.Remove(GridFromPosition(transform.position));
+                        GameManager.Instance.reservedPositions.Remove(StageBuilder.Instance.GridFromPosition(transform.position));
                     });
                 return true;
             }
@@ -117,7 +116,7 @@ public class Player : MonoBehaviour, ITurnBased
             {
                 isMoving = false;
                 UpdateForwardFromDynamic();
-                GameManager.Instance.reservedPositions.Remove(GridFromPosition(transform.position));
+                GameManager.Instance.reservedPositions.Remove(StageBuilder.Instance.GridFromPosition(transform.position));
             });
     }
 
@@ -148,8 +147,8 @@ public class Player : MonoBehaviour, ITurnBased
     {
         if (StageBuilder.Instance.IsMatchingCellType(nextPos, 'G'))
         {
-            Debug.Log("Goal Reached!");
-            isComplete = true;
+            // 臨時処理, ちゃんとGridで判定したい
+            DOVirtual.DelayedCall(Time.timeScale == 1f ? 1f : 0.5f, () => isComplete = true);
         }
     }
 
@@ -187,7 +186,7 @@ public class Player : MonoBehaviour, ITurnBased
                         {
                             isMoving = false;
                             UpdateForwardFromDynamic();
-                            GameManager.Instance.reservedPositions.Remove(GridFromPosition(transform.position));
+                            GameManager.Instance.reservedPositions.Remove(StageBuilder.Instance.GridFromPosition(transform.position));
                         });
                     return true;
                 }
@@ -206,16 +205,6 @@ public class Player : MonoBehaviour, ITurnBased
         int row = Mathf.RoundToInt(pos.z / StageBuilder.BLOCK_SIZE);
 
         return StageBuilder.Instance.GetDynamicGridData()[col, height, row] == cellType;
-    }
-
-    // これ消したい
-    private Vector3Int GridFromPosition(Vector3 pos)
-    {
-        return new Vector3Int(
-            Mathf.RoundToInt(pos.x / StageBuilder.BLOCK_SIZE),
-            Mathf.RoundToInt(pos.y / StageBuilder.HEIGHT_OFFSET),
-            Mathf.RoundToInt(pos.z / StageBuilder.BLOCK_SIZE)
-        );
     }
 
     public void UpdateGridData()
