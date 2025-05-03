@@ -4,6 +4,7 @@ using UnityEngine;
 
 public class StageSelectUI : MonoBehaviour
 {
+    private const string ClearedStageKey = "ClearedStage";
     private enum GimmickType
     {
         Up,
@@ -32,6 +33,8 @@ public class StageSelectUI : MonoBehaviour
 
     private List<GameObject> activeGimmickUIs = new List<GameObject>();
 
+    [SerializeField] GameObject[] stageSelectButtons;
+
     private void Awake()
     {
         if (Instance == null) Instance = this;
@@ -40,6 +43,22 @@ public class StageSelectUI : MonoBehaviour
         stageUI.SetActive(false);
         clearUI.SetActive(false);
         stageSelectUI.SetActive(true);
+
+        int clearedStage = PlayerPrefs.GetInt(ClearedStageKey, 0);
+
+        for (int i = 0; i < stageSelectButtons.Length; i++)
+        {
+            bool isUnlocked = i <= clearedStage;
+            stageSelectButtons[i].SetActive(true);
+
+            var button = stageSelectButtons[i].GetComponent<UnityEngine.UI.Button>();
+            if (button != null)
+                button.interactable = isUnlocked;
+
+            var image = stageSelectButtons[i].GetComponent<UnityEngine.UI.Image>();
+            if (image != null)
+                image.color = new Color(image.color.r, image.color.g, image.color.b, isUnlocked ? 1f : 0.4f);
+        }
     }
 
     public void SelectStageUI(int stageNumber)
@@ -121,4 +140,15 @@ public class StageSelectUI : MonoBehaviour
     {
         speedText.text = txt;
     }
+
+    public void SaveClearedStage(int stageNumber)
+    {
+        int currentCleared = PlayerPrefs.GetInt(ClearedStageKey, 0);
+        if (stageNumber > currentCleared)
+        {
+            PlayerPrefs.SetInt(ClearedStageKey, stageNumber);
+            PlayerPrefs.Save();
+        }
+    }
 }
+

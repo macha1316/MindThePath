@@ -148,6 +148,7 @@ public class Player : MonoBehaviour, ITurnBased
         if (StageBuilder.Instance.IsMatchingCellType(nextPos, 'G'))
         {
             // 臨時処理, ちゃんとGridで判定したい
+            StageSelectUI.Instance.SaveClearedStage(StageBuilder.Instance.stageNumber + 1);
             DOVirtual.DelayedCall(Time.timeScale == 1f ? 1f : 0.5f, () => isComplete = true);
         }
     }
