@@ -25,7 +25,7 @@ public class StageSelectUI : MonoBehaviour
         { 1, new List<GimmickType> { GimmickType.Up, GimmickType.Up } },
         { 2, new List<GimmickType> { GimmickType.Wall, GimmickType.Up} },
         { 3, new List<GimmickType> { GimmickType.Wall, GimmickType.Up, GimmickType.Up} },
-        { 4, new List<GimmickType> { GimmickType.Wall, GimmickType.MoveBox, GimmickType.Up} },
+        { 4, new List<GimmickType> { GimmickType.Wall} },
         { 5, new List<GimmickType> { GimmickType.Wall, GimmickType.MoveBox, GimmickType.Up} }
     };
 
@@ -150,12 +150,14 @@ public class StageSelectUI : MonoBehaviour
         StageBuilder.Instance.DestroyStage();
     }
 
+    // デバッグ用: 最大にしている
     public void SaveClearedStage(int stageNumber)
     {
         int currentCleared = PlayerPrefs.GetInt(ClearedStageKey, 0);
-        if (stageNumber > currentCleared)
+        // if (stageNumber > currentCleared)
         {
-            PlayerPrefs.SetInt(ClearedStageKey, stageNumber);
+            PlayerPrefs.SetInt(ClearedStageKey, 10);
+            // PlayerPrefs.SetInt(ClearedStageKey, stageNumber);
             PlayerPrefs.Save();
         }
     }

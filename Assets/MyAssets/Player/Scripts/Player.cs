@@ -175,7 +175,10 @@ public class Player : MonoBehaviour, ITurnBased
             if (bCol == col && bHeight == height && bRow == row)
             {
                 Vector3 boxNextPos = boxPos + transform.forward * StageBuilder.BLOCK_SIZE;
-                if (!StageBuilder.Instance.IsValidGridPosition(boxNextPos) || !StageBuilder.Instance.IsMatchingCellType(boxNextPos, 'N'))
+                Vector3 nextDownPos = nextPos - transform.up * StageBuilder.BLOCK_SIZE;
+                if (!StageBuilder.Instance.IsValidGridPosition(boxNextPos) ||
+                    !StageBuilder.Instance.IsMatchingCellType(boxNextPos, 'N') ||
+                    StageBuilder.Instance.IsMatchingCellType(nextDownPos, 'N'))
                 {
                     if (!TryFlipDirection(ref nextPos)) return true;
 
