@@ -82,8 +82,6 @@ public class Arrow : MonoBehaviour
                     draggableGimmic.SetCellTypeFromArrow('R');
                     break;
             }
-
-            Debug.Log("Rotated: new type = " + draggableGimmic.cellType);
         }
     }
 }
