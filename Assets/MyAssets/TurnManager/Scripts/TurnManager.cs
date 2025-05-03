@@ -8,6 +8,7 @@ public class TurnManager : MonoBehaviour
     public static TurnManager Instance;
 
     private List<ITurnBased> turnObjects = new List<ITurnBased>();
+    private bool isFirstComplete = false;
 
     private void Awake()
     {
@@ -16,6 +17,7 @@ public class TurnManager : MonoBehaviour
 
     public void ExecuteTurn()
     {
+        if (isFirstComplete) return;
         foreach (var obj in turnObjects)
         {
             obj.OnTurn();
@@ -26,6 +28,7 @@ public class TurnManager : MonoBehaviour
         // Goal判定
         if (GameManager.Instance.IsComplete())
         {
+            isFirstComplete = true;
             StageSelectUI.Instance.SetClearUI();
         }
     }
@@ -56,6 +59,7 @@ public class TurnManager : MonoBehaviour
     public void StartMove()
     {
         if (GameManager.Instance.GetIsStart()) return;
+        isFirstComplete = false;
         turnObjects = new List<ITurnBased>();
         GameManager.Instance.SetIsStart();
         StageSelectUI.Instance.GameStartUI();

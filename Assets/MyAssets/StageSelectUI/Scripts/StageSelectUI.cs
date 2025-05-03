@@ -141,6 +141,15 @@ public class StageSelectUI : MonoBehaviour
         speedText.text = txt;
     }
 
+    public void SetStageSelectUI()
+    {
+        startUI.SetActive(false);
+        stageUI.SetActive(false);
+        stageSelectUI.SetActive(true);
+        clearUI.SetActive(false);
+        StageBuilder.Instance.DestroyStage();
+    }
+
     public void SaveClearedStage(int stageNumber)
     {
         int currentCleared = PlayerPrefs.GetInt(ClearedStageKey, 0);

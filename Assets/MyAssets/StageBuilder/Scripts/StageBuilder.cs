@@ -331,6 +331,17 @@ public class StageBuilder : MonoBehaviour
         CreateStage(stageNumber + 1);
     }
 
+    public void DestroyStage()
+    {
+        if (stageRoot != null)
+        {
+            foreach (Transform child in stageRoot.transform)
+            {
+                Destroy(child.gameObject);
+            }
+        }
+    }
+
     private void OnDrawGizmos()
     {
         if (gridData == null) return;
