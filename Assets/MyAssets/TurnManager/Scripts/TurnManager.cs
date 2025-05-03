@@ -3,12 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
-public interface ITurnBased
-{
-    void OnTurn();        // ターンごとの動作（移動やアクション）
-    void UpdateGridData(); // gridDataの更新
-}
-
 public class TurnManager : MonoBehaviour
 {
     public static TurnManager Instance;

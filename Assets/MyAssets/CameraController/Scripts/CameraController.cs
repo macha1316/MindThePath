@@ -8,8 +8,6 @@ public class CameraController : MonoBehaviour
     public float zoomSpeed = 0.5f;
     public float minDistance = 3f;
     public float maxDistance = 20f;
-
-    private Vector2 lastTouchPos;
     private float currentDistance;
 
     void Start()

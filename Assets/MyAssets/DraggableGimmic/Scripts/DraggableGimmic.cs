@@ -88,6 +88,15 @@ public class DraggableGimmic : MonoBehaviour
         isDragging = false;
         boxCollider.enabled = true;
 
+        bool isValidPos = StageBuilder.Instance.IsValidGridPosition(transform.position);
+        if (!isValidPos)
+        {
+            // Debug.Log("Valid Position");
+            Destroy(gameObject);
+
+            return;
+        }
+
         // Grid
         if (cellType == 'B' || cellType == 'M' || cellType == 'P')
         {
