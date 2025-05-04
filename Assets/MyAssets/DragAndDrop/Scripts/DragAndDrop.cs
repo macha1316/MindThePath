@@ -165,7 +165,7 @@ public class DragAndDrop : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndD
             }
 
             // Grid
-            if (cellType == 'B' || cellType == 'M' || cellType == 'P')
+            if (cellType == 'B' || cellType == 'M' || cellType == 'P' || cellType == 'K')
             {
                 StageBuilder.Instance.UpdateGridAtPosition(gimmickInstance.transform.position, cellType);
             }
@@ -182,6 +182,10 @@ public class DragAndDrop : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndD
             if (cellType == 'M')
             {
                 gimmickInstance.AddComponent<MoveBox>();
+            }
+            if (cellType == 'K')
+            {
+                gimmickInstance.AddComponent<Robot>();
             }
             InputStateManager.IsDragging = false;
             AudioManager.Instance.PlayDropSound();

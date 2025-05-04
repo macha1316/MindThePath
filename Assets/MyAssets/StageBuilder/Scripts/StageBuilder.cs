@@ -21,6 +21,7 @@ public class StageBuilder : MonoBehaviour
     [SerializeField] GameObject rightPrefab;
     [SerializeField] GameObject leftPrefab;
     [SerializeField] GameObject moveBoxPrefab;
+    [SerializeField] GameObject kylePrefab;
     private char[,,] gridData;
     private char[,,] dynamicTiles;
     public int stageNumber = 0;
@@ -211,6 +212,9 @@ public class StageBuilder : MonoBehaviour
             case 'M':
                 prefab = moveBoxPrefab;
                 break;
+            case 'K':
+                prefab = kylePrefab;
+                break;
         }
         if (prefab != null)
         {
@@ -233,6 +237,11 @@ public class StageBuilder : MonoBehaviour
             {
                 MoveBox newM = obj.AddComponent<MoveBox>();
                 GameManager.Instance.GetMoveBox(newM);
+            }
+            if (cellType == 'K')
+            {
+                Robot newK = obj.AddComponent<Robot>();
+                // GameManager.Instance.GetMoveBox(newM);
             }
             Vector3 dir = Vector3.forward;
             switch (dirChar)
@@ -357,7 +366,27 @@ public class StageBuilder : MonoBehaviour
 
                     Vector3 pos = new Vector3(x * BLOCK_SIZE, y * HEIGHT_OFFSET + 0.5f, z * BLOCK_SIZE);
 
-                    Gizmos.color = (cell == 'P') ? Color.green : (cell == 'M') ? Color.yellow : Color.white;
+                    if (cell == 'G')
+                    {
+                        Gizmos.color = Color.red;
+                    }
+                    else if (cell == 'P')
+                    {
+                        Gizmos.color = Color.green;
+                    }
+                    else if (cell == 'M')
+                    {
+                        Gizmos.color = Color.yellow;
+                    }
+                    else if (cell == 'K')
+                    {
+                        Gizmos.color = Color.blue;
+                    }
+                    else
+                    {
+                        Gizmos.color = Color.white;
+                    }
+
                     Gizmos.DrawWireCube(pos, Vector3.one * 1.0f);
 
 #if UNITY_EDITOR

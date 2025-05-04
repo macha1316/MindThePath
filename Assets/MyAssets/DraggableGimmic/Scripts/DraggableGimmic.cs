@@ -99,7 +99,7 @@ public class DraggableGimmic : MonoBehaviour
         }
 
         // Grid
-        if (cellType == 'B' || cellType == 'M' || cellType == 'P')
+        if (cellType == 'B' || cellType == 'M' || cellType == 'P' || cellType == 'K')
         {
             StageBuilder.Instance.UpdateGridAtPosition(transform.position, cellType);
         }
@@ -107,6 +107,11 @@ public class DraggableGimmic : MonoBehaviour
         else
         {
             StageBuilder.Instance.UpdateDynamicTileAtPosition(transform.position, cellType);
+        }
+
+        if (cellType == 'M')
+        {
+            gameObject.GetComponent<MoveBox>().SetTargetPos(transform.position);
         }
 
         InputStateManager.IsDragging = false;
@@ -137,7 +142,7 @@ public class DraggableGimmic : MonoBehaviour
     {
         cellType = type;
         // Grid
-        if (cellType == 'B' || cellType == 'M' || cellType == 'P')
+        if (cellType == 'B' || cellType == 'M' || cellType == 'P' || cellType == 'K')
         {
             StageBuilder.Instance.UpdateGridAtPosition(transform.position, cellType);
         }

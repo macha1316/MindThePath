@@ -9,7 +9,8 @@ public class StageSelectUI : MonoBehaviour
     {
         Up,
         Wall,
-        MoveBox
+        MoveBox,
+        Kyle
     }
     [SerializeField] GameObject stageSelectUI;
     [SerializeField] GameObject startUI;
@@ -26,7 +27,7 @@ public class StageSelectUI : MonoBehaviour
         { 2, new List<GimmickType> { GimmickType.Wall, GimmickType.Up} },
         { 3, new List<GimmickType> { GimmickType.Wall, GimmickType.Up, GimmickType.Up} },
         { 4, new List<GimmickType> { GimmickType.Wall} },
-        { 5, new List<GimmickType> { GimmickType.Wall, GimmickType.MoveBox, GimmickType.Up} }
+        { 5, new List<GimmickType> { GimmickType.Wall, GimmickType.MoveBox, GimmickType.Up, GimmickType.Kyle} }
     };
 
     public static StageSelectUI Instance;
@@ -89,6 +90,7 @@ public class StageSelectUI : MonoBehaviour
             'U' => (int)GimmickType.Up,
             'B' => (int)GimmickType.Wall,
             'M' => (int)GimmickType.MoveBox,
+            'K' => (int)GimmickType.Kyle,
             _ => -1
         };
 

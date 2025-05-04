@@ -12,6 +12,11 @@ public class MoveBox : MonoBehaviour, ITurnBased
         targetPos = transform.position;
     }
 
+    public void SetTargetPos(Vector3 pos)
+    {
+        targetPos = pos;
+    }
+
     public void TryPush(Vector3 direction)
     {
         if (isMoving) return;

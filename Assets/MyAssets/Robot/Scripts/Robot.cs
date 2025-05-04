@@ -1,7 +1,7 @@
 using UnityEngine;
 using DG.Tweening;
 
-public class Player : MonoBehaviour, ITurnBased
+public class Robot : MonoBehaviour, ITurnBased
 {
     private float moveDuration = 1f;
     private bool isMoving = false;
@@ -57,9 +57,9 @@ public class Player : MonoBehaviour, ITurnBased
 
         if (GameManager.Instance.reservedPositions.TryGetValue(targetGrid, out var otherPlayer))
         {
-            // TODO: MoveBox以外は折り返さないようにする
             if (otherPlayer != this)
             {
+                Debug.Log("折り返し");
                 return !TryFlipDirection(ref nextPos); // 即折り返す
             }
         }
@@ -218,12 +218,13 @@ public class Player : MonoBehaviour, ITurnBased
 
         if (!StageBuilder.Instance.IsValidGridPosition(nextPos) ||
             StageBuilder.Instance.IsMatchingCellType(nextPos, 'B') ||
-            StageBuilder.Instance.IsMatchingCellType(nextPos, 'P'))
+            StageBuilder.Instance.IsMatchingCellType(nextPos, 'P') ||
+            StageBuilder.Instance.IsMatchingCellType(nextPos, 'K'))
         {
             return;
         }
 
-        StageBuilder.Instance.UpdateGridAtPosition(nextPos, 'P');
+        StageBuilder.Instance.UpdateGridAtPosition(nextPos, 'K');
     }
 
     public bool GetIsComplete() => isComplete;
