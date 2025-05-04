@@ -177,9 +177,14 @@ public class Player : MonoBehaviour, ITurnBased
             {
                 Vector3 boxNextPos = boxPos + transform.forward * StageBuilder.BLOCK_SIZE;
                 Vector3 nextDownPos = nextPos - transform.up * StageBuilder.BLOCK_SIZE;
+                Vector3 nextUpPos = nextPos + transform.up * StageBuilder.BLOCK_SIZE;
+
                 if (!StageBuilder.Instance.IsValidGridPosition(boxNextPos) ||
                     !StageBuilder.Instance.IsMatchingCellType(boxNextPos, 'N') ||
-                    StageBuilder.Instance.IsMatchingCellType(nextDownPos, 'N'))
+                    StageBuilder.Instance.IsMatchingCellType(nextDownPos, 'N') ||
+                    StageBuilder.Instance.IsMatchingCellType(nextUpPos, 'P') ||
+                    StageBuilder.Instance.IsMatchingCellType(nextUpPos, 'K') ||
+                    StageBuilder.Instance.IsMatchingCellType(nextUpPos, 'M'))
                 {
                     if (!TryFlipDirection(ref nextPos)) return true;
 
@@ -218,9 +223,10 @@ public class Player : MonoBehaviour, ITurnBased
 
         if (!StageBuilder.Instance.IsValidGridPosition(nextPos) ||
             StageBuilder.Instance.IsMatchingCellType(nextPos, 'B') ||
-            StageBuilder.Instance.IsMatchingCellType(nextPos, 'P'))
+            StageBuilder.Instance.IsMatchingCellType(nextPos, 'P') ||
+            StageBuilder.Instance.IsMatchingCellType(nextPos, 'K'))
         {
-            return;
+            StageBuilder.Instance.UpdateGridAtPosition(transform.position, 'P'); return;
         }
 
         StageBuilder.Instance.UpdateGridAtPosition(nextPos, 'P');

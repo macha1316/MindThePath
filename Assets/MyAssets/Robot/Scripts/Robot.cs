@@ -59,7 +59,6 @@ public class Robot : MonoBehaviour, ITurnBased
         {
             if (otherPlayer != this)
             {
-                Debug.Log("折り返し");
                 return !TryFlipDirection(ref nextPos); // 即折り返す
             }
         }
@@ -177,9 +176,14 @@ public class Robot : MonoBehaviour, ITurnBased
             {
                 Vector3 boxNextPos = boxPos + transform.forward * StageBuilder.BLOCK_SIZE;
                 Vector3 nextDownPos = nextPos - transform.up * StageBuilder.BLOCK_SIZE;
+                Vector3 nextUpPos = nextPos + transform.up * StageBuilder.BLOCK_SIZE;
+
                 if (!StageBuilder.Instance.IsValidGridPosition(boxNextPos) ||
                     !StageBuilder.Instance.IsMatchingCellType(boxNextPos, 'N') ||
-                    StageBuilder.Instance.IsMatchingCellType(nextDownPos, 'N'))
+                    StageBuilder.Instance.IsMatchingCellType(nextDownPos, 'N') ||
+                    StageBuilder.Instance.IsMatchingCellType(nextUpPos, 'P') ||
+                    StageBuilder.Instance.IsMatchingCellType(nextUpPos, 'K') ||
+                    StageBuilder.Instance.IsMatchingCellType(nextUpPos, 'M'))
                 {
                     if (!TryFlipDirection(ref nextPos)) return true;
 
@@ -221,7 +225,7 @@ public class Robot : MonoBehaviour, ITurnBased
             StageBuilder.Instance.IsMatchingCellType(nextPos, 'P') ||
             StageBuilder.Instance.IsMatchingCellType(nextPos, 'K'))
         {
-            return;
+            StageBuilder.Instance.UpdateGridAtPosition(transform.position, 'K'); return;
         }
 
         StageBuilder.Instance.UpdateGridAtPosition(nextPos, 'K');
