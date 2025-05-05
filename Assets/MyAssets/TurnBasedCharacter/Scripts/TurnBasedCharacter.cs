@@ -26,10 +26,11 @@ public class TurnbsedCharacter : MonoBehaviour, ITurnBased
 
         // === 即時方向転換処理（前方に進めない時） ===
         if (TryHandleImmediateFlip()) return;
-        // === MoveBoxを前に押す処理（条件付き） ===
-        if (TryHandleMoveBox()) return;
+
         // === 一段下へジャンプする処理 ===
         if (TryHandleJumpDown()) return;
+        // === MoveBoxを前に押す処理（条件付き） ===
+        if (TryHandleMoveBox()) return;
 
         Vector3Int targetGrid = StageBuilder.Instance.GridFromPosition(nextPos);
         if (GameManager.Instance.reservedPositions.ContainsKey(targetGrid)) return;
@@ -81,7 +82,8 @@ public class TurnbsedCharacter : MonoBehaviour, ITurnBased
 
         if (StageBuilder.Instance.IsValidGridPosition(oneDown) &&
             !StageBuilder.Instance.IsMatchingCellType(oneDown, 'B') &&
-            !StageBuilder.Instance.IsMatchingCellType(oneDown, 'M'))
+            !StageBuilder.Instance.IsMatchingCellType(oneDown, 'M') &&
+            !StageBuilder.Instance.IsMatchingCellType(nextPos, 'M'))
         {
             if (!StageBuilder.Instance.IsValidGridPosition(twoDown) ||
                 StageBuilder.Instance.IsAnyMatchingCellType(twoDown, 'B', 'M'))
@@ -143,7 +145,6 @@ public class TurnbsedCharacter : MonoBehaviour, ITurnBased
     // === 動的セルの向きに応じて進行方向を更新 ===
     private void UpdateForwardFromDynamic()
     {
-        Debug.Log($"UpdateForwardFromDynamic: {nextPos}");
         if (IsMatchingDynamicCellType(nextPos, 'U')) transform.forward = Vector3.forward;
         if (IsMatchingDynamicCellType(nextPos, 'D')) transform.forward = Vector3.back;
         if (IsMatchingDynamicCellType(nextPos, 'R')) transform.forward = Vector3.right;
@@ -190,6 +191,26 @@ public class TurnbsedCharacter : MonoBehaviour, ITurnBased
                 StageBuilder.Instance.IsAnyMatchingCellType(nextUpPos, 'P', 'K', 'M'))
             {
                 // 折り返して止まる
+                if (!TryFlipDirection(ref nextPos)) return true;
+
+                isMoving = true;
+                CheckGoal();
+                transform.DOMove(nextPos, moveDuration)
+                    .SetEase(Ease.Linear)
+                    .OnComplete(() =>
+                    {
+                        isMoving = false;
+                        UpdateForwardFromDynamic();
+                        GameManager.Instance.reservedPositions.Remove(StageBuilder.Instance.GridFromPosition(transform.position));
+                    });
+                return true;
+            }
+
+            // MoveBoxの先がすでに予約されていたら引き返す
+            Vector3Int targetGrid = StageBuilder.Instance.GridFromPosition(boxNextPos);
+            if (GameManager.Instance.reservedPositions.ContainsKey(targetGrid))
+            {
+                // MoveBoxの押し出し先がすでに他のキャラに予約されている場合、方向転換して終了
                 if (!TryFlipDirection(ref nextPos)) return true;
 
                 isMoving = true;
