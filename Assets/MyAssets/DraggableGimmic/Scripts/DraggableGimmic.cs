@@ -66,14 +66,9 @@ public class DraggableGimmic : MonoBehaviour
                 transform.position = snappedPos;
                 return;
             }
-
-            int col = Mathf.RoundToInt(snappedPos.x / StageBuilder.BLOCK_SIZE);
-            int height = Mathf.RoundToInt(snappedPos.y / StageBuilder.BLOCK_SIZE);
-            int row = Mathf.RoundToInt(snappedPos.z / StageBuilder.BLOCK_SIZE);
-
             transform.position = snappedPos;
 
-            Vector3 currentGridPos = new Vector3(col, height, row);
+            Vector3 currentGridPos = StageBuilder.Instance.GridFromPosition(snappedPos);
             if (currentGridPos != lastGridPosition)
             {
                 AudioManager.Instance.PlayDragSound();

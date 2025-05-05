@@ -94,11 +94,7 @@ public class DragAndDrop : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndD
                 Vector3 snappedPos = SnapToGrid(offsetPos);
                 gimmickInstance.transform.position = snappedPos;
 
-                int col = Mathf.RoundToInt(snappedPos.x / StageBuilder.BLOCK_SIZE);
-                int height = Mathf.RoundToInt(snappedPos.y / StageBuilder.HEIGHT_OFFSET);
-                int row = Mathf.RoundToInt(snappedPos.z / StageBuilder.BLOCK_SIZE);
-
-                Vector3 currentGridPos = new Vector3(col, height, row);
+                Vector3 currentGridPos = StageBuilder.Instance.GridFromPosition(snappedPos);
                 if (currentGridPos != lastGridPosition)
                 {
                     AudioManager.Instance.PlayDragSound();

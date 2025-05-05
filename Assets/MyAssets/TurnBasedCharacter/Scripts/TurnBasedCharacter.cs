@@ -3,17 +3,20 @@ using DG.Tweening;
 
 public class TurnbsedCharacter : MonoBehaviour, ITurnBased
 {
+    // === 基本ステータス ===
     private float moveDuration = 1f;
     private bool isMoving = false;
     protected bool isComplete = false;
     private Animator animator;
     protected Vector3 nextPos;
 
+    // === 初期化 ===
     void Start()
     {
         animator = GetComponent<Animator>();
     }
 
+    // === ターン開始時の処理 ===
     public void OnTurn()
     {
         if (ShouldSkipTurn()) return;
@@ -32,6 +35,7 @@ public class TurnbsedCharacter : MonoBehaviour, ITurnBased
         MoveForward();
     }
 
+    // === ターンをスキップすべきかの判定 ===
     private bool ShouldSkipTurn()
     {
         if (isMoving || isComplete)
@@ -42,18 +46,20 @@ public class TurnbsedCharacter : MonoBehaviour, ITurnBased
         return false;
     }
 
+    // === 即時方向転換処理（前方に進めない時） ===
     private bool TryHandleImmediateFlip()
     {
         Vector3Int targetGrid = StageBuilder.Instance.GridFromPosition(nextPos);
         if (GameManager.Instance.reservedPositions.TryGetValue(targetGrid, out var otherPlayer))
         {
-            // TODO: MoveBox以外は折り返さないようにする
+            // 他プレイヤーと衝突する場合は折り返す
             if (otherPlayer != this)
             {
-                return !TryFlipDirection(ref nextPos); // 即折り返す
+                return !TryFlipDirection(ref nextPos);
             }
         }
 
+        // 無効な座標 or ブロックなら折り返し
         if (!StageBuilder.Instance.IsValidGridPosition(nextPos) ||
             StageBuilder.Instance.IsMatchingCellType(nextPos, 'B'))
         {
@@ -63,6 +69,7 @@ public class TurnbsedCharacter : MonoBehaviour, ITurnBased
         return false;
     }
 
+    // === 一段下へジャンプする処理 ===
     private bool TryHandleJumpDown()
     {
         Vector3 oneDown = nextPos + Vector3.down * StageBuilder.HEIGHT_OFFSET;
@@ -75,6 +82,7 @@ public class TurnbsedCharacter : MonoBehaviour, ITurnBased
             if (!StageBuilder.Instance.IsValidGridPosition(twoDown) ||
                 StageBuilder.Instance.IsAnyMatchingCellType(twoDown, 'B', 'M'))
             {
+                // 一段だけ空いている → ジャンプ
                 animator.SetTrigger("jump");
                 isMoving = true;
                 nextPos = oneDown;
@@ -91,11 +99,13 @@ public class TurnbsedCharacter : MonoBehaviour, ITurnBased
                 return true;
             }
 
+            // 二段とも空いている → ジャンプ不可、折り返す
             TryFlipDirection(ref nextPos);
         }
         return false;
     }
 
+    // === 通常移動処理 ===
     private void MoveForward()
     {
         isMoving = true;
@@ -110,6 +120,7 @@ public class TurnbsedCharacter : MonoBehaviour, ITurnBased
             });
     }
 
+    // === 方向転換（反転）処理 ===
     private bool TryFlipDirection(ref Vector3 nextPos)
     {
         transform.forward = -transform.forward;
@@ -125,6 +136,7 @@ public class TurnbsedCharacter : MonoBehaviour, ITurnBased
         return false;
     }
 
+    // === 動的セルの向きに応じて進行方向を更新 ===
     private void UpdateForwardFromDynamic()
     {
         if (IsMatchingDynamicCellType(nextPos, 'U')) transform.forward = Vector3.forward;
@@ -133,70 +145,74 @@ public class TurnbsedCharacter : MonoBehaviour, ITurnBased
         if (IsMatchingDynamicCellType(nextPos, 'L')) transform.forward = Vector3.left;
     }
 
+    // === ゴール到達時の処理 ===
     private void CheckGoal()
     {
         if (StageBuilder.Instance.IsMatchingCellType(nextPos, 'G'))
         {
-            // 臨時処理, ちゃんとGridで判定したい
             StageSelectUI.Instance.SaveClearedStage(StageBuilder.Instance.stageNumber + 1);
             DOVirtual.DelayedCall(Time.timeScale == 1f ? 1f : 0.5f, () => isComplete = true);
         }
     }
 
+    // === MoveBoxを前に押す処理（条件付き） ===
     private bool TryHandleMoveBox()
     {
+        // プレイヤーの正面マスを取得
         Vector3 frontPos = transform.position + transform.forward * 2.0f;
-        int col = Mathf.RoundToInt(frontPos.x / StageBuilder.BLOCK_SIZE);
-        int height = Mathf.RoundToInt(frontPos.y / StageBuilder.HEIGHT_OFFSET);
-        int row = Mathf.RoundToInt(frontPos.z / StageBuilder.BLOCK_SIZE);
 
+        // グリッド外 or 無効な位置なら何もしない
         if (!StageBuilder.Instance.IsValidGridPosition(frontPos)) return false;
 
-        char[,,] grid = StageBuilder.Instance.GetGridData();
-        if (grid[col, height, row] != 'M') return false;
+        // そこにMoveBox('M')がなければ終了
+        if (StageBuilder.Instance.GetGridCharType(frontPos) != 'M') return false;
 
+        // 全てのMoveBoxを走査して、該当するBoxを見つける
         foreach (var box in FindObjectsOfType<MoveBox>())
         {
-            Vector3 boxPos = box.transform.position;
-            int bCol = Mathf.RoundToInt(boxPos.x / StageBuilder.BLOCK_SIZE);
-            int bHeight = Mathf.RoundToInt(boxPos.y / StageBuilder.HEIGHT_OFFSET);
-            int bRow = Mathf.RoundToInt(boxPos.z / StageBuilder.BLOCK_SIZE);
+            // Grid座標が一致しないBoxはスキップ
+            if (StageBuilder.Instance.GridFromPosition(box.transform.position) != StageBuilder.Instance.GridFromPosition(frontPos)) continue;
 
-            if (bCol == col && bHeight == height && bRow == row)
+            // 押し出し先・上下の座標を計算
+            Vector3 boxNextPos = box.transform.position + transform.forward * StageBuilder.BLOCK_SIZE;
+            Vector3 nextDownPos = nextPos - Vector3.up * StageBuilder.BLOCK_SIZE;
+            Vector3 nextUpPos = nextPos + Vector3.up * StageBuilder.BLOCK_SIZE;
+
+            // 移動先が無効 または 通行不可のセル または 障害物が上下にある場合は方向転換
+            if (!StageBuilder.Instance.IsValidGridPosition(boxNextPos) ||
+                !StageBuilder.Instance.IsMatchingCellType(boxNextPos, 'N') ||
+                StageBuilder.Instance.IsMatchingCellType(nextDownPos, 'N') ||
+                StageBuilder.Instance.IsAnyMatchingCellType(nextUpPos, 'P', 'K', 'M'))
             {
-                Vector3 boxNextPos = boxPos + transform.forward * StageBuilder.BLOCK_SIZE;
-                Vector3 nextDownPos = nextPos - transform.up * StageBuilder.BLOCK_SIZE;
-                Vector3 nextUpPos = nextPos + transform.up * StageBuilder.BLOCK_SIZE;
+                // 折り返して止まる
+                if (!TryFlipDirection(ref nextPos)) return true;
 
-                if (!StageBuilder.Instance.IsValidGridPosition(boxNextPos) ||
-                    !StageBuilder.Instance.IsMatchingCellType(boxNextPos, 'N') ||
-                    StageBuilder.Instance.IsMatchingCellType(nextDownPos, 'N') ||
-                    StageBuilder.Instance.IsAnyMatchingCellType(nextUpPos, 'P', 'K', 'M'))
-                {
-                    if (!TryFlipDirection(ref nextPos)) return true;
-
-                    isMoving = true;
-                    CheckGoal();
-                    transform.DOMove(nextPos, moveDuration)
-                        .SetEase(Ease.Linear)
-                        .OnComplete(() =>
-                        {
-                            isMoving = false;
-                            UpdateForwardFromDynamic();
-                            GameManager.Instance.reservedPositions.Remove(StageBuilder.Instance.GridFromPosition(transform.position));
-                        });
-                    return true;
-                }
-
-                box.TryPush(transform.forward);
-                break;
+                isMoving = true;
+                CheckGoal();
+                transform.DOMove(nextPos, moveDuration)
+                    .SetEase(Ease.Linear)
+                    .OnComplete(() =>
+                    {
+                        isMoving = false;
+                        UpdateForwardFromDynamic();
+                        GameManager.Instance.reservedPositions.Remove(StageBuilder.Instance.GridFromPosition(transform.position));
+                    });
+                return true;
             }
+
+            // Boxを前に押す（Box側が動く）
+            box.TryPush(transform.forward);
+            break;
         }
+
+        // Box押しで特別な処理はなし
         return false;
     }
 
+    // === 動的グリッドとの一致判定 ===
     private bool IsMatchingDynamicCellType(Vector3 pos, char cellType) => StageBuilder.Instance.GetGridCharType(pos) == cellType;
 
+    // === グリッドデータを更新する処理（基本はP） ===
     public virtual void UpdateGridData()
     {
         if (isComplete) return;
@@ -204,11 +220,13 @@ public class TurnbsedCharacter : MonoBehaviour, ITurnBased
         if (!StageBuilder.Instance.IsValidGridPosition(nextPos) ||
             StageBuilder.Instance.IsAnyMatchingCellType(nextPos, 'B', 'P', 'K'))
         {
-            StageBuilder.Instance.UpdateGridAtPosition(transform.position, 'P'); return;
+            StageBuilder.Instance.UpdateGridAtPosition(transform.position, 'P');
+            return;
         }
 
         StageBuilder.Instance.UpdateGridAtPosition(nextPos, 'P');
     }
 
+    // === ゴール完了状態の取得 ===
     public bool GetIsComplete() => isComplete;
 }
