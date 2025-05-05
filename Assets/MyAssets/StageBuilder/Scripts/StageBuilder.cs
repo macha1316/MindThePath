@@ -310,6 +310,7 @@ public class StageBuilder : MonoBehaviour
                row >= 0 && row < gridData.GetLength(2);
     }
 
+    // 個別でセルタイプを確認
     public bool IsMatchingCellType(Vector3 pos, char cellType)
     {
         int col = Mathf.RoundToInt(pos.x / BLOCK_SIZE);
@@ -317,6 +318,26 @@ public class StageBuilder : MonoBehaviour
         int row = Mathf.RoundToInt(pos.z / BLOCK_SIZE);
 
         return GetGridData()[col, height, row] == cellType;
+    }
+
+    // 複数のセルタイプを確認 一つでもマッチすればtrue
+    public bool IsAnyMatchingCellType(Vector3 pos, params char[] types)
+    {
+        foreach (char type in types)
+        {
+            if (IsMatchingCellType(pos, type)) return true;
+        }
+        return false;
+    }
+
+    // 複数のセルタイプを全て満たすか確認 全てマッチすればtrue
+    public bool IsAllMatchingCellTypes(Vector3 pos, params char[] types)
+    {
+        foreach (char type in types)
+        {
+            if (!IsMatchingCellType(pos, type)) return false;
+        }
+        return true;
     }
 
     public Vector3Int GridFromPosition(Vector3 pos)
