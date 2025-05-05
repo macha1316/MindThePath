@@ -278,6 +278,24 @@ public class StageBuilder : MonoBehaviour
     public char[,,] GetGridData() => gridData;
     public char[,,] GetDynamicGridData() => dynamicTiles;
 
+    public char GetGridCharType(Vector3 pos)
+    {
+        int col = Mathf.RoundToInt(pos.x / BLOCK_SIZE);
+        int height = Mathf.RoundToInt(pos.y / HEIGHT_OFFSET);
+        int row = Mathf.RoundToInt(pos.z / BLOCK_SIZE);
+
+        return gridData[col, height, row];
+    }
+
+    public char GetDynamicGridCharType(Vector3 pos)
+    {
+        int col = Mathf.RoundToInt(pos.x / BLOCK_SIZE);
+        int height = Mathf.RoundToInt(pos.y / HEIGHT_OFFSET);
+        int row = Mathf.RoundToInt(pos.z / BLOCK_SIZE);
+
+        return dynamicTiles[col, height, row];
+    }
+
     // setメソッド
     public void UpdateGridAtPosition(Vector3 worldPosition, char type)
     {

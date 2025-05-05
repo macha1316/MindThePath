@@ -25,12 +25,7 @@ public class TurnbsedCharacter : MonoBehaviour, ITurnBased
         if (TryHandleMoveBox()) return;
         if (TryHandleJumpDown()) return;
 
-        Vector3Int targetGrid = new Vector3Int(
-            Mathf.RoundToInt(nextPos.x / StageBuilder.BLOCK_SIZE),
-            Mathf.RoundToInt(nextPos.y / StageBuilder.HEIGHT_OFFSET),
-            Mathf.RoundToInt(nextPos.z / StageBuilder.BLOCK_SIZE)
-        );
-
+        Vector3Int targetGrid = StageBuilder.Instance.GridFromPosition(nextPos);
         if (GameManager.Instance.reservedPositions.ContainsKey(targetGrid)) return;
         GameManager.Instance.reservedPositions[targetGrid] = this;
 
@@ -49,12 +44,7 @@ public class TurnbsedCharacter : MonoBehaviour, ITurnBased
 
     private bool TryHandleImmediateFlip()
     {
-        Vector3Int targetGrid = new Vector3Int(
-            Mathf.RoundToInt(nextPos.x / StageBuilder.BLOCK_SIZE),
-            Mathf.RoundToInt(nextPos.y / StageBuilder.HEIGHT_OFFSET),
-            Mathf.RoundToInt(nextPos.z / StageBuilder.BLOCK_SIZE)
-        );
-
+        Vector3Int targetGrid = StageBuilder.Instance.GridFromPosition(nextPos);
         if (GameManager.Instance.reservedPositions.TryGetValue(targetGrid, out var otherPlayer))
         {
             // TODO: MoveBox以外は折り返さないようにする
@@ -83,8 +73,7 @@ public class TurnbsedCharacter : MonoBehaviour, ITurnBased
             !StageBuilder.Instance.IsMatchingCellType(oneDown, 'M'))
         {
             if (!StageBuilder.Instance.IsValidGridPosition(twoDown) ||
-                StageBuilder.Instance.IsMatchingCellType(twoDown, 'B') ||
-                StageBuilder.Instance.IsMatchingCellType(twoDown, 'M'))
+                StageBuilder.Instance.IsAnyMatchingCellType(twoDown, 'B', 'M'))
             {
                 animator.SetTrigger("jump");
                 isMoving = true;
@@ -182,9 +171,7 @@ public class TurnbsedCharacter : MonoBehaviour, ITurnBased
                 if (!StageBuilder.Instance.IsValidGridPosition(boxNextPos) ||
                     !StageBuilder.Instance.IsMatchingCellType(boxNextPos, 'N') ||
                     StageBuilder.Instance.IsMatchingCellType(nextDownPos, 'N') ||
-                    StageBuilder.Instance.IsMatchingCellType(nextUpPos, 'P') ||
-                    StageBuilder.Instance.IsMatchingCellType(nextUpPos, 'K') ||
-                    StageBuilder.Instance.IsMatchingCellType(nextUpPos, 'M'))
+                    StageBuilder.Instance.IsAnyMatchingCellType(nextUpPos, 'P', 'K', 'M'))
                 {
                     if (!TryFlipDirection(ref nextPos)) return true;
 
@@ -208,23 +195,14 @@ public class TurnbsedCharacter : MonoBehaviour, ITurnBased
         return false;
     }
 
-    private bool IsMatchingDynamicCellType(Vector3 pos, char cellType)
-    {
-        int col = Mathf.RoundToInt(pos.x / StageBuilder.BLOCK_SIZE);
-        int height = Mathf.RoundToInt(pos.y / StageBuilder.HEIGHT_OFFSET);
-        int row = Mathf.RoundToInt(pos.z / StageBuilder.BLOCK_SIZE);
-
-        return StageBuilder.Instance.GetDynamicGridData()[col, height, row] == cellType;
-    }
+    private bool IsMatchingDynamicCellType(Vector3 pos, char cellType) => StageBuilder.Instance.GetGridCharType(pos) == cellType;
 
     public virtual void UpdateGridData()
     {
         if (isComplete) return;
 
         if (!StageBuilder.Instance.IsValidGridPosition(nextPos) ||
-            StageBuilder.Instance.IsMatchingCellType(nextPos, 'B') ||
-            StageBuilder.Instance.IsMatchingCellType(nextPos, 'P') ||
-            StageBuilder.Instance.IsMatchingCellType(nextPos, 'K'))
+            StageBuilder.Instance.IsAnyMatchingCellType(nextPos, 'B', 'P', 'K'))
         {
             StageBuilder.Instance.UpdateGridAtPosition(transform.position, 'P'); return;
         }
