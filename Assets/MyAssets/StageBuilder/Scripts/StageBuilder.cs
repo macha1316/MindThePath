@@ -109,9 +109,10 @@ public class StageBuilder : MonoBehaviour
         int rowCount = layers[0].Length;
         int colCount = layers[0][0].Split(',').Length;
 
+        int totalHeight = heightCount + 3;
         // gridData を初期化
-        gridData = new char[colCount, heightCount, rowCount];
-        dynamicTiles = new char[colCount, heightCount, rowCount];
+        gridData = new char[colCount, totalHeight, rowCount];
+        dynamicTiles = new char[colCount, totalHeight, rowCount];
 
         int delayCounter = 0;
         remainingBlocksToSpawn = 0;
@@ -149,14 +150,13 @@ public class StageBuilder : MonoBehaviour
             }
         }
 
-        for (int h = 0; h < heightCount; h++)
+        for (int h = heightCount; h < heightCount + 3; h++)
         {
             for (int r = 0; r < rowCount; r++)
             {
-                string rowData = "";
                 for (int c = 0; c < colCount; c++)
                 {
-                    rowData += gridData[c, h, r] + " ";
+                    gridData[c, h, r] = 'N';
                 }
             }
         }

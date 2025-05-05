@@ -47,8 +47,6 @@ public class TurnManager : MonoBehaviour
     // 1秒ごとにターンを実行
     IEnumerator TurnLoop()
     {
-        // 一旦ここ
-        turnObjects.AddRange(FindObjectsOfType<MonoBehaviour>().OfType<ITurnBased>());
         while (GameManager.Instance.GetIsStart())
         {
             ExecuteTurn();
@@ -61,6 +59,10 @@ public class TurnManager : MonoBehaviour
         if (GameManager.Instance.GetIsStart()) return;
         isFirstComplete = false;
         turnObjects = new List<ITurnBased>();
+        turnObjects.AddRange(FindObjectsOfType<MonoBehaviour>().OfType<ITurnBased>());
+        turnObjects = turnObjects
+            .OrderByDescending(obj => (obj as MonoBehaviour).GetComponent<MoveBox>() != null)
+            .ToList();
         GameManager.Instance.SetIsStart();
         StageSelectUI.Instance.GameStartUI();
         StartCoroutine(TurnLoop());

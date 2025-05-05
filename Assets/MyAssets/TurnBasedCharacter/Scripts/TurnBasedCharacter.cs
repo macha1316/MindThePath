@@ -24,14 +24,18 @@ public class TurnbsedCharacter : MonoBehaviour, ITurnBased
         animator.SetTrigger("walk");
         nextPos = transform.position + transform.forward * 2.0f;
 
+        // === 即時方向転換処理（前方に進めない時） ===
         if (TryHandleImmediateFlip()) return;
+        // === MoveBoxを前に押す処理（条件付き） ===
         if (TryHandleMoveBox()) return;
+        // === 一段下へジャンプする処理 ===
         if (TryHandleJumpDown()) return;
 
         Vector3Int targetGrid = StageBuilder.Instance.GridFromPosition(nextPos);
         if (GameManager.Instance.reservedPositions.ContainsKey(targetGrid)) return;
         GameManager.Instance.reservedPositions[targetGrid] = this;
 
+        // === 通常移動処理 ===
         MoveForward();
     }
 
