@@ -143,6 +143,7 @@ public class TurnbsedCharacter : MonoBehaviour, ITurnBased
     // === 動的セルの向きに応じて進行方向を更新 ===
     private void UpdateForwardFromDynamic()
     {
+        Debug.Log($"UpdateForwardFromDynamic: {nextPos}");
         if (IsMatchingDynamicCellType(nextPos, 'U')) transform.forward = Vector3.forward;
         if (IsMatchingDynamicCellType(nextPos, 'D')) transform.forward = Vector3.back;
         if (IsMatchingDynamicCellType(nextPos, 'R')) transform.forward = Vector3.right;
@@ -214,7 +215,10 @@ public class TurnbsedCharacter : MonoBehaviour, ITurnBased
     }
 
     // === 動的グリッドとの一致判定 ===
-    private bool IsMatchingDynamicCellType(Vector3 pos, char cellType) => StageBuilder.Instance.GetGridCharType(pos) == cellType;
+    private bool IsMatchingDynamicCellType(Vector3 pos, char cellType)
+    {
+        return StageBuilder.Instance.GetDynamicGridCharType(pos) == cellType;
+    }
 
     // === グリッドデータを更新する処理（基本はP） ===
     public virtual void UpdateGridData()
