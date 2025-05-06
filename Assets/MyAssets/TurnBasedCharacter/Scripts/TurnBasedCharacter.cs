@@ -34,7 +34,6 @@ public class TurnbsedCharacter : MonoBehaviour, ITurnBased
 
         Vector3Int targetGrid = StageBuilder.Instance.GridFromPosition(nextPos);
         if (GameManager.Instance.reservedPositions.ContainsKey(targetGrid)) return;
-        GameManager.Instance.reservedPositions[targetGrid] = this;
 
         // === 通常移動処理 ===
         MoveForward();
