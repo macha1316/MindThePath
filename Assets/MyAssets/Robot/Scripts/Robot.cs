@@ -1,5 +1,15 @@
 public class Robot : TurnbsedCharacter
 {
+    // === ゴール到達時の処理 ===
+    public override void CheckGoal()
+    {
+        // ゴールに到達したら、前進せずに反転する
+        if (StageBuilder.Instance.IsMatchingCellType(nextPos, 'G'))
+        {
+            TryFlipDirection(ref nextPos);
+        }
+    }
+
     public override void UpdateGridData()
     {
         if (isComplete) return;

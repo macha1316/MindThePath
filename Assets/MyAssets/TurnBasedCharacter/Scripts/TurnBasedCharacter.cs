@@ -126,7 +126,7 @@ public class TurnbsedCharacter : MonoBehaviour, ITurnBased
     }
 
     // === 方向転換（反転）処理 ===
-    private bool TryFlipDirection(ref Vector3 nextPos)
+    public virtual bool TryFlipDirection(ref Vector3 nextPos)
     {
         transform.forward = -transform.forward;
         nextPos = transform.position + transform.forward * 2.0f;
@@ -151,7 +151,7 @@ public class TurnbsedCharacter : MonoBehaviour, ITurnBased
     }
 
     // === ゴール到達時の処理 ===
-    private void CheckGoal()
+    public virtual void CheckGoal()
     {
         if (StageBuilder.Instance.IsMatchingCellType(nextPos, 'G'))
         {
