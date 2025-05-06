@@ -83,21 +83,21 @@ public class DraggableGimmic : MonoBehaviour
         isDragging = false;
         boxCollider.enabled = true;
 
-        // Check if the tile below is 'B' or 'M' before placement
-        Vector3 belowPos = transform.position + Vector3.down * StageBuilder.BLOCK_SIZE;
-        if (!StageBuilder.Instance.IsAnyMatchingCellType(belowPos, 'B', 'M'))
-        {
-            Destroy(gameObject);
-            StageSelectUI.Instance.CreateGimmickUI(cellType);
-            InputStateManager.IsDragging = false;
-            return;
-        }
-
         bool isValidPos = StageBuilder.Instance.IsValidGridPosition(transform.position);
         if (!isValidPos)
         {
             Destroy(gameObject);
             // UI 再構築のコードを書く
+            StageSelectUI.Instance.CreateGimmickUI(cellType);
+            InputStateManager.IsDragging = false;
+            return;
+        }
+
+        // Check if the tile below is 'B' or 'M' before placement
+        Vector3 belowPos = transform.position + Vector3.down * StageBuilder.BLOCK_SIZE;
+        if (!StageBuilder.Instance.IsAnyMatchingCellType(belowPos, 'B', 'M'))
+        {
+            Destroy(gameObject);
             StageSelectUI.Instance.CreateGimmickUI(cellType);
             InputStateManager.IsDragging = false;
             return;
