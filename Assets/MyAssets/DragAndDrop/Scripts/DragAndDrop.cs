@@ -160,6 +160,20 @@ public class DragAndDrop : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndD
                 return;
             }
 
+            Vector3 belowPos = gimmickInstance.transform.position + Vector3.down * StageBuilder.BLOCK_SIZE;
+            if (!StageBuilder.Instance.IsAnyMatchingCellType(belowPos, 'B', 'M'))
+            {
+                Destroy(gimmickInstance);
+                StageSelectUI.Instance.CreateGimmickUI(cellType);
+                Destroy(gameObject);
+
+                canvasGroup.alpha = 1;
+                canvasGroup.blocksRaycasts = true;
+                InputStateManager.IsDragging = false;
+                LayoutRebuilder.ForceRebuildLayoutImmediate(spawnBoundary);
+                return;
+            }
+
             // Grid
             if (cellType == 'B' || cellType == 'M' || cellType == 'P' || cellType == 'K')
             {
