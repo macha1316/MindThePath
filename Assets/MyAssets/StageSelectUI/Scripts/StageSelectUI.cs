@@ -16,6 +16,9 @@ public class StageSelectUI : MonoBehaviour
     [SerializeField] GameObject startUI;
     [SerializeField] GameObject stageUI;
     [SerializeField] GameObject clearUI;
+    [SerializeField] GameObject pauseUI;
+    [SerializeField] GameObject optionUI;
+    [SerializeField] GameObject stopUI;
     [SerializeField] TextMeshProUGUI speedText;
 
     [SerializeField] GameObject[] gimmickUIList;
@@ -44,6 +47,8 @@ public class StageSelectUI : MonoBehaviour
         startUI.SetActive(false);
         stageUI.SetActive(false);
         clearUI.SetActive(false);
+        pauseUI.SetActive(false);
+        optionUI.SetActive(false);
         stageSelectUI.SetActive(true);
 
         int clearedStage = PlayerPrefs.GetInt(ClearedStageKey, 0);
@@ -124,6 +129,8 @@ public class StageSelectUI : MonoBehaviour
         stageUI.SetActive(true);
         stageSelectUI.SetActive(false);
         clearUI.SetActive(false);
+        pauseUI.SetActive(false);
+        optionUI.SetActive(false);
     }
 
     public void SetClearUI()
@@ -131,6 +138,8 @@ public class StageSelectUI : MonoBehaviour
         startUI.SetActive(false);
         stageUI.SetActive(false);
         stageSelectUI.SetActive(false);
+        pauseUI.SetActive(false);
+        optionUI.SetActive(false);
         clearUI.SetActive(true);
     }
 
@@ -150,7 +159,30 @@ public class StageSelectUI : MonoBehaviour
         stageUI.SetActive(false);
         stageSelectUI.SetActive(true);
         clearUI.SetActive(false);
+        pauseUI.SetActive(false);
+        optionUI.SetActive(false);
         StageBuilder.Instance.DestroyStage();
+    }
+
+    public void ShowPauseUI()
+    {
+        pauseUI.SetActive(true);
+        optionUI.SetActive(false);
+        stopUI.SetActive(false);
+    }
+
+    public void ShowOptionUI()
+    {
+        pauseUI.SetActive(false);
+        optionUI.SetActive(true);
+        stopUI.SetActive(false);
+    }
+
+    public void HidePauseUI()
+    {
+        pauseUI.SetActive(false);
+        optionUI.SetActive(false);
+        stopUI.SetActive(true);
     }
 
     // デバッグ用: 最大にしている

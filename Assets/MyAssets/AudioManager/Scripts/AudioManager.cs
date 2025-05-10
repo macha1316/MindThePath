@@ -4,6 +4,9 @@ public class AudioManager : MonoBehaviour
 {
     [SerializeField] private AudioClip dragSound;
     [SerializeField] private AudioClip dropSound;
+    [SerializeField] private AudioClip rotateSound;
+    [SerializeField] private AudioClip selectStageSound;
+    [SerializeField] private AudioClip gameStartSound;
     private AudioSource audioSource;
 
     public static AudioManager Instance;
@@ -31,5 +34,20 @@ public class AudioManager : MonoBehaviour
         {
             audioSource.PlayOneShot(dropSound);
         }
+    }
+
+    public void PlayRotateSound()
+    {
+        audioSource.PlayOneShot(rotateSound);
+    }
+
+    public void SelectStageSound()
+    {
+        audioSource.PlayOneShot(selectStageSound);
+    }
+
+    public void GameStartSound()
+    {
+        audioSource.PlayOneShot(gameStartSound);
     }
 }

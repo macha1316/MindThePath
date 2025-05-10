@@ -65,6 +65,7 @@ public class TurnManager : MonoBehaviour
             .ToList();
         GameManager.Instance.SetIsStart();
         StageSelectUI.Instance.GameStartUI();
+        AudioManager.Instance.GameStartSound();
         StartCoroutine(TurnLoop());
     }
 }

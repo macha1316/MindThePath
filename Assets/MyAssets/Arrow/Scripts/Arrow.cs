@@ -65,6 +65,7 @@ public class Arrow : MonoBehaviour
         if (topParent != null)
         {
             topParent.Rotate(0, 90f, 0, Space.World);
+            AudioManager.Instance.PlayRotateSound();
 
             // ギミックタイプの変更: R → D → L → U → R...
             switch (draggableGimmic.cellType)

@@ -38,12 +38,12 @@ public class StageBuilder : MonoBehaviour
     public void CreateStage(int stageNumberProp)
     {
         stageNumber = stageNumberProp;
-        // GameManager.Instance.GetStageNumber();
         StageSelectUI.Instance.SelectStageUI(stageNumber);
         GameManager.Instance.SetGameStop();
         gridData = null;
         dynamicTiles = null;
         isGenerating = true;
+        AudioManager.Instance.SelectStageSound();
         LoadStage(textAssets[stageNumber]);
     }
 
