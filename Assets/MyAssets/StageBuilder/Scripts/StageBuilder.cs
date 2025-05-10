@@ -34,6 +34,8 @@ public class StageBuilder : MonoBehaviour
     private int remainingBlocksToSpawn = 0;
     private bool isGenerating = false;
 
+    public bool IsGenerating => isGenerating;
+
     // Stage情報をロード & UIをStage情報に合わせて出す
     public void CreateStage(int stageNumberProp)
     {

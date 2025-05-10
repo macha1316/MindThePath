@@ -56,6 +56,7 @@ public class TurnManager : MonoBehaviour
 
     public void StartMove()
     {
+        if (StageBuilder.Instance.IsGenerating) return;
         if (GameManager.Instance.GetIsStart()) return;
         isFirstComplete = false;
         turnObjects = new List<ITurnBased>();
