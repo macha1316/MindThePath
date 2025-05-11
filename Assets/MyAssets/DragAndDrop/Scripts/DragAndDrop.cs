@@ -9,6 +9,7 @@ public class DragAndDrop : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndD
     private bool hasSpawnedObject = false;
     private GameObject gimmickInstance;
     private Vector3 lastGridPosition;
+    private Color[] originalColors;
 
     [SerializeField] GameObject gimmickPrefab; // ギミックのプレハブ
     [SerializeField] RectTransform spawnBoundary; // ドラッグして脱出したい境界パネル
@@ -93,6 +94,26 @@ public class DragAndDrop : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndD
 
                 Vector3 snappedPos = SnapToGrid(offsetPos);
                 gimmickInstance.transform.position = snappedPos;
+
+                bool isValid = StageBuilder.Instance.IsValidGridPosition(snappedPos)
+                               && StageBuilder.Instance.IsAnyMatchingCellType(snappedPos + Vector3.down * StageBuilder.BLOCK_SIZE, 'B', 'M');
+                Renderer[] renderers = gimmickInstance.GetComponentsInChildren<Renderer>();
+                if (renderers.Length > 0)
+                {
+                    if (originalColors == null || originalColors.Length != renderers.Length)
+                    {
+                        originalColors = new Color[renderers.Length];
+                        for (int i = 0; i < renderers.Length; i++)
+                        {
+                            originalColors[i] = renderers[i].material.color;
+                        }
+                    }
+
+                    for (int i = 0; i < renderers.Length; i++)
+                    {
+                        renderers[i].material.color = isValid ? originalColors[i] : Color.red;
+                    }
+                }
 
                 Vector3 currentGridPos = StageBuilder.Instance.GridFromPosition(snappedPos);
                 if (currentGridPos != lastGridPosition)

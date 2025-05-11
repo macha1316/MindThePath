@@ -7,6 +7,7 @@ public class DraggableGimmic : MonoBehaviour
     private bool isDragging = false;
     private Vector3 lastGridPosition;
     public char cellType = 'N';
+    private Color[] originalColors;
 
     void Start()
     {
@@ -67,6 +68,29 @@ public class DraggableGimmic : MonoBehaviour
                 return;
             }
             transform.position = snappedPos;
+
+            // 設置可能かを判定し、色を変更
+            Vector3 belowPos = snappedPos + Vector3.down * StageBuilder.BLOCK_SIZE;
+            bool isValid = StageBuilder.Instance.IsValidGridPosition(snappedPos)
+                           && StageBuilder.Instance.IsAnyMatchingCellType(belowPos, 'B', 'M');
+
+            Renderer[] renderers = GetComponentsInChildren<Renderer>();
+            if (renderers.Length > 0)
+            {
+                if (originalColors == null || originalColors.Length != renderers.Length)
+                {
+                    originalColors = new Color[renderers.Length];
+                    for (int i = 0; i < renderers.Length; i++)
+                    {
+                        originalColors[i] = renderers[i].material.color;
+                    }
+                }
+
+                for (int i = 0; i < renderers.Length; i++)
+                {
+                    renderers[i].material.color = isValid ? originalColors[i] : Color.red;
+                }
+            }
 
             Vector3 currentGridPos = StageBuilder.Instance.GridFromPosition(snappedPos);
             if (currentGridPos != lastGridPosition)
