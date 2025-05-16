@@ -30,9 +30,9 @@ public class GameManager : MonoBehaviour
     {
         foreach (var player in players)
         {
-            if (!player.GetIsComplete()) return false;
+            // if (!player.GetIsComplete()) return false;
         }
-        return true;
+        return false;
     }
 
     public bool GetIsStart() => isStart;
