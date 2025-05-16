@@ -1,7 +1,7 @@
 using UnityEngine;
 using DG.Tweening;
 
-public class Player : MonoBehaviour
+public class Player : MonoBehaviour, ITurnBased
 {
     public float moveSpeed = 5f;
     private bool isMoving = false;
@@ -47,5 +47,14 @@ public class Player : MonoBehaviour
                     });
             }
         }
+    }
+
+    public void OnTurn()
+    {
+        // Implement turn-based logic here if needed
+    }
+    public void UpdateGridData()
+    {
+        StageBuilder.Instance.UpdateGridAtPosition(targetPosition, 'P');
     }
 }
