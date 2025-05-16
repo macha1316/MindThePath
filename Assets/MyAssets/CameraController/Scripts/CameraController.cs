@@ -17,11 +17,6 @@ public class CameraController : MonoBehaviour
 
     void Update()
     {
-        if (InputStateManager.IsDragging == true)
-        {
-            return;
-        }
-
         if (Input.touchSupported && Input.touchCount > 0)
         {
             HandleTouch();

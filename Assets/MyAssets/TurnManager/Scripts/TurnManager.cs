@@ -65,7 +65,6 @@ public class TurnManager : MonoBehaviour
             .OrderByDescending(obj => (obj as MonoBehaviour).GetComponent<MoveBox>() != null)
             .ToList();
         GameManager.Instance.SetIsStart();
-        StageSelectUI.Instance.GameStartUI();
         AudioManager.Instance.GameStartSound();
         StartCoroutine(TurnLoop());
     }
