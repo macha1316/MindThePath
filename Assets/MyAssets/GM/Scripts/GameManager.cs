@@ -8,6 +8,7 @@ public class GameManager : MonoBehaviour
     private List<Player> players;
     private List<MoveBox> boxes;
     private bool isStart = false;
+    public bool Is2DMode { get; set; } = false;
     public Dictionary<Vector3Int, MonoBehaviour> reservedPositions = new();
 
     private void Awake()

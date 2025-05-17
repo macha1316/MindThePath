@@ -6,7 +6,9 @@ using System.Collections;
 
 public class StageBuilder : MonoBehaviour
 {
-    // 定数
+    private List<GameObject> canvasObjects = new List<GameObject>();
+    private List<GameObject> modelObjects = new List<GameObject>();
+
     public const float BLOCK_SIZE = 2.0f;
     public const float HEIGHT_OFFSET = 2.0f;
 
@@ -45,6 +47,8 @@ public class StageBuilder : MonoBehaviour
         gridData = null;
         dynamicTiles = null;
         isGenerating = true;
+        canvasObjects.Clear();
+        modelObjects.Clear();
         AudioManager.Instance.SelectStageSound();
         LoadStage(textAssets[stageNumber]);
     }
@@ -254,7 +258,36 @@ public class StageBuilder : MonoBehaviour
                 case '>': dir = Vector3.right; break;
             }
             obj.transform.forward = dir;
+
+            // Classify child objects as Canvas or model objects
+            foreach (Transform child in obj.transform)
+            {
+                Canvas canvas = child.GetComponent<Canvas>();
+                if (canvas != null)
+                {
+                    canvasObjects.Add(child.gameObject);
+                    child.gameObject.SetActive(false); // start hidden
+                }
+                else
+                {
+                    modelObjects.Add(child.gameObject);
+                    child.gameObject.SetActive(true); // default visible
+                }
+            }
         }
+    }
+
+    // Toggle view modes
+    public void SwitchTo2DView()
+    {
+        foreach (var obj in canvasObjects) obj.SetActive(true);
+        foreach (var obj in modelObjects) obj.SetActive(false);
+    }
+
+    public void SwitchTo3DView()
+    {
+        foreach (var obj in canvasObjects) obj.SetActive(false);
+        foreach (var obj in modelObjects) obj.SetActive(true);
     }
 
     public void ResetGridData()
@@ -390,6 +423,40 @@ public class StageBuilder : MonoBehaviour
                 Destroy(child.gameObject);
             }
         }
+    }
+
+    public char GetTopCellTypeAt(Vector3 position)
+    {
+        int col = Mathf.RoundToInt(position.x / BLOCK_SIZE);
+        int row = Mathf.RoundToInt(position.z / BLOCK_SIZE);
+
+        for (int height = gridData.GetLength(1) - 1; height >= 0; height--)
+        {
+            char cell = gridData[col, height, row];
+            if (cell != 'N')
+            {
+                return cell;
+            }
+        }
+        return 'N';
+    }
+
+    public Vector3 GetTopCellPosition(Vector3 position)
+    {
+        int col = Mathf.RoundToInt(position.x / BLOCK_SIZE);
+        int row = Mathf.RoundToInt(position.z / BLOCK_SIZE);
+
+        for (int height = gridData.GetLength(1) - 1; height >= 0; height--)
+        {
+            char cell = gridData[col, height, row];
+            if (cell != 'N')
+            {
+                return new Vector3(col * BLOCK_SIZE, height * HEIGHT_OFFSET, row * BLOCK_SIZE);
+            }
+        }
+
+        // デフォルトで最下層を返す
+        return new Vector3(col * BLOCK_SIZE, 0f, row * BLOCK_SIZE);
     }
 
     private void OnDrawGizmos()

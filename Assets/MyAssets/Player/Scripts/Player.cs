@@ -28,9 +28,31 @@ public class Player : MonoBehaviour, ITurnBased
 
         if (direction != Vector3.zero)
         {
-            Vector3 next = transform.position + direction * 2.0f;
-            if (StageBuilder.Instance.IsValidGridPosition(next) &&
-                !StageBuilder.Instance.IsAnyMatchingCellType(next, 'B', 'P', 'K'))
+            Vector3 next = transform.position + direction * StageBuilder.HEIGHT_OFFSET;
+
+            bool canMove = false;
+
+            if (GameManager.Instance.Is2DMode)
+            {
+                Vector3 topPos = StageBuilder.Instance.GetTopCellPosition(next);
+                if (StageBuilder.Instance.IsAnyMatchingCellType(topPos, 'B', 'M'))
+                {
+                    next = topPos + Vector3.up * StageBuilder.HEIGHT_OFFSET;
+                    canMove = true;
+                }
+            }
+            else
+            {
+                Vector3 nextDown = next + Vector3.down * StageBuilder.HEIGHT_OFFSET;
+                if (StageBuilder.Instance.IsValidGridPosition(next) &&
+                    !StageBuilder.Instance.IsAnyMatchingCellType(next, 'B', 'P', 'K') &&
+                    !StageBuilder.Instance.IsAnyMatchingCellType(nextDown, 'P', 'K', 'N'))
+                {
+                    canMove = true;
+                }
+            }
+
+            if (canMove)
             {
                 StageBuilder.Instance.UpdateGridAtPosition(transform.position, 'N');
                 targetPosition = next;
