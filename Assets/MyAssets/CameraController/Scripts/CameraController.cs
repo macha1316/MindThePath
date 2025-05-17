@@ -2,12 +2,7 @@ using UnityEngine;
 
 public class CameraController : MonoBehaviour
 {
-    public Transform mainCamera;     // 実際のカメラ
-    // private bool is2DView = false;
-
-    void Start()
-    {
-    }
+    public Transform mainCamera;
 
     public void SwitchView()
     {

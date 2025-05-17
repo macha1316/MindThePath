@@ -44,7 +44,34 @@ public class Player : MonoBehaviour, ITurnBased
             else
             {
                 Vector3 nextDown = next + Vector3.down * StageBuilder.HEIGHT_OFFSET;
-                if (StageBuilder.Instance.IsValidGridPosition(next) &&
+                if (StageBuilder.Instance.IsMatchingCellType(next, 'M'))
+                {
+                    Vector3 afterNext = next + direction * StageBuilder.HEIGHT_OFFSET;
+
+                    Vector3 dropPos = afterNext;
+                    while (StageBuilder.Instance.IsValidGridPosition(dropPos + Vector3.down * StageBuilder.HEIGHT_OFFSET) &&
+                           !StageBuilder.Instance.IsAnyMatchingCellType(dropPos + Vector3.down * StageBuilder.HEIGHT_OFFSET, 'B', 'M', 'P', 'K'))
+                    {
+                        dropPos += Vector3.down * StageBuilder.HEIGHT_OFFSET;
+                    }
+
+                    StageBuilder.Instance.UpdateGridAtPosition(next, 'N');
+                    StageBuilder.Instance.UpdateGridAtPosition(dropPos, 'M');
+
+                    foreach (var box in FindObjectsOfType<MoveBox>())
+                    {
+                        if (Vector3.Distance(box.transform.position, next) < 0.1f)
+                        {
+                            box.transform.DOMove(dropPos, 1f / moveSpeed).SetEase(Ease.Linear);
+                            box.TargetPos = dropPos;
+                            break;
+                        }
+                    }
+
+                    canMove = true;
+                    return;
+                }
+                else if (StageBuilder.Instance.IsValidGridPosition(next) &&
                     !StageBuilder.Instance.IsAnyMatchingCellType(next, 'B', 'P', 'K') &&
                     !StageBuilder.Instance.IsAnyMatchingCellType(nextDown, 'P', 'K', 'N'))
                 {

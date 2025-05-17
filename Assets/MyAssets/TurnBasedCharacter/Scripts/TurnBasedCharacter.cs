@@ -254,7 +254,4 @@ public class TurnbsedCharacter : MonoBehaviour, ITurnBased
 
         StageBuilder.Instance.UpdateGridAtPosition(nextPos, 'P');
     }
-
-    // === ゴール完了状態の取得 ===
-    public bool GetIsComplete() => isComplete;
 }
