@@ -117,7 +117,7 @@ public class TurnbsedCharacter : MonoBehaviour, ITurnBased
 
     private bool TryHandleImmediateFlipFor2D(Vector3 topPos)
     {
-        if (StageBuilder.Instance.IsAnyMatchingCellType(topPos, 'P', 'K'))
+        if (StageBuilder.Instance.IsAnyMatchingCellType(topPos, 'P', 'K', 'O'))
         {
             transform.forward = -transform.forward;
             Vector3 flippedPos = transform.position + transform.forward * 2.0f;

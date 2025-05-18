@@ -17,7 +17,8 @@ public class Robot : TurnbsedCharacter
         if (!StageBuilder.Instance.IsValidGridPosition(nextPos) ||
             StageBuilder.Instance.IsMatchingCellType(nextPos, 'B') ||
             StageBuilder.Instance.IsMatchingCellType(nextPos, 'P') ||
-            StageBuilder.Instance.IsMatchingCellType(nextPos, 'K'))
+            StageBuilder.Instance.IsMatchingCellType(nextPos, 'K') ||
+            StageBuilder.Instance.IsMatchingCellType(nextPos, 'O'))
         {
             StageBuilder.Instance.UpdateGridAtPosition(transform.position, 'K'); return;
         }
