@@ -24,6 +24,7 @@ public class StageBuilder : MonoBehaviour
     [SerializeField] GameObject leftPrefab;
     [SerializeField] GameObject moveBoxPrefab;
     [SerializeField] GameObject kylePrefab;
+    [SerializeField] GameObject lavaPrefab;
     private char[,,] gridData;
     private char[,,] dynamicTiles;
     public int stageNumber = 0;
@@ -221,6 +222,9 @@ public class StageBuilder : MonoBehaviour
             case 'K':
                 prefab = kylePrefab;
                 break;
+            case 'O':
+                prefab = lavaPrefab;
+                break;
         }
         if (prefab != null)
         {
@@ -247,7 +251,6 @@ public class StageBuilder : MonoBehaviour
             if (cellType == 'K')
             {
                 Robot newK = obj.AddComponent<Robot>();
-                // GameManager.Instance.GetMoveBox(newM);
             }
             Vector3 dir = Vector3.forward;
             switch (dirChar)
@@ -259,7 +262,6 @@ public class StageBuilder : MonoBehaviour
             }
             obj.transform.forward = dir;
 
-            // Classify child objects as Canvas or model objects
             foreach (Transform child in obj.transform)
             {
                 Canvas canvas = child.GetComponent<Canvas>();
@@ -303,7 +305,6 @@ public class StageBuilder : MonoBehaviour
                     {
                         gridData[c, h, r] = 'N';
                     }
-                    // Dynamicの方のリセットいるかも
                 }
             }
         }

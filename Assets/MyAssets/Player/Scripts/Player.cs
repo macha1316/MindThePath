@@ -54,10 +54,11 @@ public class Player : MonoBehaviour, ITurnBased
                     Vector3 afterNext = next + direction * StageBuilder.HEIGHT_OFFSET;
                     if (!StageBuilder.Instance.IsValidGridPosition(afterNext)) return;
                     if (!StageBuilder.Instance.IsMatchingCellType(afterNext, 'N')) return;
+                    if (StageBuilder.Instance.IsMatchingCellType(nextDown, 'O')) return;
 
                     Vector3 dropPos = afterNext;
                     while (StageBuilder.Instance.IsValidGridPosition(dropPos + Vector3.down * StageBuilder.HEIGHT_OFFSET) &&
-                           !StageBuilder.Instance.IsAnyMatchingCellType(dropPos + Vector3.down * StageBuilder.HEIGHT_OFFSET, 'B', 'M', 'P', 'K'))
+                           !StageBuilder.Instance.IsAnyMatchingCellType(dropPos + Vector3.down * StageBuilder.HEIGHT_OFFSET, 'B', 'M', 'P', 'K', 'O'))
                     {
                         dropPos += Vector3.down * StageBuilder.HEIGHT_OFFSET;
                     }
@@ -78,8 +79,8 @@ public class Player : MonoBehaviour, ITurnBased
                     canMove = true;
                 }
                 else if (StageBuilder.Instance.IsValidGridPosition(next) &&
-                    !StageBuilder.Instance.IsAnyMatchingCellType(next, 'B', 'P', 'K') &&
-                    !StageBuilder.Instance.IsAnyMatchingCellType(nextDown, 'P', 'K', 'N'))
+                    !StageBuilder.Instance.IsAnyMatchingCellType(next, 'B', 'P', 'K', 'O') &&
+                    !StageBuilder.Instance.IsAnyMatchingCellType(nextDown, 'P', 'K', 'N', 'O'))
                 {
                     canMove = true;
                 }
