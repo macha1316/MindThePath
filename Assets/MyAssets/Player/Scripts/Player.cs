@@ -52,13 +52,8 @@ public class Player : MonoBehaviour, ITurnBased
                 if (StageBuilder.Instance.IsMatchingCellType(next, 'M'))
                 {
                     Vector3 afterNext = next + direction * StageBuilder.HEIGHT_OFFSET;
-
-                    if (!StageBuilder.Instance.IsMatchingCellType(afterNext, 'N'))
-                    {
-                        return;
-                    }
-
                     if (!StageBuilder.Instance.IsValidGridPosition(afterNext)) return;
+                    if (!StageBuilder.Instance.IsMatchingCellType(afterNext, 'N')) return;
 
                     Vector3 dropPos = afterNext;
                     while (StageBuilder.Instance.IsValidGridPosition(dropPos + Vector3.down * StageBuilder.HEIGHT_OFFSET) &&
@@ -72,7 +67,7 @@ public class Player : MonoBehaviour, ITurnBased
 
                     foreach (var box in FindObjectsOfType<MoveBox>())
                     {
-                        if (Vector3.Distance(box.transform.position, next) < 0.1f)
+                        if (Vector3.Distance(box.transform.position, next) < 1f)
                         {
                             box.transform.DOMove(dropPos, 1f / moveSpeed).SetEase(Ease.Linear);
                             box.TargetPos = dropPos;
@@ -96,6 +91,7 @@ public class Player : MonoBehaviour, ITurnBased
                 targetPosition = next;
                 isMoving = true;
                 transform.forward = direction;
+                StageBuilder.Instance.UpdateGridAtPosition(targetPosition, 'P');
 
                 transform.DOMove(targetPosition, 1f / moveSpeed)
                     .SetEase(Ease.Linear)
@@ -103,7 +99,6 @@ public class Player : MonoBehaviour, ITurnBased
                     {
                         transform.position = targetPosition;
                         isMoving = false;
-                        StageBuilder.Instance.UpdateGridAtPosition(transform.position, 'P');
                     });
             }
         }

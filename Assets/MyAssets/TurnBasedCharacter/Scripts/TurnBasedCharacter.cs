@@ -149,7 +149,6 @@ public class TurnbsedCharacter : MonoBehaviour, ITurnBased
             .OnComplete(() =>
             {
                 isMoving = false;
-                UpdateForwardFromDynamic();
             });
     }
 
@@ -186,15 +185,6 @@ public class TurnbsedCharacter : MonoBehaviour, ITurnBased
         return false;
     }
 
-    // === 動的セルの向きに応じて進行方向を更新 ===
-    private void UpdateForwardFromDynamic()
-    {
-        if (IsMatchingDynamicCellType(nextPos, 'U')) transform.forward = Vector3.forward;
-        if (IsMatchingDynamicCellType(nextPos, 'D')) transform.forward = Vector3.back;
-        if (IsMatchingDynamicCellType(nextPos, 'R')) transform.forward = Vector3.right;
-        if (IsMatchingDynamicCellType(nextPos, 'L')) transform.forward = Vector3.left;
-    }
-
     // === ゴール到達時の処理 ===
     public virtual void CheckGoal()
     {
@@ -222,7 +212,6 @@ public class TurnbsedCharacter : MonoBehaviour, ITurnBased
         {
             // Grid座標が一致しないBoxはスキップ
             if (StageBuilder.Instance.GridFromPosition(box.transform.position) != StageBuilder.Instance.GridFromPosition(frontPos)) continue;
-
             // 押し出し先・上下の座標を計算
             Vector3 boxNextPos = box.transform.position + transform.forward * StageBuilder.BLOCK_SIZE;
             Vector3 nextDownPos = nextPos - Vector3.up * StageBuilder.BLOCK_SIZE;
@@ -244,7 +233,6 @@ public class TurnbsedCharacter : MonoBehaviour, ITurnBased
                     .OnComplete(() =>
                     {
                         isMoving = false;
-                        UpdateForwardFromDynamic();
                     });
                 return true;
             }
@@ -255,12 +243,6 @@ public class TurnbsedCharacter : MonoBehaviour, ITurnBased
 
         // Box押しで特別な処理はなし
         return false;
-    }
-
-    // === 動的グリッドとの一致判定 ===
-    private bool IsMatchingDynamicCellType(Vector3 pos, char cellType)
-    {
-        return StageBuilder.Instance.GetDynamicGridCharType(pos) == cellType;
     }
 
     // === グリッドデータを更新する処理（基本はP） ===
