@@ -26,46 +26,30 @@ public class MoveBox : MonoBehaviour, ITurnBased
         if (!StageBuilder.Instance.IsValidGridPosition(TargetPos)) return;
         if (!StageBuilder.Instance.IsMatchingCellType(TargetPos, 'N')) return;
 
+        // Drop until hitting a non-'N' block or invalid grid
+        Vector3 below = TargetPos + Vector3.down * StageBuilder.HEIGHT_OFFSET;
+        while (StageBuilder.Instance.IsValidGridPosition(below) &&
+               StageBuilder.Instance.IsMatchingCellType(below, 'N'))
+        {
+            TargetPos = below;
+            below += Vector3.down * StageBuilder.HEIGHT_OFFSET;
+        }
+
         isMoving = true;
 
         Vector3Int targetGrid = new Vector3Int(
-                    Mathf.RoundToInt(TargetPos.x / StageBuilder.BLOCK_SIZE),
-                    Mathf.RoundToInt(TargetPos.y / StageBuilder.HEIGHT_OFFSET),
-                    Mathf.RoundToInt(TargetPos.z / StageBuilder.BLOCK_SIZE)
-                );
-        GameManager.Instance.reservedPositions[targetGrid] = this;
+            Mathf.RoundToInt(TargetPos.x / StageBuilder.BLOCK_SIZE),
+            Mathf.RoundToInt(TargetPos.y / StageBuilder.HEIGHT_OFFSET),
+            Mathf.RoundToInt(TargetPos.z / StageBuilder.BLOCK_SIZE)
+        );
+
         transform.DOMove(TargetPos, moveDuration).SetEase(Ease.Linear).OnComplete(() =>
         {
             isMoving = false;
-            GameManager.Instance.reservedPositions.Remove(StageBuilder.Instance.GridFromPosition(transform.position));
         });
     }
 
-    public void OnTurn()
-    {
-        if (isMoving) return;
-        // 自らの下を見てNなら毎ターン下がるようにする
-        Vector3 oneDown = TargetPos + Vector3.down * StageBuilder.HEIGHT_OFFSET;
-        if (StageBuilder.Instance.IsValidGridPosition(oneDown))
-        {
-            if (!StageBuilder.Instance.IsMatchingCellType(oneDown, 'B') && !StageBuilder.Instance.IsMatchingCellType(oneDown, 'M'))
-            {
-                TargetPos = oneDown;
-                isMoving = true;
-                Vector3Int targetGrid = new Vector3Int(
-                    Mathf.RoundToInt(TargetPos.x / StageBuilder.BLOCK_SIZE),
-                    Mathf.RoundToInt(TargetPos.y / StageBuilder.HEIGHT_OFFSET),
-                    Mathf.RoundToInt(TargetPos.z / StageBuilder.BLOCK_SIZE)
-                );
-                GameManager.Instance.reservedPositions[targetGrid] = this;
-                transform.DOMove(TargetPos, moveDuration).SetEase(Ease.Linear).OnComplete(() =>
-                {
-                    isMoving = false;
-                    GameManager.Instance.reservedPositions.Remove(StageBuilder.Instance.GridFromPosition(transform.position));
-                });
-            }
-        }
-    }
+    public void OnTurn() { }
 
     public void UpdateGridData()
     {

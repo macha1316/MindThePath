@@ -19,24 +19,66 @@ public class TurnbsedCharacter : MonoBehaviour, ITurnBased
     // === ターン開始時の処理 ===
     public void OnTurn()
     {
-        if (ShouldSkipTurn()) return;
+        if (GameManager.Instance.Is2DMode)
+        {
+            Vector3 forwardPos = transform.position + transform.forward * 2.0f;
 
-        animator.SetTrigger("walk");
-        nextPos = transform.position + transform.forward * 2.0f;
+            if (!StageBuilder.Instance.IsValidGridPosition(forwardPos))
+            {
+                transform.forward = -transform.forward;
+                Vector3 flippedPos = transform.position + transform.forward * 2.0f;
 
-        // === 即時方向転換処理（前方に進めない時） ===
-        if (TryHandleImmediateFlip()) return;
+                if (!StageBuilder.Instance.IsValidGridPosition(flippedPos))
+                {
+                    animator.SetTrigger("idle");
+                    return;
+                }
 
-        // === 一段下へジャンプする処理 ===
-        if (TryHandleJumpDown()) return;
-        // === MoveBoxを前に押す処理（条件付き） ===
-        if (TryHandleMoveBox()) return;
+                Vector3 topPos1 = StageBuilder.Instance.GetTopCellPosition(flippedPos);
 
-        Vector3Int targetGrid = StageBuilder.Instance.GridFromPosition(nextPos);
-        if (GameManager.Instance.reservedPositions.ContainsKey(targetGrid)) return;
+                if (StageBuilder.Instance.IsAnyMatchingCellType(topPos1, 'B', 'M'))
+                {
+                    animator.SetTrigger("walk");
+                    nextPos = topPos1 + Vector3.up * StageBuilder.HEIGHT_OFFSET;
+                    MoveForward();
+                    return;
+                }
+                animator.SetTrigger("idle");
+                return;
+            }
 
-        // === 通常移動処理 ===
-        MoveForward();
+            Vector3 topPos = StageBuilder.Instance.GetTopCellPosition(forwardPos);
+            if (TryHandleImmediateFlipFor2D(topPos)) return;
+
+            if (StageBuilder.Instance.IsMatchingCellType(topPos, 'B') ||
+                StageBuilder.Instance.IsMatchingCellType(topPos, 'M'))
+            {
+                animator.SetTrigger("walk");
+                nextPos = topPos + Vector3.up * StageBuilder.HEIGHT_OFFSET;
+                MoveForward();
+                return;
+            }
+
+            animator.SetTrigger("idle");
+            return;
+        }
+        else
+        {
+            if (ShouldSkipTurn()) return;
+
+            animator.SetTrigger("walk");
+            nextPos = transform.position + transform.forward * 2.0f;
+
+            // === 即時方向転換処理（前方に進めない時） ===
+            if (TryHandleImmediateFlip()) return;
+
+            // === MoveBoxを前に押す処理（条件付き） ===
+            if (TryHandleMoveBox()) return;
+
+            // === 通常移動処理 ===
+            MoveForward();
+        }
+
     }
 
     // === ターンをスキップすべきかの判定 ===
@@ -53,59 +95,46 @@ public class TurnbsedCharacter : MonoBehaviour, ITurnBased
     // === 即時方向転換処理（前方に進めない時） ===
     private bool TryHandleImmediateFlip()
     {
-        Vector3Int targetGrid = StageBuilder.Instance.GridFromPosition(nextPos);
-        if (GameManager.Instance.reservedPositions.TryGetValue(targetGrid, out var otherPlayer))
+        // 無効な座標 or ブロックなら折り返し
+        if (!StageBuilder.Instance.IsValidGridPosition(nextPos) ||
+            StageBuilder.Instance.IsAnyMatchingCellType(nextPos, 'B', 'P'))
         {
-            // 他プレイヤーと衝突する場合は折り返す
-            if (otherPlayer != this)
+            return !TryFlipDirection(ref nextPos);
+        }
+
+        // === N段の空間が続いていたら引き返す ===
+        if (StageBuilder.Instance.IsMatchingCellType(nextPos, 'N'))
+        {
+            Vector3 belowNext = nextPos + Vector3.down * StageBuilder.BLOCK_SIZE;
+            if (StageBuilder.Instance.IsMatchingCellType(belowNext, 'N'))
             {
                 return !TryFlipDirection(ref nextPos);
             }
         }
 
-        // 無効な座標 or ブロックなら折り返し
-        if (!StageBuilder.Instance.IsValidGridPosition(nextPos) ||
-            StageBuilder.Instance.IsMatchingCellType(nextPos, 'B'))
-        {
-            return !TryFlipDirection(ref nextPos);
-        }
-
         return false;
     }
 
-    // === 一段下へジャンプする処理 ===
-    private bool TryHandleJumpDown()
+    private bool TryHandleImmediateFlipFor2D(Vector3 topPos)
     {
-        Vector3 oneDown = nextPos + Vector3.down * StageBuilder.HEIGHT_OFFSET;
-        Vector3 twoDown = nextPos + Vector3.down * StageBuilder.HEIGHT_OFFSET * 2;
-
-        if (StageBuilder.Instance.IsValidGridPosition(oneDown) &&
-            !StageBuilder.Instance.IsMatchingCellType(oneDown, 'B') &&
-            !StageBuilder.Instance.IsMatchingCellType(oneDown, 'M') &&
-            !StageBuilder.Instance.IsMatchingCellType(nextPos, 'M'))
+        if (StageBuilder.Instance.IsAnyMatchingCellType(topPos, 'P', 'K'))
         {
-            if (!StageBuilder.Instance.IsValidGridPosition(twoDown) ||
-                StageBuilder.Instance.IsAnyMatchingCellType(twoDown, 'B', 'M'))
-            {
-                // 一段だけ空いている → ジャンプ
-                animator.SetTrigger("jump");
-                isMoving = true;
-                nextPos = oneDown;
+            transform.forward = -transform.forward;
+            Vector3 flippedPos = transform.position + transform.forward * 2.0f;
 
-                CheckGoal();
-                transform.DOJump(nextPos, 2f, 1, moveDuration)
-                    .SetEase(Ease.OutQuad)
-                    .OnComplete(() =>
-                    {
-                        isMoving = false;
-                        UpdateForwardFromDynamic();
-                        GameManager.Instance.reservedPositions.Remove(StageBuilder.Instance.GridFromPosition(transform.position));
-                    });
+            if (!StageBuilder.Instance.IsValidGridPosition(flippedPos)) return true;
+
+            Vector3 newTopPos = StageBuilder.Instance.GetTopCellPosition(flippedPos);
+            if (StageBuilder.Instance.IsAnyMatchingCellType(newTopPos, 'B', 'M'))
+            {
+                animator.SetTrigger("walk");
+                nextPos = newTopPos + Vector3.up * StageBuilder.HEIGHT_OFFSET;
+                MoveForward();
                 return true;
             }
 
-            // 二段とも空いている → ジャンプ不可、折り返す
-            TryFlipDirection(ref nextPos);
+            animator.SetTrigger("idle");
+            return true;
         }
         return false;
     }
@@ -121,7 +150,6 @@ public class TurnbsedCharacter : MonoBehaviour, ITurnBased
             {
                 isMoving = false;
                 UpdateForwardFromDynamic();
-                GameManager.Instance.reservedPositions.Remove(StageBuilder.Instance.GridFromPosition(transform.position));
             });
     }
 
@@ -132,10 +160,27 @@ public class TurnbsedCharacter : MonoBehaviour, ITurnBased
         nextPos = transform.position + transform.forward * 2.0f;
         if (StageBuilder.Instance.IsValidGridPosition(nextPos))
         {
-            if (StageBuilder.Instance.IsMatchingCellType(nextPos, 'B'))
+            if (StageBuilder.Instance.IsAnyMatchingCellType(nextPos, 'B', 'P'))
             {
                 return false;
             }
+            return true;
+        }
+        return false;
+    }
+
+    public bool TryFlipDirectionFor2D(ref Vector3 nextPos)
+    {
+        transform.forward = -transform.forward;
+        Vector3 flippedPos = transform.position + transform.forward * 2.0f;
+
+        if (!StageBuilder.Instance.IsValidGridPosition(flippedPos)) return true;
+
+        Vector3 topPos = StageBuilder.Instance.GetTopCellPosition(flippedPos);
+
+        if (StageBuilder.Instance.IsAnyMatchingCellType(topPos, 'K', 'P'))
+        {
+            nextPos = topPos + Vector3.up * StageBuilder.HEIGHT_OFFSET;
             return true;
         }
         return false;
@@ -200,31 +245,9 @@ public class TurnbsedCharacter : MonoBehaviour, ITurnBased
                     {
                         isMoving = false;
                         UpdateForwardFromDynamic();
-                        GameManager.Instance.reservedPositions.Remove(StageBuilder.Instance.GridFromPosition(transform.position));
                     });
                 return true;
             }
-
-            // MoveBoxの先がすでに予約されていたら引き返す
-            Vector3Int targetGrid = StageBuilder.Instance.GridFromPosition(boxNextPos);
-            if (GameManager.Instance.reservedPositions.ContainsKey(targetGrid))
-            {
-                // MoveBoxの押し出し先がすでに他のキャラに予約されている場合、方向転換して終了
-                if (!TryFlipDirection(ref nextPos)) return true;
-
-                isMoving = true;
-                CheckGoal();
-                transform.DOMove(nextPos, moveDuration)
-                    .SetEase(Ease.Linear)
-                    .OnComplete(() =>
-                    {
-                        isMoving = false;
-                        UpdateForwardFromDynamic();
-                        GameManager.Instance.reservedPositions.Remove(StageBuilder.Instance.GridFromPosition(transform.position));
-                    });
-                return true;
-            }
-
             // Boxを前に押す（Box側が動く）
             box.TryPush(transform.forward);
             break;

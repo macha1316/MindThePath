@@ -9,7 +9,6 @@ public class GameManager : MonoBehaviour
     private List<MoveBox> boxes;
     private bool isStart = false;
     public bool Is2DMode { get; set; } = false;
-    public Dictionary<Vector3Int, MonoBehaviour> reservedPositions = new();
 
     private void Awake()
     {
@@ -47,7 +46,6 @@ public class GameManager : MonoBehaviour
         players = new List<Player>();
         boxes = new List<MoveBox>();
         isStart = false;
-        reservedPositions = new Dictionary<Vector3Int, MonoBehaviour>();
     }
 
     public void SetGameSpeedFast()

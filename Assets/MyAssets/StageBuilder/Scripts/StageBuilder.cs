@@ -140,7 +140,7 @@ public class StageBuilder : MonoBehaviour
                     if (cellTypeString[0] != 'N')
                     {
                         remainingBlocksToSpawn++;
-                        StartCoroutine(SpawnBlockWithDelay(cellTypeString, position, delayCounter * 0.01f));
+                        StartCoroutine(SpawnBlockWithDelay(cellTypeString, position, delayCounter * 0.005f));
                         delayCounter++;
                     }
                     else

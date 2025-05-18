@@ -34,19 +34,31 @@ public class Player : MonoBehaviour, ITurnBased
 
             if (GameManager.Instance.Is2DMode)
             {
-                Vector3 topPos = StageBuilder.Instance.GetTopCellPosition(next);
-                if (StageBuilder.Instance.IsAnyMatchingCellType(topPos, 'B', 'M'))
+                if (StageBuilder.Instance.IsValidGridPosition(next))
                 {
-                    next = topPos + Vector3.up * StageBuilder.HEIGHT_OFFSET;
-                    canMove = true;
+                    Vector3 topPos = StageBuilder.Instance.GetTopCellPosition(next);
+                    if (StageBuilder.Instance.IsAnyMatchingCellType(topPos, 'B', 'M'))
+                    {
+                        next = topPos + Vector3.up * StageBuilder.HEIGHT_OFFSET;
+                        canMove = true;
+                    }
                 }
             }
             else
             {
+                if (!StageBuilder.Instance.IsValidGridPosition(next)) return;
                 Vector3 nextDown = next + Vector3.down * StageBuilder.HEIGHT_OFFSET;
+
                 if (StageBuilder.Instance.IsMatchingCellType(next, 'M'))
                 {
                     Vector3 afterNext = next + direction * StageBuilder.HEIGHT_OFFSET;
+
+                    if (!StageBuilder.Instance.IsMatchingCellType(afterNext, 'N'))
+                    {
+                        return;
+                    }
+
+                    if (!StageBuilder.Instance.IsValidGridPosition(afterNext)) return;
 
                     Vector3 dropPos = afterNext;
                     while (StageBuilder.Instance.IsValidGridPosition(dropPos + Vector3.down * StageBuilder.HEIGHT_OFFSET) &&
@@ -69,7 +81,6 @@ public class Player : MonoBehaviour, ITurnBased
                     }
 
                     canMove = true;
-                    return;
                 }
                 else if (StageBuilder.Instance.IsValidGridPosition(next) &&
                     !StageBuilder.Instance.IsAnyMatchingCellType(next, 'B', 'P', 'K') &&
