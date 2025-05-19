@@ -7,8 +7,9 @@ public class GameManager : MonoBehaviour
 
     private List<Player> players;
     private List<MoveBox> boxes;
-    private bool isStart = false;
+    public bool IsStart { get; set; } = false;
     public bool Is2DMode { get; set; } = false;
+    public bool IsGameClear { get; set; } = false;
 
     private void Awake()
     {
@@ -26,31 +27,28 @@ public class GameManager : MonoBehaviour
         boxes.Add(newM);
     }
 
-    public bool IsComplete()
-    {
-        foreach (var player in players)
-        {
-            // if (!player.GetIsComplete()) return false;
-        }
-        return false;
-    }
-
-    public bool GetIsStart() => isStart;
-
-    public void SetIsStart()
-    {
-        isStart = true;
-    }
     public void SetGameStop()
     {
         players = new List<Player>();
         boxes = new List<MoveBox>();
-        isStart = false;
+        IsStart = false;
     }
 
-    public void SetGameSpeedFast()
+    // スマホ対応
+    public void MoveRight()
     {
-        Time.timeScale = Time.timeScale == 1f ? 2f : 1f;
-        StageSelectUI.Instance.SetGameSpeedText(Time.timeScale == 2f ? "2x" : "1x");
+        players[0].Direction = Vector3.right;
+    }
+    public void MoveLeft()
+    {
+        players[0].Direction = Vector3.left;
+    }
+    public void MoveUp()
+    {
+        players[0].Direction = Vector3.forward;
+    }
+    public void MoveDown()
+    {
+        players[0].Direction = Vector3.back;
     }
 }

@@ -310,10 +310,6 @@ public class StageBuilder : MonoBehaviour
         }
     }
 
-    // getメソッド
-    public char[,,] GetGridData() => gridData;
-    public char[,,] GetDynamicGridData() => dynamicTiles;
-
     public char GetGridCharType(Vector3 pos)
     {
         int col = Mathf.RoundToInt(pos.x / BLOCK_SIZE);
@@ -371,7 +367,7 @@ public class StageBuilder : MonoBehaviour
         int height = Mathf.RoundToInt(pos.y / HEIGHT_OFFSET);
         int row = Mathf.RoundToInt(pos.z / BLOCK_SIZE);
 
-        return GetGridData()[col, height, row] == cellType;
+        return gridData[col, height, row] == cellType;
     }
 
     // 複数のセルタイプを確認 一つでもマッチすればtrue
@@ -424,6 +420,8 @@ public class StageBuilder : MonoBehaviour
                 Destroy(child.gameObject);
             }
         }
+        gridData = null;
+        dynamicTiles = null;
     }
 
     public char GetTopCellTypeAt(Vector3 position)

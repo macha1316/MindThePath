@@ -12,7 +12,6 @@ public class StageSelectUI : MonoBehaviour
     [SerializeField] GameObject pauseUI;
     [SerializeField] GameObject optionUI;
     [SerializeField] GameObject stopUI;
-    [SerializeField] TextMeshProUGUI speedText;
 
     public static StageSelectUI Instance;
 
@@ -54,6 +53,7 @@ public class StageSelectUI : MonoBehaviour
     private void SelectStageUI()
     {
         startUI.SetActive(true);
+        stopUI.SetActive(true);
         stageSelectUI.SetActive(false);
         clearUI.SetActive(false);
         pauseUI.SetActive(false);
@@ -69,17 +69,13 @@ public class StageSelectUI : MonoBehaviour
         clearUI.SetActive(true);
     }
 
-    public void SetGameSpeedText(string txt)
-    {
-        speedText.text = txt;
-    }
-
     public void SetStageSelectUI()
     {
         startUI.SetActive(false);
         clearUI.SetActive(false);
         pauseUI.SetActive(false);
         optionUI.SetActive(false);
+        stageSelectUI.SetActive(true);
         StageBuilder.Instance.DestroyStage();
     }
 

@@ -26,10 +26,9 @@ public class TurnManager : MonoBehaviour
         UpdateGridData();
 
         // Goal判定
-        if (GameManager.Instance.IsComplete())
+        if (GameManager.Instance.IsGameClear)
         {
             isFirstComplete = true;
-            StageSelectUI.Instance.SetClearUI();
         }
     }
 
@@ -47,7 +46,7 @@ public class TurnManager : MonoBehaviour
     // 1秒ごとにターンを実行
     IEnumerator TurnLoop()
     {
-        while (GameManager.Instance.GetIsStart())
+        while (GameManager.Instance.IsStart)
         {
             ExecuteTurn();
             yield return new WaitForSeconds(1f);
@@ -57,14 +56,15 @@ public class TurnManager : MonoBehaviour
     public void StartMove()
     {
         if (StageBuilder.Instance.IsGenerating) return;
-        if (GameManager.Instance.GetIsStart()) return;
+        if (GameManager.Instance.IsStart) return;
         isFirstComplete = false;
         turnObjects = new List<ITurnBased>();
         turnObjects.AddRange(FindObjectsOfType<MonoBehaviour>().OfType<ITurnBased>());
         turnObjects = turnObjects
             .OrderByDescending(obj => (obj as MonoBehaviour).GetComponent<MoveBox>() != null)
             .ToList();
-        GameManager.Instance.SetIsStart();
+        GameManager.Instance.IsStart = true;
+        GameManager.Instance.IsGameClear = false;
         AudioManager.Instance.GameStartSound();
         StartCoroutine(TurnLoop());
     }

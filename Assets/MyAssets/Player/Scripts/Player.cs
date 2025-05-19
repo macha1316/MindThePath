@@ -6,6 +6,7 @@ public class Player : MonoBehaviour, ITurnBased
     public float moveSpeed = 5f;
     private bool isMoving = false;
     private Vector3 targetPosition;
+    public Vector3 Direction { get; set; } = Vector3.zero;
 
     void Start()
     {
@@ -20,15 +21,14 @@ public class Player : MonoBehaviour, ITurnBased
             return;
         }
 
-        Vector3 direction = Vector3.zero;
-        if (Input.GetKeyDown(KeyCode.W)) direction = Vector3.forward;
-        else if (Input.GetKeyDown(KeyCode.S)) direction = Vector3.back;
-        else if (Input.GetKeyDown(KeyCode.A)) direction = Vector3.left;
-        else if (Input.GetKeyDown(KeyCode.D)) direction = Vector3.right;
+        if (Input.GetKeyDown(KeyCode.W)) Direction = Vector3.forward;
+        else if (Input.GetKeyDown(KeyCode.S)) Direction = Vector3.back;
+        else if (Input.GetKeyDown(KeyCode.A)) Direction = Vector3.left;
+        else if (Input.GetKeyDown(KeyCode.D)) Direction = Vector3.right;
 
-        if (direction != Vector3.zero)
+        if (Direction != Vector3.zero)
         {
-            Vector3 next = transform.position + direction * StageBuilder.HEIGHT_OFFSET;
+            Vector3 next = transform.position + Direction * StageBuilder.HEIGHT_OFFSET;
 
             bool canMove = false;
 
@@ -51,7 +51,7 @@ public class Player : MonoBehaviour, ITurnBased
 
                 if (StageBuilder.Instance.IsMatchingCellType(next, 'M'))
                 {
-                    Vector3 afterNext = next + direction * StageBuilder.HEIGHT_OFFSET;
+                    Vector3 afterNext = next + Direction * StageBuilder.HEIGHT_OFFSET;
                     if (!StageBuilder.Instance.IsValidGridPosition(afterNext)) return;
                     if (!StageBuilder.Instance.IsMatchingCellType(afterNext, 'N')) return;
                     if (StageBuilder.Instance.IsMatchingCellType(nextDown, 'O')) return;
@@ -91,9 +91,10 @@ public class Player : MonoBehaviour, ITurnBased
                 StageBuilder.Instance.UpdateGridAtPosition(transform.position, 'N');
                 targetPosition = next;
                 isMoving = true;
-                transform.forward = direction;
-                StageBuilder.Instance.UpdateGridAtPosition(targetPosition, 'P');
+                transform.forward = Direction;
+                CheckGoal();
 
+                StageBuilder.Instance.UpdateGridAtPosition(targetPosition, 'P');
                 transform.DOMove(targetPosition, 1f / moveSpeed)
                     .SetEase(Ease.Linear)
                     .OnComplete(() =>
@@ -102,6 +103,17 @@ public class Player : MonoBehaviour, ITurnBased
                         isMoving = false;
                     });
             }
+            Direction = Vector3.zero;
+        }
+    }
+
+    private void CheckGoal()
+    {
+        if (StageBuilder.Instance.IsMatchingCellType(targetPosition, 'G'))
+        {
+            GameManager.Instance.IsGameClear = true;
+            StageSelectUI.Instance.SetClearUI();
+
         }
     }
 

@@ -106,7 +106,7 @@ public class TurnbsedCharacter : MonoBehaviour, ITurnBased
         if (StageBuilder.Instance.IsMatchingCellType(nextPos, 'N'))
         {
             Vector3 belowNext = nextPos + Vector3.down * StageBuilder.BLOCK_SIZE;
-            if (StageBuilder.Instance.IsMatchingCellType(belowNext, 'N'))
+            if (StageBuilder.Instance.IsAnyMatchingCellType(belowNext, 'N', 'P', 'K'))
             {
                 return !TryFlipDirection(ref nextPos);
             }
