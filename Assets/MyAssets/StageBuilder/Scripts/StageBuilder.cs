@@ -12,6 +12,12 @@ public class StageBuilder : MonoBehaviour
     public const float BLOCK_SIZE = 2.0f;
     public const float HEIGHT_OFFSET = 2.0f;
 
+    // Customization: Allow for depth offset and rotation
+    public float spawnDepthOffset = 0f; // You may set this dynamically as needed
+    public float spawnXOffset = 0f; // You may set this dynamically as needed
+    public float spawnYOffset = 0f; // You may set this dynamically as needed
+    public float spawnRotationY = 0f;   // You may set this dynamically as needed (degrees)
+
     // デバッグ用
     [SerializeField] string csvFileName = "Stages/Stage1";
     [SerializeField] GameObject blockPrefab;
@@ -35,9 +41,7 @@ public class StageBuilder : MonoBehaviour
 
     // コルーチンによるブロック生成管理用
     private int remainingBlocksToSpawn = 0;
-    private bool isGenerating = false;
-
-    public bool IsGenerating => isGenerating;
+    public bool IsGenerating { get; private set; } = false;
 
     // Stage情報をロード & UIをStage情報に合わせて出す
     public void CreateStage(int stageNumberProp)
@@ -47,7 +51,7 @@ public class StageBuilder : MonoBehaviour
         GameManager.Instance.SetGameStop();
         gridData = null;
         dynamicTiles = null;
-        isGenerating = true;
+        IsGenerating = true;
         canvasObjects.Clear();
         modelObjects.Clear();
         AudioManager.Instance.SelectStageSound();
@@ -56,7 +60,7 @@ public class StageBuilder : MonoBehaviour
 
     public void ReCreateStage()
     {
-        if (isGenerating) return;
+        if (IsGenerating) return;
         if (stageRoot != null)
         {
             foreach (Transform child in stageRoot.transform)
@@ -64,6 +68,10 @@ public class StageBuilder : MonoBehaviour
                 Destroy(child.gameObject);
             }
         }
+        CameraController.Instance.SwitchTo3DView();
+        CameraController.Instance.CurrentIndex = 1;
+        CameraController.Instance.RotateLeft();
+        GameManager.Instance.Is2DMode = false;
         CreateStage(stageNumber);
     }
 
@@ -180,7 +188,8 @@ public class StageBuilder : MonoBehaviour
             remainingBlocksToSpawn--;
             if (remainingBlocksToSpawn == 0)
             {
-                isGenerating = false;
+                IsGenerating = false;
+                TurnManager.Instance.StartMove();
             }
         }
     }
@@ -457,6 +466,127 @@ public class StageBuilder : MonoBehaviour
         // デフォルトで最下層を返す
         return new Vector3(col * BLOCK_SIZE, 0f, row * BLOCK_SIZE);
     }
+
+    void Start()
+    {
+        // Initialize the stage with the first stage
+        AnimateStageBuildAndReverse();
+    }
+
+    // Animates the stage build (blocks drop in from above) and then reverses (blocks move up in reverse order)
+    public void AnimateStageBuildAndReverse()
+    {
+        StartCoroutine(BuildAndReverseStage());
+    }
+
+    IEnumerator BuildAndReverseStage()
+    {
+        List<GameObject> spawnedBlocks = new List<GameObject>();
+        float dropHeight = 10f;
+        float spawnDelay = 0.03f;
+
+        // Create the stage and collect references
+        List<string[]> layers = new List<string[]>();
+        string[] lines = Resources.Load<TextAsset>(textAssets[4]).text.Split(new[] { "\r\n", "\n" }, StringSplitOptions.None);
+        List<string> currentLayer = new List<string>();
+
+        foreach (string line in lines)
+        {
+            if (string.IsNullOrWhiteSpace(line))
+            {
+                if (currentLayer.Count > 0)
+                {
+                    layers.Add(currentLayer.ToArray());
+                    currentLayer.Clear();
+                }
+            }
+            else
+            {
+                currentLayer.Add(line);
+            }
+        }
+        if (currentLayer.Count > 0)
+        {
+            layers.Add(currentLayer.ToArray());
+        }
+
+        int heightCount = layers.Count;
+        int rowCount = layers[0].Length;
+        int colCount = layers[0][0].Split(',').Length;
+
+        Quaternion spawnRotation = Quaternion.Euler(0f, spawnRotationY, 0f);
+
+        for (int height = 0; height < heightCount; height++)
+        {
+            string[] layer = layers[height];
+
+            for (int row = 0; row < rowCount; row++)
+            {
+                string[] cells = layer[row].Split(',');
+
+                for (int col = 0; col < colCount; col++)
+                {
+                    string cellTypeString = cells[col];
+                    char cellType = cellTypeString[0];
+                    if (cellType == 'N') continue;
+
+                    Vector3 targetPosition = new Vector3(
+                        col * BLOCK_SIZE + spawnXOffset,
+                        height * HEIGHT_OFFSET + spawnYOffset,
+                        (rowCount - 1 - row) * BLOCK_SIZE + spawnDepthOffset
+                    );
+                    Vector3 spawnPosition = targetPosition + Vector3.up * dropHeight;
+
+                    GameObject prefab = GetPrefabByType(cellType);
+                    if (prefab == null) continue;
+
+                    GameObject obj = Instantiate(prefab, spawnPosition, spawnRotation, stageRoot != null ? stageRoot.transform : null);
+                    obj.transform.DOMove(targetPosition, 0.5f).SetEase(Ease.OutBounce);
+
+                    spawnedBlocks.Add(obj);
+                    yield return new WaitForSeconds(spawnDelay);
+                }
+            }
+        }
+
+        // Wait before reversing
+        yield return new WaitForSeconds(30f);
+
+        // Animate back upward in reverse order and destroy on complete
+        for (int i = spawnedBlocks.Count - 1; i >= 0; i--)
+        {
+            GameObject obj = spawnedBlocks[i];
+            obj.transform.DOMoveY(obj.transform.position.y + dropHeight, 0.5f)
+                .SetEase(Ease.InBack)
+                .OnComplete(() => Destroy(obj));
+            yield return new WaitForSeconds(spawnDelay);
+        }
+
+        // Wait before looping again
+        yield return new WaitForSeconds(1f);
+
+        // Restart the sequence
+        StartCoroutine(BuildAndReverseStage());
+    }
+
+    GameObject GetPrefabByType(char type)
+    {
+        switch (type)
+        {
+            case 'B': return blockPrefab;
+            case 'G': return goalPrefab;
+            case 'P': return playerPrefab;
+            case 'U': return upPrefab;
+            case 'D': return downPrefab;
+            case 'R': return rightPrefab;
+            case 'L': return leftPrefab;
+            case 'M': return moveBoxPrefab;
+            case 'K': return kylePrefab;
+            case 'O': return lavaPrefab;
+            default: return null;
+        }
+    }
+
 
     private void OnDrawGizmos()
     {

@@ -34,6 +34,7 @@ public class TurnManager : MonoBehaviour
 
     private void UpdateGridData()
     {
+        if (!GameManager.Instance.IsStart) return;
         // gridDataをリセット（全てのオブジェクトの位置を反映）
         StageBuilder.Instance.ResetGridData();
 

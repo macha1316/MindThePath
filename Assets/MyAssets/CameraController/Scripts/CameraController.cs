@@ -2,7 +2,18 @@ using UnityEngine;
 
 public class CameraController : MonoBehaviour
 {
+    public Cinemachine.CinemachineVirtualCamera[] virtualCameras;
+    public Cinemachine.CinemachineVirtualCamera virtualCamera2D;
+    public Cinemachine.CinemachineBrain cinemachineBrain;
+    public int CurrentIndex { get; set; } = 0;
     public Transform mainCamera;
+
+    public static CameraController Instance;
+
+    private void Awake()
+    {
+        if (Instance == null) Instance = this;
+    }
 
     public void SwitchView()
     {
@@ -22,8 +33,27 @@ public class CameraController : MonoBehaviour
 
     public void SwitchTo2DView()
     {
-        mainCamera.position = new Vector3(8f, 17f, 8f);
-        mainCamera.rotation = Quaternion.Euler(90f, 0f, 0f);
+        cinemachineBrain.m_DefaultBlend.m_Time = 0f;
+        virtualCamera2D.Priority = 11;
+        virtualCamera2D.m_Lens.OrthographicSize = 12f;
+        StageSelectUI.Instance.HideCameraRotateUI();
+
+        switch (CurrentIndex)
+        {
+            case 0:
+                virtualCamera2D.transform.rotation = Quaternion.Euler(90, 0, 0);
+                break;
+            case 1:
+                virtualCamera2D.transform.rotation = Quaternion.Euler(90, -90, 0);
+                break;
+            case 2:
+                virtualCamera2D.transform.rotation = Quaternion.Euler(90, 180, 0);
+                break;
+            case 3:
+                virtualCamera2D.transform.rotation = Quaternion.Euler(90, 90, 0);
+                break;
+        }
+
         Camera cam = mainCamera.GetComponent<Camera>();
         if (cam != null)
         {
@@ -34,12 +64,32 @@ public class CameraController : MonoBehaviour
 
     public void SwitchTo3DView()
     {
-        mainCamera.position = new Vector3(8f, 17f, -8f);
-        mainCamera.rotation = Quaternion.Euler(45f, 0f, 0f);
+        cinemachineBrain.m_DefaultBlend.m_Time = 0.5f;
+        virtualCamera2D.Priority = 0;
+        StageSelectUI.Instance.ShowCameraRotateUI();
+
         Camera cam = mainCamera.GetComponent<Camera>();
         if (cam != null)
         {
             cam.orthographic = false;
         }
+    }
+
+    public void RotateRight()
+    {
+        if (virtualCameras == null || virtualCameras.Length == 0) return;
+
+        virtualCameras[CurrentIndex].Priority = 0;
+        CurrentIndex = (CurrentIndex + 1) % virtualCameras.Length;
+        virtualCameras[CurrentIndex].Priority = 10;
+    }
+
+    public void RotateLeft()
+    {
+        if (virtualCameras == null || virtualCameras.Length == 0) return;
+
+        virtualCameras[CurrentIndex].Priority = 0;
+        CurrentIndex = (CurrentIndex - 1 + virtualCameras.Length) % virtualCameras.Length;
+        virtualCameras[CurrentIndex].Priority = 10;
     }
 }

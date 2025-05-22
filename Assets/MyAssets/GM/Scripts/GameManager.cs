@@ -34,21 +34,46 @@ public class GameManager : MonoBehaviour
         IsStart = false;
     }
 
-    // スマホ対応
+    // スマホ対応（カメラの向きに応じてプレイヤーの移動方向を変える）
+    public int currentIndex = 0;
     public void MoveRight()
     {
-        players[0].Direction = Vector3.right;
+        switch (CameraController.Instance.CurrentIndex)
+        {
+            case 0: players[0].Direction = Vector3.right; break;
+            case 1: players[0].Direction = Vector3.forward; break;
+            case 2: players[0].Direction = Vector3.left; break;
+            case 3: players[0].Direction = Vector3.back; break;
+        }
     }
     public void MoveLeft()
     {
-        players[0].Direction = Vector3.left;
+        switch (CameraController.Instance.CurrentIndex)
+        {
+            case 0: players[0].Direction = Vector3.left; break;
+            case 1: players[0].Direction = Vector3.back; break;
+            case 2: players[0].Direction = Vector3.right; break;
+            case 3: players[0].Direction = Vector3.forward; break;
+        }
     }
     public void MoveUp()
     {
-        players[0].Direction = Vector3.forward;
+        switch (CameraController.Instance.CurrentIndex)
+        {
+            case 0: players[0].Direction = Vector3.forward; break;
+            case 1: players[0].Direction = Vector3.left; break;
+            case 2: players[0].Direction = Vector3.back; break;
+            case 3: players[0].Direction = Vector3.right; break;
+        }
     }
     public void MoveDown()
     {
-        players[0].Direction = Vector3.back;
+        switch (CameraController.Instance.CurrentIndex)
+        {
+            case 0: players[0].Direction = Vector3.back; break;
+            case 1: players[0].Direction = Vector3.right; break;
+            case 2: players[0].Direction = Vector3.forward; break;
+            case 3: players[0].Direction = Vector3.left; break;
+        }
     }
 }

@@ -1,6 +1,6 @@
-using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class StageSelectUI : MonoBehaviour
 {
@@ -12,6 +12,9 @@ public class StageSelectUI : MonoBehaviour
     [SerializeField] GameObject pauseUI;
     [SerializeField] GameObject optionUI;
     [SerializeField] GameObject stopUI;
+    [SerializeField] GameObject operatePlayerUI;
+    [SerializeField] GameObject cameraRotateUI;
+    [SerializeField] TextMeshProUGUI dimensionText;
 
     public static StageSelectUI Instance;
 
@@ -22,11 +25,9 @@ public class StageSelectUI : MonoBehaviour
     {
         if (Instance == null) Instance = this;
 
-        startUI.SetActive(false);
-        clearUI.SetActive(false);
-        pauseUI.SetActive(false);
-        optionUI.SetActive(false);
+        CloseAllUI();
         stageSelectUI.SetActive(true);
+        dimensionText.text = "2D";
 
         int clearedStage = PlayerPrefs.GetInt(ClearedStageKey, 0);
 
@@ -35,11 +36,11 @@ public class StageSelectUI : MonoBehaviour
             bool isUnlocked = i <= clearedStage;
             stageSelectButtons[i].SetActive(true);
 
-            var button = stageSelectButtons[i].GetComponent<UnityEngine.UI.Button>();
+            var button = stageSelectButtons[i].GetComponent<Button>();
             if (button != null)
                 button.interactable = isUnlocked;
 
-            var image = stageSelectButtons[i].GetComponent<UnityEngine.UI.Image>();
+            var image = stageSelectButtons[i].GetComponent<Image>();
             if (image != null)
                 image.color = new Color(image.color.r, image.color.g, image.color.b, isUnlocked ? 1f : 0.4f);
         }
@@ -50,54 +51,72 @@ public class StageSelectUI : MonoBehaviour
         SelectStageUI();
     }
 
-    private void SelectStageUI()
+    private void CloseAllUI()
     {
-        startUI.SetActive(true);
-        stopUI.SetActive(true);
+        startUI.SetActive(false);
+        stopUI.SetActive(false);
+        operatePlayerUI.SetActive(false);
         stageSelectUI.SetActive(false);
         clearUI.SetActive(false);
         pauseUI.SetActive(false);
         optionUI.SetActive(false);
+        cameraRotateUI.SetActive(false);
+    }
+
+    private void SelectStageUI()
+    {
+        CloseAllUI();
+        startUI.SetActive(true);
+        stopUI.SetActive(true);
+        operatePlayerUI.SetActive(true);
+        cameraRotateUI.SetActive(true);
     }
 
     public void SetClearUI()
     {
-        startUI.SetActive(false);
-        stageSelectUI.SetActive(false);
-        pauseUI.SetActive(false);
-        optionUI.SetActive(false);
+        CloseAllUI();
         clearUI.SetActive(true);
     }
 
     public void SetStageSelectUI()
     {
-        startUI.SetActive(false);
-        clearUI.SetActive(false);
-        pauseUI.SetActive(false);
-        optionUI.SetActive(false);
+        CloseAllUI();
         stageSelectUI.SetActive(true);
         StageBuilder.Instance.DestroyStage();
+        GameManager.Instance.IsStart = false;
     }
 
     public void ShowPauseUI()
     {
+        CloseAllUI();
         pauseUI.SetActive(true);
-        optionUI.SetActive(false);
-        stopUI.SetActive(false);
     }
 
     public void ShowOptionUI()
     {
-        pauseUI.SetActive(false);
+        CloseAllUI();
         optionUI.SetActive(true);
-        stopUI.SetActive(false);
+    }
+
+    public void ShowCameraRotateUI()
+    {
+        cameraRotateUI.SetActive(true);
+        dimensionText.text = "2D";
+    }
+
+    public void HideCameraRotateUI()
+    {
+        cameraRotateUI.SetActive(false);
+        dimensionText.text = "3D";
     }
 
     public void HidePauseUI()
     {
-        pauseUI.SetActive(false);
-        optionUI.SetActive(false);
+        CloseAllUI();
         stopUI.SetActive(true);
+        operatePlayerUI.SetActive(true);
+        cameraRotateUI.SetActive(true);
+        startUI.SetActive(true);
     }
 
     // デバッグ用: 最大にしている
