@@ -4,6 +4,7 @@ public class CameraController : MonoBehaviour
 {
     public Cinemachine.CinemachineVirtualCamera[] virtualCameras;
     public Cinemachine.CinemachineVirtualCamera virtualCamera2D;
+    public Cinemachine.CinemachineVirtualCamera titleCamera;
     public Cinemachine.CinemachineBrain cinemachineBrain;
     public int CurrentIndex { get; set; } = 0;
     public Transform mainCamera;
@@ -13,6 +14,7 @@ public class CameraController : MonoBehaviour
     private void Awake()
     {
         if (Instance == null) Instance = this;
+        titleCamera.Priority = 10;
     }
 
     public void SwitchView()

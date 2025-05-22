@@ -1,4 +1,5 @@
 using TMPro;
+using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -15,6 +16,7 @@ public class StageSelectUI : MonoBehaviour
     [SerializeField] GameObject operatePlayerUI;
     [SerializeField] GameObject cameraRotateUI;
     [SerializeField] TextMeshProUGUI dimensionText;
+    [SerializeField] GameObject titleUI;
 
     public static StageSelectUI Instance;
 
@@ -26,7 +28,7 @@ public class StageSelectUI : MonoBehaviour
         if (Instance == null) Instance = this;
 
         CloseAllUI();
-        stageSelectUI.SetActive(true);
+        titleUI.SetActive(true);
         dimensionText.text = "2D";
 
         int clearedStage = PlayerPrefs.GetInt(ClearedStageKey, 0);
@@ -61,6 +63,7 @@ public class StageSelectUI : MonoBehaviour
         pauseUI.SetActive(false);
         optionUI.SetActive(false);
         cameraRotateUI.SetActive(false);
+        titleUI.SetActive(false);
     }
 
     private void SelectStageUI()
@@ -117,6 +120,14 @@ public class StageSelectUI : MonoBehaviour
         operatePlayerUI.SetActive(true);
         cameraRotateUI.SetActive(true);
         startUI.SetActive(true);
+    }
+
+    public void ClickTitle()
+    {
+        CloseAllUI();
+        stageSelectUI.SetActive(true);
+        CameraController.Instance.titleCamera.Priority = 0;
+        StartCoroutine(StageBuilder.Instance.UpBlocks());
     }
 
     // デバッグ用: 最大にしている

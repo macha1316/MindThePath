@@ -12,11 +12,10 @@ public class StageBuilder : MonoBehaviour
     public const float BLOCK_SIZE = 2.0f;
     public const float HEIGHT_OFFSET = 2.0f;
 
-    // Customization: Allow for depth offset and rotation
-    public float spawnDepthOffset = 0f; // You may set this dynamically as needed
-    public float spawnXOffset = 0f; // You may set this dynamically as needed
-    public float spawnYOffset = 0f; // You may set this dynamically as needed
-    public float spawnRotationY = 0f;   // You may set this dynamically as needed (degrees)
+    float dropHeight = 10f;
+    float spawnDelay = 0.0005f;
+    List<GameObject> spawnedBlocks = new List<GameObject>();
+
 
     // デバッグ用
     [SerializeField] string csvFileName = "Stages/Stage1";
@@ -149,7 +148,7 @@ public class StageBuilder : MonoBehaviour
                     if (cellTypeString[0] != 'N')
                     {
                         remainingBlocksToSpawn++;
-                        StartCoroutine(SpawnBlockWithDelay(cellTypeString, position, delayCounter * 0.005f));
+                        StartCoroutine(SpawnBlockWithDelay(cellTypeString, position, delayCounter * 0.01f));
                         delayCounter++;
                     }
                     else
@@ -237,6 +236,10 @@ public class StageBuilder : MonoBehaviour
         }
         if (prefab != null)
         {
+            // Vector3 spawnPosition = position + Vector3.up * dropHeight;
+            // GameObject obj = Instantiate(prefab, spawnPosition, Quaternion.identity, stageRoot != null ? stageRoot.transform : null);
+            // obj.transform.DOMove(position, 0.5f).SetEase(Ease.OutBounce);
+
             GameObject obj = Instantiate(prefab, position, Quaternion.identity, stageRoot != null ? stageRoot.transform : null);
             obj.transform.localScale = Vector3.zero;
             obj.transform.DOScale(Vector3.one, 0.3f).SetEase(Ease.OutBack);
@@ -467,13 +470,13 @@ public class StageBuilder : MonoBehaviour
         return new Vector3(col * BLOCK_SIZE, 0f, row * BLOCK_SIZE);
     }
 
+    // TITLE
     void Start()
     {
         // Initialize the stage with the first stage
         AnimateStageBuildAndReverse();
     }
 
-    // Animates the stage build (blocks drop in from above) and then reverses (blocks move up in reverse order)
     public void AnimateStageBuildAndReverse()
     {
         StartCoroutine(BuildAndReverseStage());
@@ -481,10 +484,6 @@ public class StageBuilder : MonoBehaviour
 
     IEnumerator BuildAndReverseStage()
     {
-        List<GameObject> spawnedBlocks = new List<GameObject>();
-        float dropHeight = 10f;
-        float spawnDelay = 0.03f;
-
         // Create the stage and collect references
         List<string[]> layers = new List<string[]>();
         string[] lines = Resources.Load<TextAsset>(textAssets[4]).text.Split(new[] { "\r\n", "\n" }, StringSplitOptions.None);
@@ -514,7 +513,7 @@ public class StageBuilder : MonoBehaviour
         int rowCount = layers[0].Length;
         int colCount = layers[0][0].Split(',').Length;
 
-        Quaternion spawnRotation = Quaternion.Euler(0f, spawnRotationY, 0f);
+        Quaternion spawnRotation = Quaternion.Euler(0f, 0f, 0f);
 
         for (int height = 0; height < heightCount; height++)
         {
@@ -531,9 +530,9 @@ public class StageBuilder : MonoBehaviour
                     if (cellType == 'N') continue;
 
                     Vector3 targetPosition = new Vector3(
-                        col * BLOCK_SIZE + spawnXOffset,
-                        height * HEIGHT_OFFSET + spawnYOffset,
-                        (rowCount - 1 - row) * BLOCK_SIZE + spawnDepthOffset
+                        col * BLOCK_SIZE,
+                        height * HEIGHT_OFFSET,
+                        (rowCount - 1 - row) * BLOCK_SIZE
                     );
                     Vector3 spawnPosition = targetPosition + Vector3.up * dropHeight;
 
@@ -548,11 +547,10 @@ public class StageBuilder : MonoBehaviour
                 }
             }
         }
+    }
 
-        // Wait before reversing
-        yield return new WaitForSeconds(30f);
-
-        // Animate back upward in reverse order and destroy on complete
+    public IEnumerator UpBlocks()
+    {
         for (int i = spawnedBlocks.Count - 1; i >= 0; i--)
         {
             GameObject obj = spawnedBlocks[i];
@@ -561,12 +559,6 @@ public class StageBuilder : MonoBehaviour
                 .OnComplete(() => Destroy(obj));
             yield return new WaitForSeconds(spawnDelay);
         }
-
-        // Wait before looping again
-        yield return new WaitForSeconds(1f);
-
-        // Restart the sequence
-        StartCoroutine(BuildAndReverseStage());
     }
 
     GameObject GetPrefabByType(char type)
