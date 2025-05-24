@@ -4,12 +4,14 @@ using DG.Tweening;
 public class Player : MonoBehaviour, ITurnBased
 {
     public float moveSpeed = 5f;
+    private Animator animator;
     private bool isMoving = false;
     private Vector3 targetPosition;
     public Vector3 Direction { get; set; } = Vector3.zero;
 
     void Start()
     {
+        animator = GetComponent<Animator>();
         targetPosition = transform.position;
         StageBuilder.Instance.UpdateGridAtPosition(transform.position, 'P');
     }
@@ -18,6 +20,7 @@ public class Player : MonoBehaviour, ITurnBased
     {
         if (isMoving)
         {
+            animator.SetTrigger("Idle");
             return;
         }
 
@@ -93,6 +96,8 @@ public class Player : MonoBehaviour, ITurnBased
                 isMoving = true;
                 transform.forward = Direction;
                 CheckGoal();
+
+                animator.SetTrigger("Walk");
 
                 StageBuilder.Instance.UpdateGridAtPosition(targetPosition, 'P');
                 transform.DOMove(targetPosition, 1f / moveSpeed)
