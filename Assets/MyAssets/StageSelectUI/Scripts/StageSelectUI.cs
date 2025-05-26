@@ -1,5 +1,6 @@
+using System.Collections;
+using DG.Tweening;
 using TMPro;
-using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -17,11 +18,11 @@ public class StageSelectUI : MonoBehaviour
     [SerializeField] GameObject cameraRotateUI;
     [SerializeField] TextMeshProUGUI dimensionText;
     [SerializeField] GameObject titleUI;
+    [SerializeField] GameObject titleText;
+    [SerializeField] GameObject[] stageSelectButtons;
+    [SerializeField] GameObject hintButton;
 
     public static StageSelectUI Instance;
-
-
-    [SerializeField] GameObject[] stageSelectButtons;
 
     private void Awake()
     {
@@ -29,6 +30,13 @@ public class StageSelectUI : MonoBehaviour
 
         CloseAllUI();
         titleUI.SetActive(true);
+        if (titleText != null)
+        {
+            var rect = titleText.GetComponent<RectTransform>();
+            rect.DOAnchorPosY(rect.anchoredPosition.y + 20f, 1f)
+                .SetLoops(-1, LoopType.Yoyo)
+                .SetEase(Ease.InOutSine);
+        }
         dimensionText.text = "2D";
 
         int clearedStage = PlayerPrefs.GetInt(ClearedStageKey, 0);
@@ -46,6 +54,7 @@ public class StageSelectUI : MonoBehaviour
             if (image != null)
                 image.color = new Color(image.color.r, image.color.g, image.color.b, isUnlocked ? 1f : 0.4f);
         }
+        StartCoroutine(AnimateStageButtons());
     }
 
     public void SelectStageUI(int stageNumber)
@@ -130,6 +139,53 @@ public class StageSelectUI : MonoBehaviour
         StartCoroutine(StageBuilder.Instance.UpBlocks());
     }
 
+    IEnumerator AnimateStageButtons()
+    {
+        for (int i = 0; i < stageSelectButtons.Length; i++)
+        {
+            var button = stageSelectButtons[i];
+            if (button != null)
+            {
+                var rect = button.GetComponent<RectTransform>();
+                Vector2 originalPos = rect.anchoredPosition;
+
+                // 1回だけ上下動させる
+                rect.DOAnchorPosY(originalPos.y + 10f, 0.25f)
+                    .SetEase(Ease.InOutSine)
+                    .OnComplete(() =>
+                    {
+                        rect.DOAnchorPosY(originalPos.y, 0.25f).SetEase(Ease.InOutSine);
+                    });
+            }
+            yield return new WaitForSeconds(0.05f);
+        }
+
+        yield return new WaitForSeconds(3f);
+        StartCoroutine(AnimateStageButtons());
+    }
+
+    IEnumerator AnimateHintButton()
+    {
+        if (hintButton == null) yield break;
+
+        RectTransform rect = hintButton.GetComponent<RectTransform>();
+        rect.DOScale(1.2f, 0.5f)
+            .SetLoops(-1, LoopType.Yoyo)
+            .SetEase(Ease.InOutSine);
+
+        yield break;
+    }
+
+    public void StopHintButtonAnimation()
+    {
+        if (hintButton != null)
+        {
+            RectTransform rect = hintButton.GetComponent<RectTransform>();
+            rect.DOKill();
+            rect.localScale = Vector3.one;
+        }
+    }
+
     // デバッグ用: 最大にしている
     public void SaveClearedStage(int stageNumber)
     {
@@ -142,4 +198,3 @@ public class StageSelectUI : MonoBehaviour
         }
     }
 }
-

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using DG.Tweening;
 using System.Collections;
+using UnityEditor.SceneManagement;
 
 public class StageBuilder : MonoBehaviour
 {
@@ -55,6 +56,7 @@ public class StageBuilder : MonoBehaviour
         modelObjects.Clear();
         AudioManager.Instance.SelectStageSound();
         LoadStage(textAssets[stageNumber]);
+        StartCoroutine(AnimateStageIdleMotion());
     }
 
     public void ReCreateStage()
@@ -579,6 +581,23 @@ public class StageBuilder : MonoBehaviour
         }
     }
 
+    IEnumerator AnimateStageIdleMotion()
+    {
+        yield return new WaitUntil(() => !IsGenerating);
+
+        foreach (var obj in modelObjects)
+        {
+            float offset = UnityEngine.Random.Range(0.15f, 0.15f);
+            float delay = UnityEngine.Random.Range(0f, 2f);
+            Vector3 originalPos = obj.transform.localPosition;
+
+            obj.transform.DOLocalMoveY(originalPos.y + offset, 2f)
+                .SetEase(Ease.InOutSine)
+                .SetDelay(delay)
+                .SetLoops(-1, LoopType.Yoyo);
+        }
+    }
+
 
     private void OnDrawGizmos()
     {
@@ -626,3 +645,4 @@ public class StageBuilder : MonoBehaviour
         }
     }
 }
+
