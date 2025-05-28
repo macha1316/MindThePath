@@ -21,6 +21,8 @@ public class StageSelectUI : MonoBehaviour
     [SerializeField] GameObject titleText;
     [SerializeField] GameObject[] stageSelectButtons;
     [SerializeField] GameObject hintUI;
+    [SerializeField] GameObject rewardPanel;
+    [SerializeField] TextMeshProUGUI stageNumberText;
     AdmobUnitInterstitial admobUnitInterstitial;
     AdmobUnitReward admobUnitReward;
 
@@ -79,6 +81,8 @@ public class StageSelectUI : MonoBehaviour
         cameraRotateUI.SetActive(false);
         titleUI.SetActive(false);
         hintUI.SetActive(false);
+        rewardPanel.SetActive(false);
+        stageNumberText.text = string.Empty;
     }
 
     private void SelectStageUI()
@@ -88,6 +92,7 @@ public class StageSelectUI : MonoBehaviour
         stopUI.SetActive(true);
         operatePlayerUI.SetActive(true);
         cameraRotateUI.SetActive(true);
+        stageNumberText.text = "ステージ1";
     }
 
     public void SetClearUI()
@@ -136,6 +141,7 @@ public class StageSelectUI : MonoBehaviour
         operatePlayerUI.SetActive(true);
         cameraRotateUI.SetActive(true);
         startUI.SetActive(true);
+        stageNumberText.text = "ステージ1";
     }
 
     public void ClickTitle()
@@ -143,7 +149,7 @@ public class StageSelectUI : MonoBehaviour
         CloseAllUI();
         stageSelectUI.SetActive(true);
         CameraController.Instance.titleCamera.Priority = 0;
-        StartCoroutine(StageBuilder.Instance.UpBlocks());
+        // StartCoroutine(StageBuilder.Instance.UpBlocks());
     }
 
     IEnumerator AnimateStageButtons()
@@ -175,6 +181,12 @@ public class StageSelectUI : MonoBehaviour
     {
         CloseAllUI();
         hintUI.SetActive(true);
+    }
+
+    public void ShowRewardPanel()
+    {
+        CloseAllUI();
+        rewardPanel.SetActive(true);
     }
 
     public void ShowRewardAd()

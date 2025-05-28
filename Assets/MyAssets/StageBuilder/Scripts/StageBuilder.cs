@@ -9,12 +9,13 @@ public class StageBuilder : MonoBehaviour
 {
     private List<GameObject> canvasObjects = new List<GameObject>();
     private List<GameObject> modelObjects = new List<GameObject>();
+    private bool isIdleAnimationEnabled = true;
 
     public const float BLOCK_SIZE = 2.0f;
     public const float HEIGHT_OFFSET = 2.0f;
 
     float dropHeight = 10f;
-    float spawnDelay = 0.0005f;
+    float spawnDelay = 0.2f;
     List<GameObject> spawnedBlocks = new List<GameObject>();
 
 
@@ -56,7 +57,7 @@ public class StageBuilder : MonoBehaviour
         modelObjects.Clear();
         AudioManager.Instance.SelectStageSound();
         LoadStage(textAssets[stageNumber]);
-        StartCoroutine(AnimateStageIdleMotion());
+        // StartCoroutine(AnimateStageIdleMotion());
     }
 
     public void ReCreateStage()
@@ -473,95 +474,98 @@ public class StageBuilder : MonoBehaviour
     }
 
     // TITLE
-    void Start()
-    {
-        // Initialize the stage with the first stage
-        AnimateStageBuildAndReverse();
-    }
+    // void Start()
+    // {
+    //     // Initialize the stage with the first stage
+    //     AnimateStageBuildAndReverse();
+    // }
 
-    public void AnimateStageBuildAndReverse()
-    {
-        StartCoroutine(BuildAndReverseStage());
-    }
+    // public void AnimateStageBuildAndReverse()
+    // {
+    //     StartCoroutine(BuildAndReverseStage());
+    // }
 
-    IEnumerator BuildAndReverseStage()
-    {
-        // Create the stage and collect references
-        List<string[]> layers = new List<string[]>();
-        string[] lines = Resources.Load<TextAsset>(textAssets[4]).text.Split(new[] { "\r\n", "\n" }, StringSplitOptions.None);
-        List<string> currentLayer = new List<string>();
+    // IEnumerator BuildAndReverseStage()
+    // {
+    //     // Create the stage and collect references
+    //     List<string[]> layers = new List<string[]>();
+    //     string[] lines = Resources.Load<TextAsset>(textAssets[4]).text.Split(new[] { "\r\n", "\n" }, StringSplitOptions.None);
+    //     List<string> currentLayer = new List<string>();
 
-        foreach (string line in lines)
-        {
-            if (string.IsNullOrWhiteSpace(line))
-            {
-                if (currentLayer.Count > 0)
-                {
-                    layers.Add(currentLayer.ToArray());
-                    currentLayer.Clear();
-                }
-            }
-            else
-            {
-                currentLayer.Add(line);
-            }
-        }
-        if (currentLayer.Count > 0)
-        {
-            layers.Add(currentLayer.ToArray());
-        }
+    //     foreach (string line in lines)
+    //     {
+    //         if (string.IsNullOrWhiteSpace(line))
+    //         {
+    //             if (currentLayer.Count > 0)
+    //             {
+    //                 layers.Add(currentLayer.ToArray());
+    //                 currentLayer.Clear();
+    //             }
+    //         }
+    //         else
+    //         {
+    //             currentLayer.Add(line);
+    //         }
+    //     }
+    //     if (currentLayer.Count > 0)
+    //     {
+    //         layers.Add(currentLayer.ToArray());
+    //     }
 
-        int heightCount = layers.Count;
-        int rowCount = layers[0].Length;
-        int colCount = layers[0][0].Split(',').Length;
+    //     int heightCount = layers.Count;
+    //     int rowCount = layers[0].Length;
+    //     int colCount = layers[0][0].Split(',').Length;
 
-        Quaternion spawnRotation = Quaternion.Euler(0f, 0f, 0f);
+    //     Quaternion spawnRotation = Quaternion.Euler(0f, 0f, 0f);
 
-        for (int height = 0; height < heightCount; height++)
-        {
-            string[] layer = layers[height];
+    //     for (int height = 0; height < heightCount; height++)
+    //     {
+    //         string[] layer = layers[height];
 
-            for (int row = 0; row < rowCount; row++)
-            {
-                string[] cells = layer[row].Split(',');
+    //         for (int row = 0; row < rowCount; row++)
+    //         {
+    //             string[] cells = layer[row].Split(',');
 
-                for (int col = 0; col < colCount; col++)
-                {
-                    string cellTypeString = cells[col];
-                    char cellType = cellTypeString[0];
-                    if (cellType == 'N') continue;
+    //             for (int col = 0; col < colCount; col++)
+    //             {
+    //                 if (!isIdleAnimationEnabled) yield break;
 
-                    Vector3 targetPosition = new Vector3(
-                        col * BLOCK_SIZE,
-                        height * HEIGHT_OFFSET,
-                        (rowCount - 1 - row) * BLOCK_SIZE
-                    );
-                    Vector3 spawnPosition = targetPosition + Vector3.up * dropHeight;
+    //                 string cellTypeString = cells[col];
+    //                 char cellType = cellTypeString[0];
+    //                 if (cellType == 'N') continue;
 
-                    GameObject prefab = GetPrefabByType(cellType);
-                    if (prefab == null) continue;
+    //                 Vector3 targetPosition = new Vector3(
+    //                     col * BLOCK_SIZE,
+    //                     height * HEIGHT_OFFSET,
+    //                     (rowCount - 1 - row) * BLOCK_SIZE
+    //                 );
+    //                 Vector3 spawnPosition = targetPosition + Vector3.up * dropHeight;
 
-                    GameObject obj = Instantiate(prefab, spawnPosition, spawnRotation, stageRoot != null ? stageRoot.transform : null);
-                    obj.transform.DOMove(targetPosition, 0.5f).SetEase(Ease.OutBounce);
+    //                 GameObject prefab = GetPrefabByType(cellType);
+    //                 if (prefab == null) continue;
 
-                    spawnedBlocks.Add(obj);
-                    yield return new WaitForSeconds(spawnDelay);
-                }
-            }
-        }
-    }
+    //                 GameObject obj = Instantiate(prefab, spawnPosition, spawnRotation, stageRoot != null ? stageRoot.transform : null);
+    //                 obj.transform.DOMove(targetPosition, 0.5f).SetEase(Ease.OutBounce);
 
-    public IEnumerator UpBlocks()
-    {
-        for (int i = spawnedBlocks.Count - 1; i >= 0; i--)
-        {
-            GameObject obj = spawnedBlocks[i];
-            obj.transform.DOMoveY(obj.transform.position.y + dropHeight, 0.5f)
-                .SetEase(Ease.InBack)
-                .OnComplete(() => Destroy(obj));
-            yield return new WaitForSeconds(spawnDelay);
-        }
-    }
+    //                 spawnedBlocks.Add(obj);
+    //                 yield return new WaitForSeconds(spawnDelay);
+    //             }
+    //         }
+    //     }
+    // }
+
+    // public IEnumerator UpBlocks()
+    // {
+    //     isIdleAnimationEnabled = false;
+    //     for (int i = spawnedBlocks.Count - 1; i >= 0; i--)
+    //     {
+    //         GameObject obj = spawnedBlocks[i];
+    //         obj.transform.DOMoveY(obj.transform.position.y + dropHeight, 0.5f)
+    //             .SetEase(Ease.InBack)
+    //             .OnComplete(() => Destroy(obj));
+    //         yield return new WaitForSeconds(0.005f);
+    //     }
+    // }
 
     GameObject GetPrefabByType(char type)
     {
@@ -581,22 +585,24 @@ public class StageBuilder : MonoBehaviour
         }
     }
 
-    IEnumerator AnimateStageIdleMotion()
-    {
-        yield return new WaitUntil(() => !IsGenerating);
+    // IEnumerator AnimateStageIdleMotion()
+    // {
+    //     yield return new WaitUntil(() => !IsGenerating);
 
-        foreach (var obj in modelObjects)
-        {
-            float offset = UnityEngine.Random.Range(0.15f, 0.15f);
-            float delay = UnityEngine.Random.Range(0f, 2f);
-            Vector3 originalPos = obj.transform.localPosition;
+    //     foreach (var obj in modelObjects)
+    //     {
+    //         float offset = UnityEngine.Random.Range(0.3f, 0.3f);
+    //         // float delay = UnityEngine.Random.Range(0f, 2f);
+    //         Vector3 originalPos = obj.transform.localPosition;
 
-            obj.transform.DOLocalMoveY(originalPos.y + offset, 2f)
-                .SetEase(Ease.InOutSine)
-                .SetDelay(delay)
-                .SetLoops(-1, LoopType.Yoyo);
-        }
-    }
+    //         obj.transform.DOLocalMoveY(originalPos.y + offset, 0.3f)
+    //             .SetEase(Ease.InOutSine)
+    //             // .SetDelay(0.05f)
+    //             .SetLoops(-1, LoopType.Yoyo);
+
+    //         yield return new WaitForSeconds(0.05f);
+    //     }
+    // }
 
 
     private void OnDrawGizmos()

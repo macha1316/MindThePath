@@ -5,9 +5,12 @@ using System;
 public class AdmobUnitReward : AdmobUnitBase
 {
     private RewardedAd rewardedAd;
+    private Supabase supabase;
 
-    [SerializeField] GameObject rewardPanel;
-    [SerializeField] GameObject[] rewardMovies;
+    void Awake()
+    {
+        supabase = FindObjectOfType<Supabase>();
+    }
 
     public bool IsReady
     {
@@ -103,15 +106,8 @@ public class AdmobUnitReward : AdmobUnitBase
         {
             Debug.Log("Rewarded ad full screen content closed.");
             LoadRewardAd();
-
-            // 報酬
-            int currentStageNumber = StageBuilder.Instance.stageNumber;
-            rewardPanel.SetActive(true);
-            for (int i = 0; i < rewardMovies.Length; i++)
-            {
-                rewardMovies[i].SetActive(false);
-            }
-            rewardMovies[currentStageNumber].SetActive(true);
+            StageSelectUI.Instance.ShowRewardPanel();
+            supabase.PlayVideo();
         };
         // Raised when the ad failed to open full screen content.
         ad.OnAdFullScreenContentFailed += (AdError error) =>
