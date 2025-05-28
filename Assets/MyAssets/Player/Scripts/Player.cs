@@ -118,7 +118,6 @@ public class Player : MonoBehaviour, ITurnBased
         {
             GameManager.Instance.IsGameClear = true;
             StageSelectUI.Instance.SetClearUI();
-
         }
     }
 

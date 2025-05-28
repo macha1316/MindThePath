@@ -20,7 +20,9 @@ public class StageSelectUI : MonoBehaviour
     [SerializeField] GameObject titleUI;
     [SerializeField] GameObject titleText;
     [SerializeField] GameObject[] stageSelectButtons;
-    [SerializeField] GameObject hintButton;
+    [SerializeField] GameObject hintUI;
+    AdmobUnitInterstitial admobUnitInterstitial;
+    AdmobUnitReward admobUnitReward;
 
     public static StageSelectUI Instance;
 
@@ -38,6 +40,9 @@ public class StageSelectUI : MonoBehaviour
                 .SetEase(Ease.InOutSine);
         }
         dimensionText.text = "2D";
+
+        admobUnitInterstitial = FindObjectOfType<AdmobUnitInterstitial>();
+        admobUnitReward = FindObjectOfType<AdmobUnitReward>();
 
         int clearedStage = PlayerPrefs.GetInt(ClearedStageKey, 0);
 
@@ -73,6 +78,7 @@ public class StageSelectUI : MonoBehaviour
         optionUI.SetActive(false);
         cameraRotateUI.SetActive(false);
         titleUI.SetActive(false);
+        hintUI.SetActive(false);
     }
 
     private void SelectStageUI()
@@ -87,6 +93,7 @@ public class StageSelectUI : MonoBehaviour
     public void SetClearUI()
     {
         CloseAllUI();
+        admobUnitInterstitial.ShowInterstitial();
         clearUI.SetActive(true);
     }
 
@@ -164,25 +171,28 @@ public class StageSelectUI : MonoBehaviour
         StartCoroutine(AnimateStageButtons());
     }
 
-    IEnumerator AnimateHintButton()
+    public void ShowHintUI()
     {
-        if (hintButton == null) yield break;
-
-        RectTransform rect = hintButton.GetComponent<RectTransform>();
-        rect.DOScale(1.2f, 0.5f)
-            .SetLoops(-1, LoopType.Yoyo)
-            .SetEase(Ease.InOutSine);
-
-        yield break;
+        CloseAllUI();
+        hintUI.SetActive(true);
     }
 
-    public void StopHintButtonAnimation()
+    public void ShowRewardAd()
     {
-        if (hintButton != null)
+        if (admobUnitReward != null && admobUnitReward.IsReady)
         {
-            RectTransform rect = hintButton.GetComponent<RectTransform>();
-            rect.DOKill();
-            rect.localScale = Vector3.one;
+            admobUnitReward.ShowRewardAd((reward) =>
+            {
+                if (reward != null)
+                {
+                    Debug.Log("Reward type: " + reward.Type);
+                    Debug.Log("Reward received: " + reward.Amount);
+                }
+            });
+        }
+        else
+        {
+            Debug.Log("Reward ad is not ready yet.");
         }
     }
 
