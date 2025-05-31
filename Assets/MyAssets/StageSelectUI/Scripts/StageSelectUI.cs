@@ -23,6 +23,10 @@ public class StageSelectUI : MonoBehaviour
     [SerializeField] GameObject hintUI;
     [SerializeField] GameObject rewardPanel;
     [SerializeField] TextMeshProUGUI stageNumberText;
+    [SerializeField] GameObject tutorialBg;
+    [SerializeField] GameObject tutorialUI;
+    [SerializeField] GameObject[] tutorialPages;
+
     AdmobUnitInterstitial admobUnitInterstitial;
     AdmobUnitReward admobUnitReward;
 
@@ -82,6 +86,8 @@ public class StageSelectUI : MonoBehaviour
         titleUI.SetActive(false);
         hintUI.SetActive(false);
         rewardPanel.SetActive(false);
+        tutorialBg.SetActive(false);
+        tutorialUI.transform.DOScale(Vector3.zero, 0f).SetEase(Ease.OutBack);
         stageNumberText.text = string.Empty;
     }
 
@@ -149,7 +155,28 @@ public class StageSelectUI : MonoBehaviour
         CloseAllUI();
         stageSelectUI.SetActive(true);
         CameraController.Instance.titleCamera.Priority = 0;
-        // StartCoroutine(StageBuilder.Instance.UpBlocks());
+    }
+
+    public void ShowTutorialUI()
+    {
+        tutorialBg.SetActive(true);
+        tutorialUI.transform.DOScale(Vector3.one, 0.5f).SetEase(Ease.OutBack);
+        for (int i = 0; i < tutorialPages.Length; i++)
+        {
+            tutorialPages[0].SetActive(true);
+        }
+    }
+
+    IEnumerator HideTutorialUIDeray()
+    {
+        tutorialUI.transform.DOScale(Vector3.zero, 0.5f).SetEase(Ease.Linear);
+        yield return new WaitForSeconds(0.5f);
+        tutorialBg.SetActive(false);
+    }
+
+    public void HideTutorialUI()
+    {
+        StartCoroutine(HideTutorialUIDeray());
     }
 
     IEnumerator AnimateStageButtons()
