@@ -50,7 +50,14 @@ public class StageBuilder : MonoBehaviour
         modelObjects.Clear();
         AudioManager.Instance.SelectStageSound();
         LoadStage(textAssets[stageNumber]);
-        StageSelectUI.Instance.ShowTutorialUI();
+
+        bool isFirstPlay = !PlayerPrefs.HasKey(PlayerPrefsManager.FirstPlayKey);
+        if (isFirstPlay)
+        {
+            PlayerPrefs.SetInt(PlayerPrefsManager.FirstPlayKey, 1);
+            PlayerPrefs.Save();
+            StageSelectUI.Instance.ShowTutorialUI();
+        }
     }
 
     public void ReCreateStage()

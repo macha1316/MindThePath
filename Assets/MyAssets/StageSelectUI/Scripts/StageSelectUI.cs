@@ -6,8 +6,6 @@ using UnityEngine.UI;
 
 public class StageSelectUI : MonoBehaviour
 {
-    private const string ClearedStageKey = "ClearedStage";
-
     [SerializeField] GameObject stageSelectUI;
     [SerializeField] GameObject startUI;
     [SerializeField] GameObject clearUI;
@@ -23,9 +21,15 @@ public class StageSelectUI : MonoBehaviour
     [SerializeField] GameObject hintUI;
     [SerializeField] GameObject rewardPanel;
     [SerializeField] TextMeshProUGUI stageNumberText;
+
+    // Tutorial UI
     [SerializeField] GameObject tutorialBg;
     [SerializeField] GameObject tutorialUI;
     [SerializeField] GameObject[] tutorialPages;
+    [SerializeField] GameObject nextPageButton;
+    [SerializeField] GameObject previousPageButton;
+    private int tutorialPageIndex = 0;
+    [SerializeField] TextMeshProUGUI tutorialPageText;
 
     AdmobUnitInterstitial admobUnitInterstitial;
     AdmobUnitReward admobUnitReward;
@@ -50,7 +54,7 @@ public class StageSelectUI : MonoBehaviour
         admobUnitInterstitial = FindObjectOfType<AdmobUnitInterstitial>();
         admobUnitReward = FindObjectOfType<AdmobUnitReward>();
 
-        int clearedStage = PlayerPrefs.GetInt(ClearedStageKey, 0);
+        int clearedStage = PlayerPrefs.GetInt(PlayerPrefsManager.ClearedStageKey, 0);
 
         for (int i = 0; i < stageSelectButtons.Length; i++)
         {
@@ -159,24 +163,75 @@ public class StageSelectUI : MonoBehaviour
 
     public void ShowTutorialUI()
     {
+        tutorialPageIndex = 1;
+        tutorialPageText.text = tutorialPageIndex.ToString() + " / " + (tutorialPages.Length).ToString();
         tutorialBg.SetActive(true);
         tutorialUI.transform.DOScale(Vector3.one, 0.5f).SetEase(Ease.OutBack);
         for (int i = 0; i < tutorialPages.Length; i++)
         {
-            tutorialPages[0].SetActive(true);
+            tutorialPages[i].SetActive(false);
         }
+        tutorialPages[0].SetActive(true);
+        previousPageButton.SetActive(false);
     }
 
     IEnumerator HideTutorialUIDeray()
     {
-        tutorialUI.transform.DOScale(Vector3.zero, 0.5f).SetEase(Ease.Linear);
-        yield return new WaitForSeconds(0.5f);
+        tutorialUI.transform.DOScale(Vector3.zero, 0.3f).SetEase(Ease.Linear);
+        yield return new WaitForSeconds(0.3f);
         tutorialBg.SetActive(false);
     }
 
     public void HideTutorialUI()
     {
         StartCoroutine(HideTutorialUIDeray());
+    }
+
+    public void NextTutorialPage()
+    {
+        for (int i = 0; i < tutorialPages.Length; i++)
+        {
+            if (tutorialPages[i].activeSelf)
+            {
+                tutorialPages[i].SetActive(false);
+                previousPageButton.SetActive(true);
+                tutorialPageIndex += 1;
+                tutorialPageText.text = tutorialPageIndex.ToString() + " / " + (tutorialPages.Length).ToString();
+
+                if (i + 1 < tutorialPages.Length)
+                {
+                    tutorialPages[i + 1].SetActive(true);
+                    if (i + 1 == tutorialPages.Length - 1)
+                    {
+                        nextPageButton.SetActive(false);
+                    }
+                    break;
+                }
+            }
+        }
+    }
+
+    public void PreviousTutorialPage()
+    {
+        for (int i = 0; i < tutorialPages.Length; i++)
+        {
+            if (tutorialPages[i].activeSelf)
+            {
+                tutorialPages[i].SetActive(false);
+                nextPageButton.SetActive(true);
+                tutorialPageIndex -= 1;
+                tutorialPageText.text = tutorialPageIndex.ToString() + " / " + (tutorialPages.Length).ToString();
+                if (i - 1 >= 0)
+                {
+                    tutorialPages[i - 1].SetActive(true);
+                    if (i - 1 == 0)
+                    {
+                        previousPageButton.SetActive(false);
+                    }
+                    break;
+                }
+            }
+        }
     }
 
     IEnumerator AnimateStageButtons()
@@ -238,10 +293,10 @@ public class StageSelectUI : MonoBehaviour
     // デバッグ用: 最大にしている
     public void SaveClearedStage(int stageNumber)
     {
-        int currentCleared = PlayerPrefs.GetInt(ClearedStageKey, 0);
+        int currentCleared = PlayerPrefs.GetInt(PlayerPrefsManager.ClearedStageKey, 0);
         // if (stageNumber > currentCleared)
         {
-            PlayerPrefs.SetInt(ClearedStageKey, 10);
+            PlayerPrefs.SetInt(PlayerPrefsManager.ClearedStageKey, 10);
             // PlayerPrefs.SetInt(ClearedStageKey, stageNumber);
             PlayerPrefs.Save();
         }
