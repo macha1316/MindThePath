@@ -1,10 +1,7 @@
 using UnityEngine;
-using DG.Tweening;
 
 public class MoveBox : MonoBehaviour, ITurnBased
 {
-    private bool isMoving = false;
-    private float moveDuration = 1f;
     public Vector3 TargetPos { get; set; }
 
     void Start()
@@ -12,41 +9,38 @@ public class MoveBox : MonoBehaviour, ITurnBased
         TargetPos = transform.position;
     }
 
-    public void SetTargetPos(Vector3 pos)
-    {
-        TargetPos = pos;
-    }
-
-    public void TryPush(Vector3 direction)
-    {
-        if (isMoving) return;
-
-        TargetPos += direction * StageBuilder.BLOCK_SIZE;
-
-        if (!StageBuilder.Instance.IsValidGridPosition(TargetPos)) return;
-        if (!StageBuilder.Instance.IsMatchingCellType(TargetPos, 'N')) return;
-
-        // Drop until hitting a non-air block (Goalは空気扱いしない)
-        TargetPos = StageBuilder.Instance.FindDropPosition(TargetPos, goalIsAir: false);
-
-        isMoving = true;
-
-        Vector3Int targetGrid = new Vector3Int(
-            Mathf.RoundToInt(TargetPos.x / StageBuilder.BLOCK_SIZE),
-            Mathf.RoundToInt(TargetPos.y / StageBuilder.HEIGHT_OFFSET),
-            Mathf.RoundToInt(TargetPos.z / StageBuilder.BLOCK_SIZE)
-        );
-
-        transform.DOMove(TargetPos, moveDuration).SetEase(Ease.Linear).OnComplete(() =>
-        {
-            isMoving = false;
-        });
-    }
-
     public void OnTurn() { }
 
     public void UpdateGridData()
     {
-        StageBuilder.Instance.UpdateGridAtPosition(TargetPos, 'M');
+        // グリッドは常に実位置を信頼して更新（Undo後の不整合を防ぐ）
+        StageBuilder.Instance.UpdateGridAtPosition(transform.position, 'M');
+    }
+
+    public void TeleportIfOnPortal()
+    {
+        // 足元(1段下)がテレポート('A')なら、相方の'A'へ瞬時移動
+        Vector3 support = TargetPos + Vector3.down * StageBuilder.HEIGHT_OFFSET;
+        if (!StageBuilder.Instance.IsValidGridPosition(support)) return;
+        if (!StageBuilder.Instance.IsMatchingCellType(support, 'A')) return;
+
+        var fromCell = StageBuilder.Instance.GridFromPosition(support);
+        if (StageBuilder.Instance.TryFindOtherCell('A', fromCell, out var otherCell))
+        {
+            Vector3 dest = StageBuilder.Instance.WorldFromGrid(otherCell) + Vector3.up * StageBuilder.HEIGHT_OFFSET;
+
+            // 目的地が占有されていないことを確認（簡易チェック）
+            if (!StageBuilder.Instance.IsValidGridPosition(dest)) return;
+            char occ = StageBuilder.Instance.GetGridCharType(dest);
+            if (occ != 'N') return;
+
+            // グリッド更新
+            StageBuilder.Instance.UpdateGridAtPosition(TargetPos, 'N');
+            StageBuilder.Instance.UpdateGridAtPosition(dest, 'M');
+
+            // 瞬間移動
+            TargetPos = dest;
+            transform.position = dest;
+        }
     }
 }

@@ -21,6 +21,7 @@ public class StageBuilder : MonoBehaviour
     [SerializeField] GameObject playerPrefab;
     [SerializeField] GameObject moveBoxPrefab;
     [SerializeField] GameObject lavaPrefab;
+    [SerializeField] GameObject teleportPrefab; // 'A' テレポート床
     private char[,,] gridData;
     private char[,,] dynamicTiles;
     public int stageNumber = 0;
@@ -43,6 +44,7 @@ public class StageBuilder : MonoBehaviour
         public const char MoveBox = 'M';
         public const char Fragile = 'F';
         public const char Lava = 'O';
+        public const char Teleport = 'A';
     }
 
     // Stage情報をロード & UIをStage情報に合わせて出す
@@ -221,6 +223,9 @@ public class StageBuilder : MonoBehaviour
             case 'N':
                 prefab = nonePrefab;
                 break;
+            case 'A':
+                prefab = teleportPrefab != null ? teleportPrefab : blockPrefab;
+                break;
             case 'F':
                 prefab = fragileBlockPrefab != null ? fragileBlockPrefab : blockPrefab;
                 break;
@@ -314,8 +319,8 @@ public class StageBuilder : MonoBehaviour
             {
                 for (int c = 0; c < gridData.GetLength(0); c++)
                 {
-                    // ブロック（B）、ゴール（G）、溶岩（O）、消える床（F）を保持し、それ以外をリセット
-                    if (gridData[c, h, r] != 'B' && gridData[c, h, r] != 'G' && gridData[c, h, r] != 'O' && gridData[c, h, r] != 'F')
+                    // ブロック（B）、ゴール（G）、溶岩（O）、消える床（F）、テレポート（A）を保持し、それ以外をリセット
+                    if (gridData[c, h, r] != 'B' && gridData[c, h, r] != 'G' && gridData[c, h, r] != 'O' && gridData[c, h, r] != 'F' && gridData[c, h, r] != 'A')
                     {
                         gridData[c, h, r] = 'N';
                     }
@@ -503,6 +508,49 @@ public class StageBuilder : MonoBehaviour
         return false;
     }
 
+    // 指定ワールド座標のグリッドセルに存在する MoveBox を取得
+    public bool TryGetMoveBoxAtPosition(Vector3 worldPosition, out MoveBox found)
+    {
+        var targetCell = GridFromPosition(worldPosition);
+        foreach (var box in GameObject.FindObjectsOfType<MoveBox>())
+        {
+            if (GridFromPosition(box.transform.position) == targetCell)
+            {
+                found = box;
+                return true;
+            }
+        }
+        found = null;
+        return false;
+    }
+
+    // 指定セルの他方の同タイプセルを探す（例: 'A' テレポートの相方）
+    public bool TryFindOtherCell(char type, Vector3Int fromCell, out Vector3Int otherCell)
+    {
+        otherCell = default;
+        int xLen = gridData.GetLength(0);
+        int yLen = gridData.GetLength(1);
+        int zLen = gridData.GetLength(2);
+        for (int x = 0; x < xLen; x++)
+        {
+            for (int y = 0; y < yLen; y++)
+            {
+                for (int z = 0; z < zLen; z++)
+                {
+                    if (gridData[x, y, z] == type)
+                    {
+                        if (x != fromCell.x || y != fromCell.y || z != fromCell.z)
+                        {
+                            otherCell = new Vector3Int(x, y, z);
+                            return true;
+                        }
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
     // 複数のセルタイプを全て満たすか確認 全てマッチすればtrue
     public bool IsAllMatchingCellTypes(Vector3 pos, params char[] types)
     {
@@ -611,6 +659,10 @@ public class StageBuilder : MonoBehaviour
                     else if (cell == 'F')
                     {
                         Gizmos.color = Color.magenta;
+                    }
+                    else if (cell == 'A')
+                    {
+                        Gizmos.color = Color.cyan;
                     }
                     else
                     {

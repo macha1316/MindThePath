@@ -51,7 +51,7 @@ public class Player : MonoBehaviour, ITurnBased
                 if (StageBuilder.Instance.IsValidGridPosition(next))
                 {
                     Vector3 topPos = StageBuilder.Instance.GetTopCellPosition(next);
-                    if (StageBuilder.Instance.IsAnyMatchingCellType(topPos, 'B', 'M', 'F'))
+                    if (StageBuilder.Instance.IsAnyMatchingCellType(topPos, 'B', 'M', 'F', 'A'))
                     {
                         next = topPos + Vector3.up * StageBuilder.HEIGHT_OFFSET;
                         canMove = true;
@@ -79,14 +79,16 @@ public class Player : MonoBehaviour, ITurnBased
                     StageBuilder.Instance.UpdateGridAtPosition(next, 'N');
                     StageBuilder.Instance.UpdateGridAtPosition(dropPos, 'M');
 
-                    foreach (var box in FindObjectsOfType<MoveBox>())
+                    if (StageBuilder.Instance.TryGetMoveBoxAtPosition(next, out var box))
                     {
-                        if (Vector3.Distance(box.transform.position, next) < 1f)
-                        {
-                            box.transform.DOMove(dropPos, 1f / moveSpeed).SetEase(Ease.Linear);
-                            box.TargetPos = dropPos;
-                            break;
-                        }
+                        box.transform.DOMove(dropPos, 1f / moveSpeed)
+                            .SetEase(Ease.Linear)
+                            .OnComplete(() =>
+                            {
+                                box.transform.position = dropPos;
+                                box.TeleportIfOnPortal();
+                            });
+                        box.TargetPos = dropPos;
                     }
 
                     canMove = true;
@@ -122,6 +124,7 @@ public class Player : MonoBehaviour, ITurnBased
                         transform.position = targetPosition;
                         isMoving = false;
                         HandleFragileFloorDisappear();
+                        HandleTeleport();
                     });
             }
             Direction = Vector3.zero;
@@ -178,6 +181,62 @@ public class Player : MonoBehaviour, ITurnBased
                 });
                 break;
             }
+        }
+    }
+
+    private void HandleTeleport()
+    {
+        // プレイヤーの足元(1段下)がテレポート('A')なら、相方の'A'へ瞬間移動
+        Vector3 support = targetPosition + Vector3.down * StageBuilder.HEIGHT_OFFSET;
+        if (!StageBuilder.Instance.IsValidGridPosition(support)) return;
+        if (!StageBuilder.Instance.IsMatchingCellType(support, 'A')) return;
+
+        var fromCell = StageBuilder.Instance.GridFromPosition(support);
+        if (StageBuilder.Instance.TryFindOtherCell('A', fromCell, out var otherCell))
+        {
+            Vector3 dest = StageBuilder.Instance.WorldFromGrid(otherCell) + Vector3.up * StageBuilder.HEIGHT_OFFSET;
+            if (!StageBuilder.Instance.IsValidGridPosition(dest)) return;
+
+            char occ = StageBuilder.Instance.GetGridCharType(dest);
+            if (occ == 'M')
+            {
+                // 目的地に箱がいる場合は、押せるなら押してからテレポート
+                Vector3 afterNext = dest + transform.forward * StageBuilder.HEIGHT_OFFSET;
+                if (!StageBuilder.Instance.IsValidGridPosition(afterNext)) return; // 押せないのでTP中止
+                if (!StageBuilder.Instance.IsMatchingCellType(afterNext, 'N')) return; // 押せない
+                if (!StageBuilder.Instance.HasAnySupportBelow(afterNext)) return; // 支えがない
+
+                Vector3 dropPos = StageBuilder.Instance.FindDropPosition(afterNext, goalIsAir: true);
+
+                // グリッド更新（箱を先に動かす）
+                StageBuilder.Instance.UpdateGridAtPosition(dest, 'N');
+                StageBuilder.Instance.UpdateGridAtPosition(dropPos, 'M');
+
+                if (StageBuilder.Instance.TryGetMoveBoxAtPosition(dest, out var boxAtDest))
+                {
+                    boxAtDest.transform.DOMove(dropPos, 1f / moveSpeed)
+                        .SetEase(Ease.Linear)
+                        .OnComplete(() =>
+                        {
+                            boxAtDest.transform.position = dropPos;
+                            boxAtDest.TargetPos = dropPos;
+                            boxAtDest.TeleportIfOnPortal();
+                        });
+                }
+            }
+            else if (occ != 'N')
+            {
+                // 目的地が空でない場合はテレポートしない
+                return;
+            }
+
+            // グリッド更新: 現在位置を空に、目的地をプレイヤーに
+            StageBuilder.Instance.UpdateGridAtPosition(targetPosition, 'N');
+            StageBuilder.Instance.UpdateGridAtPosition(dest, 'P');
+
+            // 瞬間移動
+            transform.position = dest;
+            targetPosition = dest;
         }
     }
 }
