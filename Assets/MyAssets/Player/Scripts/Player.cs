@@ -8,6 +8,7 @@ public class Player : MonoBehaviour, ITurnBased
     private bool isMoving = false;
     private Vector3 targetPosition;
     public Vector3 Direction { get; set; } = Vector3.zero;
+    private Vector3 lastSupportPos; // 直前に立っていた床（1段下）の座標
 
     void Start()
     {
@@ -20,7 +21,7 @@ public class Player : MonoBehaviour, ITurnBased
     {
         if (isMoving)
         {
-            animator.SetTrigger("Idle");
+            if (animator != null) animator.SetTrigger("Idle");
             return;
         }
 
@@ -40,7 +41,7 @@ public class Player : MonoBehaviour, ITurnBased
                 if (StageBuilder.Instance.IsValidGridPosition(next))
                 {
                     Vector3 topPos = StageBuilder.Instance.GetTopCellPosition(next);
-                    if (StageBuilder.Instance.IsAnyMatchingCellType(topPos, 'B', 'M'))
+                    if (StageBuilder.Instance.IsAnyMatchingCellType(topPos, 'B', 'M', 'F'))
                     {
                         next = topPos + Vector3.up * StageBuilder.HEIGHT_OFFSET;
                         canMove = true;
@@ -91,13 +92,15 @@ public class Player : MonoBehaviour, ITurnBased
 
             if (canMove)
             {
+                // 今立っている床（1段下）を記録（移動後に消滅処理するため）
+                lastSupportPos = transform.position + Vector3.down * StageBuilder.HEIGHT_OFFSET;
                 StageBuilder.Instance.UpdateGridAtPosition(transform.position, 'N');
                 targetPosition = next;
                 isMoving = true;
                 transform.forward = Direction;
                 CheckGoal();
 
-                animator.SetTrigger("Walk");
+                if (animator != null) animator.SetTrigger("Walk");
 
                 StageBuilder.Instance.UpdateGridAtPosition(targetPosition, 'P');
                 transform.DOMove(targetPosition, 1f / moveSpeed)
@@ -106,6 +109,7 @@ public class Player : MonoBehaviour, ITurnBased
                     {
                         transform.position = targetPosition;
                         isMoving = false;
+                        HandleFragileFloorDisappear();
                     });
             }
             Direction = Vector3.zero;
@@ -128,5 +132,32 @@ public class Player : MonoBehaviour, ITurnBased
     public void UpdateGridData()
     {
         StageBuilder.Instance.UpdateGridAtPosition(targetPosition, 'P');
+    }
+
+    private void HandleFragileFloorDisappear()
+    {
+        // 直前に乗っていた足場が消える床(F)なら、破壊してグリッドを'N'にする
+        if (!StageBuilder.Instance.IsValidGridPosition(lastSupportPos)) return;
+        if (!StageBuilder.Instance.IsMatchingCellType(lastSupportPos, 'F')) return;
+
+        // グリッド更新
+        StageBuilder.Instance.UpdateGridAtPosition(lastSupportPos, 'N');
+
+        // 対応するFragileBlockオブジェクトを探して破棄
+        var lastGrid = StageBuilder.Instance.GridFromPosition(lastSupportPos);
+        foreach (var frag in GameObject.FindObjectsOfType<FragileBlock>())
+        {
+            var g = StageBuilder.Instance.GridFromPosition(frag.transform.position);
+            if (g == lastGrid)
+            {
+                // 演出して消す
+                var t = frag.transform;
+                t.DOScale(Vector3.zero, 0.15f).SetEase(Ease.InBack).OnComplete(() =>
+                {
+                    if (frag != null) Destroy(frag.gameObject);
+                });
+                break;
+            }
+        }
     }
 }

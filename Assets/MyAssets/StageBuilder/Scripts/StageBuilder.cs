@@ -15,6 +15,7 @@ public class StageBuilder : MonoBehaviour
     // デバッグ用
     [SerializeField] string csvFileName = "Stages/Stage1";
     [SerializeField] GameObject blockPrefab;
+    [SerializeField] GameObject fragileBlockPrefab; // 'F' 一度乗ると消える床
     [SerializeField] GameObject goalPrefab;
     [SerializeField] GameObject nonePrefab;
     [SerializeField] GameObject playerPrefab;
@@ -207,6 +208,9 @@ public class StageBuilder : MonoBehaviour
             case 'N':
                 prefab = nonePrefab;
                 break;
+            case 'F':
+                prefab = fragileBlockPrefab != null ? fragileBlockPrefab : blockPrefab;
+                break;
             case 'P':
                 prefab = playerPrefab;
                 break;
@@ -238,6 +242,10 @@ public class StageBuilder : MonoBehaviour
             {
                 MoveBox newM = obj.AddComponent<MoveBox>();
                 GameManager.Instance.GetMoveBox(newM);
+            }
+            if (cellType == 'F')
+            {
+                obj.AddComponent<FragileBlock>();
             }
             Vector3 dir = Vector3.forward;
             switch (dirChar)
@@ -287,8 +295,8 @@ public class StageBuilder : MonoBehaviour
             {
                 for (int c = 0; c < gridData.GetLength(0); c++)
                 {
-                    // ブロック（B）、ゴール（G）、プレイヤー（P）を保持し、それ以外をリセット
-                    if (gridData[c, h, r] != 'B' && gridData[c, h, r] != 'G' && gridData[c, h, r] != 'O')
+                    // ブロック（B）、ゴール（G）、溶岩（O）、消える床（F）を保持し、それ以外をリセット
+                    if (gridData[c, h, r] != 'B' && gridData[c, h, r] != 'G' && gridData[c, h, r] != 'O' && gridData[c, h, r] != 'F')
                     {
                         gridData[c, h, r] = 'N';
                     }
@@ -472,6 +480,10 @@ public class StageBuilder : MonoBehaviour
                     {
                         Gizmos.color = Color.yellow;
                     }
+                    else if (cell == 'F')
+                    {
+                        Gizmos.color = Color.magenta;
+                    }
                     else
                     {
                         Gizmos.color = Color.white;
@@ -487,4 +499,3 @@ public class StageBuilder : MonoBehaviour
         }
     }
 }
-
