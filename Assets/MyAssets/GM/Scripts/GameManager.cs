@@ -15,6 +15,14 @@ public class GameManager : MonoBehaviour
     {
         if (Instance == null) Instance = this;
         players = new List<Player>();
+        boxes = new List<MoveBox>();
+        // Ensure UndoManager exists in scene
+        if (FindObjectOfType<UndoManager>() == null)
+        {
+            var go = new GameObject("UndoManager");
+            go.AddComponent<UndoManager>();
+            DontDestroyOnLoad(go);
+        }
     }
 
     public void GetPlayer(Player newP)

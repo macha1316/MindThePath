@@ -19,6 +19,16 @@ public class Player : MonoBehaviour, ITurnBased
 
     void Update()
     {
+        // Undo (keyboard): Z — only when not moving
+        if (Input.GetKeyDown(KeyCode.Z))
+        {
+            if (!isMoving)
+            {
+                UndoManager.Instance?.Undo();
+            }
+            return;
+        }
+
         if (isMoving)
         {
             if (animator != null) animator.SetTrigger("Idle");
@@ -91,6 +101,9 @@ public class Player : MonoBehaviour, ITurnBased
 
             if (canMove)
             {
+                // Snapshot current state for Undo
+                UndoManager.Instance?.Record();
+
                 // 今立っている床（1段下）を記録（移動後に消滅処理するため）
                 lastSupportPos = transform.position + Vector3.down * StageBuilder.HEIGHT_OFFSET;
                 StageBuilder.Instance.UpdateGridAtPosition(transform.position, 'N');
@@ -131,6 +144,14 @@ public class Player : MonoBehaviour, ITurnBased
     public void UpdateGridData()
     {
         StageBuilder.Instance.UpdateGridAtPosition(targetPosition, 'P');
+    }
+
+    // Teleport instantly (used by Undo)
+    public void TeleportTo(Vector3 pos)
+    {
+        isMoving = false;
+        targetPosition = pos;
+        transform.position = pos;
     }
 
     private void HandleFragileFloorDisappear()

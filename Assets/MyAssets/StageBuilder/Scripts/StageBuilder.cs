@@ -51,6 +51,7 @@ public class StageBuilder : MonoBehaviour
         stageNumber = stageNumberProp;
         StageSelectUI.Instance.SelectStageUI(stageNumber);
         GameManager.Instance.SetGameStop();
+        UndoManager.Instance?.Clear();
         gridData = null;
         dynamicTiles = null;
         IsGenerating = true;
@@ -286,6 +287,12 @@ public class StageBuilder : MonoBehaviour
         }
     }
 
+    // === Public spawn helpers (for Undo etc.) ===
+    public void SpawnFragileAt(Vector3 worldPosition)
+    {
+        SpawnBlock("F", worldPosition);
+    }
+
     // Toggle view modes
     public void SwitchTo2DView()
     {
@@ -311,6 +318,83 @@ public class StageBuilder : MonoBehaviour
                     if (gridData[c, h, r] != 'B' && gridData[c, h, r] != 'G' && gridData[c, h, r] != 'O' && gridData[c, h, r] != 'F')
                     {
                         gridData[c, h, r] = 'N';
+                    }
+                }
+            }
+        }
+    }
+
+    // === Grid copy/restore (for Undo) ===
+    public char[,,] GetGridDataCopy()
+    {
+        if (gridData == null) return null;
+        int xLen = gridData.GetLength(0);
+        int yLen = gridData.GetLength(1);
+        int zLen = gridData.GetLength(2);
+        var copy = new char[xLen, yLen, zLen];
+        for (int x = 0; x < xLen; x++)
+            for (int y = 0; y < yLen; y++)
+                for (int z = 0; z < zLen; z++)
+                    copy[x, y, z] = gridData[x, y, z];
+        return copy;
+    }
+
+    public void SetGridData(char[,,] source)
+    {
+        if (source == null) return;
+        if (gridData == null) return;
+        if (source.GetLength(0) != gridData.GetLength(0) ||
+            source.GetLength(1) != gridData.GetLength(1) ||
+            source.GetLength(2) != gridData.GetLength(2))
+        {
+            Debug.LogWarning("Grid size mismatch on SetGridData; skipping.");
+            return;
+        }
+        for (int x = 0; x < gridData.GetLength(0); x++)
+            for (int y = 0; y < gridData.GetLength(1); y++)
+                for (int z = 0; z < gridData.GetLength(2); z++)
+                    gridData[x, y, z] = source[x, y, z];
+    }
+
+    public Vector3 WorldFromGrid(Vector3Int cell)
+    {
+        return new Vector3(cell.x * BLOCK_SIZE, cell.y * HEIGHT_OFFSET, cell.z * BLOCK_SIZE);
+    }
+
+    public void RebuildFragilesFromGrid()
+    {
+        // Map existing fragile objects by grid cell
+        var existing = new Dictionary<Vector3Int, FragileBlock>();
+        foreach (var frag in GameObject.FindObjectsOfType<FragileBlock>())
+        {
+            var g = GridFromPosition(frag.transform.position);
+            existing[g] = frag;
+        }
+
+        // Destroy fragiles where grid no longer has 'F'
+        foreach (var kv in existing)
+        {
+            var cell = kv.Key;
+            if (gridData[cell.x, cell.y, cell.z] != 'F')
+            {
+                Destroy(kv.Value.gameObject);
+            }
+        }
+
+        // Ensure fragiles exist where grid has 'F'
+        for (int x = 0; x < gridData.GetLength(0); x++)
+        {
+            for (int y = 0; y < gridData.GetLength(1); y++)
+            {
+                for (int z = 0; z < gridData.GetLength(2); z++)
+                {
+                    if (gridData[x, y, z] == 'F')
+                    {
+                        var cell = new Vector3Int(x, y, z);
+                        if (!existing.ContainsKey(cell))
+                        {
+                            SpawnFragileAt(WorldFromGrid(cell));
+                        }
                     }
                 }
             }
