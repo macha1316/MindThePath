@@ -18,12 +18,7 @@ public class StageBuilder : MonoBehaviour
     [SerializeField] GameObject goalPrefab;
     [SerializeField] GameObject nonePrefab;
     [SerializeField] GameObject playerPrefab;
-    [SerializeField] GameObject upPrefab;
-    [SerializeField] GameObject downPrefab;
-    [SerializeField] GameObject rightPrefab;
-    [SerializeField] GameObject leftPrefab;
     [SerializeField] GameObject moveBoxPrefab;
-    [SerializeField] GameObject kylePrefab;
     [SerializeField] GameObject lavaPrefab;
     private char[,,] gridData;
     private char[,,] dynamicTiles;
@@ -215,23 +210,8 @@ public class StageBuilder : MonoBehaviour
             case 'P':
                 prefab = playerPrefab;
                 break;
-            case 'U':
-                prefab = upPrefab;
-                break;
-            case 'D':
-                prefab = downPrefab;
-                break;
-            case 'R':
-                prefab = rightPrefab;
-                break;
-            case 'L':
-                prefab = leftPrefab;
-                break;
             case 'M':
                 prefab = moveBoxPrefab;
-                break;
-            case 'K':
-                prefab = kylePrefab;
                 break;
             case 'O':
                 prefab = lavaPrefab;
