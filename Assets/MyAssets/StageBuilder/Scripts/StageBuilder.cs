@@ -198,7 +198,6 @@ public class StageBuilder : MonoBehaviour
             if (remainingBlocksToSpawn == 0)
             {
                 IsGenerating = false;
-                TurnManager.Instance.StartMove();
             }
         }
     }

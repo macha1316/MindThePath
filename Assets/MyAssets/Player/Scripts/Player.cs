@@ -140,10 +140,6 @@ public class Player : MonoBehaviour, ITurnBased
         }
     }
 
-    public void OnTurn()
-    {
-        // Implement turn-based logic here if needed
-    }
     public void UpdateGridData()
     {
         StageBuilder.Instance.UpdateGridAtPosition(targetPosition, 'P');

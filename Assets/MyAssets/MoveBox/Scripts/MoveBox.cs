@@ -9,7 +9,6 @@ public class MoveBox : MonoBehaviour, ITurnBased
         TargetPos = transform.position;
     }
 
-    public void OnTurn() { }
 
     public void UpdateGridData()
     {
