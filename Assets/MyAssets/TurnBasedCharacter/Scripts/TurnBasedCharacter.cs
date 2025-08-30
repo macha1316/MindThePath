@@ -106,7 +106,7 @@ public class TurnbsedCharacter : MonoBehaviour, ITurnBased
         if (StageBuilder.Instance.IsMatchingCellType(nextPos, 'N'))
         {
             Vector3 belowNext = nextPos + Vector3.down * StageBuilder.BLOCK_SIZE;
-            if (StageBuilder.Instance.IsAnyMatchingCellType(belowNext, 'N', 'P', 'K'))
+            if (StageBuilder.Instance.IsAnyMatchingCellType(belowNext, 'N', 'P'))
             {
                 return !TryFlipDirection(ref nextPos);
             }
@@ -117,7 +117,7 @@ public class TurnbsedCharacter : MonoBehaviour, ITurnBased
 
     private bool TryHandleImmediateFlipFor2D(Vector3 topPos)
     {
-        if (StageBuilder.Instance.IsAnyMatchingCellType(topPos, 'P', 'K', 'O'))
+        if (StageBuilder.Instance.IsAnyMatchingCellType(topPos, 'P', 'O'))
         {
             transform.forward = -transform.forward;
             Vector3 flippedPos = transform.position + transform.forward * 2.0f;
@@ -177,7 +177,7 @@ public class TurnbsedCharacter : MonoBehaviour, ITurnBased
 
         Vector3 topPos = StageBuilder.Instance.GetTopCellPosition(flippedPos);
 
-        if (StageBuilder.Instance.IsAnyMatchingCellType(topPos, 'K', 'P'))
+        if (StageBuilder.Instance.IsAnyMatchingCellType(topPos, 'P'))
         {
             nextPos = topPos + Vector3.up * StageBuilder.HEIGHT_OFFSET;
             return true;
@@ -221,7 +221,7 @@ public class TurnbsedCharacter : MonoBehaviour, ITurnBased
             if (!StageBuilder.Instance.IsValidGridPosition(boxNextPos) ||
                 !StageBuilder.Instance.IsMatchingCellType(boxNextPos, 'N') ||
                 StageBuilder.Instance.IsMatchingCellType(nextDownPos, 'N') ||
-                StageBuilder.Instance.IsAnyMatchingCellType(nextUpPos, 'P', 'K', 'M'))
+                StageBuilder.Instance.IsAnyMatchingCellType(nextUpPos, 'P', 'M'))
             {
                 // 折り返して止まる
                 if (!TryFlipDirection(ref nextPos)) return true;
@@ -251,7 +251,7 @@ public class TurnbsedCharacter : MonoBehaviour, ITurnBased
         if (isComplete) return;
 
         if (!StageBuilder.Instance.IsValidGridPosition(nextPos) ||
-            StageBuilder.Instance.IsAnyMatchingCellType(nextPos, 'B', 'P', 'K'))
+            StageBuilder.Instance.IsAnyMatchingCellType(nextPos, 'B', 'P'))
         {
             StageBuilder.Instance.UpdateGridAtPosition(transform.position, 'P');
             return;

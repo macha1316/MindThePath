@@ -239,10 +239,6 @@ public class StageBuilder : MonoBehaviour
                 MoveBox newM = obj.AddComponent<MoveBox>();
                 GameManager.Instance.GetMoveBox(newM);
             }
-            if (cellType == 'K')
-            {
-                Robot newK = obj.AddComponent<Robot>();
-            }
             Vector3 dir = Vector3.forward;
             switch (dirChar)
             {
@@ -475,10 +471,6 @@ public class StageBuilder : MonoBehaviour
                     else if (cell == 'M')
                     {
                         Gizmos.color = Color.yellow;
-                    }
-                    else if (cell == 'K')
-                    {
-                        Gizmos.color = Color.blue;
                     }
                     else
                     {

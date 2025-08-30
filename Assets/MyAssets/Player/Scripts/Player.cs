@@ -61,7 +61,7 @@ public class Player : MonoBehaviour, ITurnBased
 
                     Vector3 dropPos = afterNext;
                     while (StageBuilder.Instance.IsValidGridPosition(dropPos + Vector3.down * StageBuilder.HEIGHT_OFFSET) &&
-                           !StageBuilder.Instance.IsAnyMatchingCellType(dropPos + Vector3.down * StageBuilder.HEIGHT_OFFSET, 'B', 'M', 'P', 'K', 'O'))
+                           !StageBuilder.Instance.IsAnyMatchingCellType(dropPos + Vector3.down * StageBuilder.HEIGHT_OFFSET, 'B', 'M', 'P', 'O'))
                     {
                         dropPos += Vector3.down * StageBuilder.HEIGHT_OFFSET;
                     }
@@ -82,8 +82,8 @@ public class Player : MonoBehaviour, ITurnBased
                     canMove = true;
                 }
                 else if (StageBuilder.Instance.IsValidGridPosition(next) &&
-                    !StageBuilder.Instance.IsAnyMatchingCellType(next, 'B', 'P', 'K', 'O') &&
-                    !StageBuilder.Instance.IsAnyMatchingCellType(nextDown, 'P', 'K', 'N', 'O'))
+                    !StageBuilder.Instance.IsAnyMatchingCellType(next, 'B', 'P', 'O') &&
+                    !StageBuilder.Instance.IsAnyMatchingCellType(nextDown, 'P', 'N', 'O'))
                 {
                     canMove = true;
                 }
