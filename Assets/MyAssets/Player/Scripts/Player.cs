@@ -9,21 +9,6 @@ public class Player : MonoBehaviour, ITurnBased
     private Vector3 targetPosition;
     public Vector3 Direction { get; set; } = Vector3.zero;
     private Vector3 lastSupportPos; // 直前に立っていた床（1段下）の座標
-    
-    // 押し出し先の直下以降に1つでもブロックがあるか
-    private bool HasSupportBelow(Vector3 worldPos)
-    {
-        Vector3 check = worldPos + Vector3.down * StageBuilder.HEIGHT_OFFSET;
-        while (StageBuilder.Instance.IsValidGridPosition(check))
-        {
-            if (StageBuilder.Instance.GetGridCharType(check) != 'N')
-            {
-                return true; // 何かしらのブロックがある
-            }
-            check += Vector3.down * StageBuilder.HEIGHT_OFFSET;
-        }
-        return false; // 何もなかった
-    }
 
     void Start()
     {
@@ -76,14 +61,10 @@ public class Player : MonoBehaviour, ITurnBased
                     if (StageBuilder.Instance.IsMatchingCellType(nextDown, 'O')) return;
 
                     // 押し出し先の直下に一つもブロックが無い場合は押せない
-                    if (!HasSupportBelow(afterNext)) return;
+                    if (!StageBuilder.Instance.HasAnySupportBelow(afterNext)) return;
 
-                    Vector3 dropPos = afterNext;
-                    while (StageBuilder.Instance.IsValidGridPosition(dropPos + Vector3.down * StageBuilder.HEIGHT_OFFSET) &&
-                           !StageBuilder.Instance.IsAnyMatchingCellType(dropPos + Vector3.down * StageBuilder.HEIGHT_OFFSET, 'B', 'M', 'P', 'O', 'F'))
-                    {
-                        dropPos += Vector3.down * StageBuilder.HEIGHT_OFFSET;
-                    }
+                    // 既存挙動に合わせて、Goal('G')は空気として扱い更に下まで落下
+                    Vector3 dropPos = StageBuilder.Instance.FindDropPosition(afterNext, goalIsAir: true);
 
                     StageBuilder.Instance.UpdateGridAtPosition(next, 'N');
                     StageBuilder.Instance.UpdateGridAtPosition(dropPos, 'M');

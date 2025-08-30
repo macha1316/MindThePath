@@ -26,14 +26,8 @@ public class MoveBox : MonoBehaviour, ITurnBased
         if (!StageBuilder.Instance.IsValidGridPosition(TargetPos)) return;
         if (!StageBuilder.Instance.IsMatchingCellType(TargetPos, 'N')) return;
 
-        // Drop until hitting a non-'N' block or invalid grid
-        Vector3 below = TargetPos + Vector3.down * StageBuilder.HEIGHT_OFFSET;
-        while (StageBuilder.Instance.IsValidGridPosition(below) &&
-               StageBuilder.Instance.IsMatchingCellType(below, 'N'))
-        {
-            TargetPos = below;
-            below += Vector3.down * StageBuilder.HEIGHT_OFFSET;
-        }
+        // Drop until hitting a non-air block (Goalは空気扱いしない)
+        TargetPos = StageBuilder.Instance.FindDropPosition(TargetPos, goalIsAir: false);
 
         isMoving = true;
 

@@ -33,6 +33,18 @@ public class StageBuilder : MonoBehaviour
     private int remainingBlocksToSpawn = 0;
     public bool IsGenerating { get; private set; } = false;
 
+    // セル種別の定義（マジックナンバー回避）
+    public static class Cell
+    {
+        public const char Empty = 'N';
+        public const char Block = 'B';
+        public const char Goal = 'G';
+        public const char Player = 'P';
+        public const char MoveBox = 'M';
+        public const char Fragile = 'F';
+        public const char Lava = 'O';
+    }
+
     // Stage情報をロード & UIをStage情報に合わせて出す
     public void CreateStage(int stageNumberProp)
     {
@@ -371,6 +383,38 @@ public class StageBuilder : MonoBehaviour
         foreach (char type in types)
         {
             if (IsMatchingCellType(pos, type)) return true;
+        }
+        return false;
+    }
+
+    // === 便利関数（重複ロジックの集約） ===
+    // 指定位置直下から下方向に探索し、最初に見つかる "落下を止める床" の直上まで落とした座標を返す
+    // goalIsAir=true の場合、'G' も空気として扱い、更に下まで落下させる（既存挙動互換）
+    public Vector3 FindDropPosition(Vector3 startWorldPos, bool goalIsAir)
+    {
+        Vector3 pos = startWorldPos;
+        while (IsValidGridPosition(pos + Vector3.down * HEIGHT_OFFSET))
+        {
+            Vector3 below = pos + Vector3.down * HEIGHT_OFFSET;
+            char t = GetGridCharType(below);
+            bool canFall = (t == Cell.Empty) || (goalIsAir && t == Cell.Goal);
+            if (!canFall) break;
+            pos = below;
+        }
+        return pos;
+    }
+
+    // 指定位置の直下に一つでも"空気でない"セルが存在するか（支えがあるか）
+    public bool HasAnySupportBelow(Vector3 worldPos)
+    {
+        Vector3 check = worldPos + Vector3.down * HEIGHT_OFFSET;
+        while (IsValidGridPosition(check))
+        {
+            if (GetGridCharType(check) != Cell.Empty)
+            {
+                return true;
+            }
+            check += Vector3.down * HEIGHT_OFFSET;
         }
         return false;
     }
