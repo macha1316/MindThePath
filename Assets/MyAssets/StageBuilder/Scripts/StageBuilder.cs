@@ -23,7 +23,6 @@ public class StageBuilder : MonoBehaviour
     [SerializeField] GameObject lavaPrefab;
     [SerializeField] GameObject teleportPrefab; // 'A' テレポート床
     private char[,,] gridData;
-    private char[,,] dynamicTiles;
     public int stageNumber = 0;
 
     // UIPrefab
@@ -55,7 +54,6 @@ public class StageBuilder : MonoBehaviour
         GameManager.Instance.SetGameStop();
         UndoManager.Instance?.Clear();
         gridData = null;
-        dynamicTiles = null;
         IsGenerating = true;
         canvasObjects.Clear();
         modelObjects.Clear();
@@ -140,7 +138,6 @@ public class StageBuilder : MonoBehaviour
         int totalHeight = heightCount + 3;
         // gridData を初期化
         gridData = new char[colCount, totalHeight, rowCount];
-        dynamicTiles = new char[colCount, totalHeight, rowCount];
 
         int delayCounter = 0;
         remainingBlocksToSpawn = 0;
@@ -173,7 +170,6 @@ public class StageBuilder : MonoBehaviour
                     int correctedRow = rowCount - 1 - row;
 
                     gridData[col, height, correctedRow] = cellType;
-                    dynamicTiles[col, height, correctedRow] = cellType;
                 }
             }
         }
@@ -415,15 +411,6 @@ public class StageBuilder : MonoBehaviour
         return gridData[col, height, row];
     }
 
-    public char GetDynamicGridCharType(Vector3 pos)
-    {
-        int col = Mathf.RoundToInt(pos.x / BLOCK_SIZE);
-        int height = Mathf.RoundToInt(pos.y / HEIGHT_OFFSET);
-        int row = Mathf.RoundToInt(pos.z / BLOCK_SIZE);
-
-        return dynamicTiles[col, height, row];
-    }
-
     // setメソッド
     public void UpdateGridAtPosition(Vector3 worldPosition, char type)
     {
@@ -432,16 +419,6 @@ public class StageBuilder : MonoBehaviour
         int row = Mathf.RoundToInt(worldPosition.z / BLOCK_SIZE);
 
         gridData[col, height, row] = type;
-    }
-
-    // setメソッド
-    public void UpdateDynamicTileAtPosition(Vector3 worldPosition, char type)
-    {
-        int col = Mathf.RoundToInt(worldPosition.x / BLOCK_SIZE);
-        int height = Mathf.RoundToInt(worldPosition.y / HEIGHT_OFFSET);
-        int row = Mathf.RoundToInt(worldPosition.z / BLOCK_SIZE);
-
-        dynamicTiles[col, height, row] = type;
     }
 
     // grid範囲内かの判定
@@ -592,7 +569,6 @@ public class StageBuilder : MonoBehaviour
             }
         }
         gridData = null;
-        dynamicTiles = null;
     }
 
     public char GetTopCellTypeAt(Vector3 position)
