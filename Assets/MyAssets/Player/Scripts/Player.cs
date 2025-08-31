@@ -63,12 +63,18 @@ public class Player : MonoBehaviour, ITurnBased
                 if (!StageBuilder.Instance.IsValidGridPosition(next)) return;
                 Vector3 nextDown = next + Vector3.down * StageBuilder.HEIGHT_OFFSET;
 
-                if (StageBuilder.Instance.IsMatchingCellType(next, 'M'))
+                if (StageBuilder.Instance.TryGetMoveBoxAtPosition(next, out var boxAhead))
                 {
                     Vector3 afterNext = next + Direction * StageBuilder.HEIGHT_OFFSET;
                     if (!StageBuilder.Instance.IsValidGridPosition(afterNext)) return;
+                    // 押し先に箱が既にある場合は押せない
+                    if (StageBuilder.Instance.TryGetMoveBoxAtPosition(afterNext, out _)) return;
                     if (!StageBuilder.Instance.IsMatchingCellType(afterNext, 'N')) return;
                     if (StageBuilder.Instance.IsMatchingCellType(nextDown, 'O')) return;
+
+                    // 新規条件: 対象の箱の上にさらに箱がある場合は押せない
+                    Vector3 aboveBox = next + Vector3.up * StageBuilder.HEIGHT_OFFSET;
+                    if (StageBuilder.Instance.TryGetMoveBoxAtPosition(aboveBox, out _)) return;
 
                     // 押し出し先の直下に一つもブロックが無い場合は押せない
                     if (!StageBuilder.Instance.HasAnySupportBelow(afterNext)) return;
@@ -79,17 +85,15 @@ public class Player : MonoBehaviour, ITurnBased
                     StageBuilder.Instance.UpdateGridAtPosition(next, 'N');
                     StageBuilder.Instance.UpdateGridAtPosition(dropPos, 'M');
 
-                    if (StageBuilder.Instance.TryGetMoveBoxAtPosition(next, out var box))
-                    {
-                        box.transform.DOMove(dropPos, 1f / moveSpeed)
-                            .SetEase(Ease.Linear)
-                            .OnComplete(() =>
-                            {
-                                box.transform.position = dropPos;
-                                box.TeleportIfOnPortal();
-                            });
-                        box.TargetPos = dropPos;
-                    }
+                    boxAhead.transform.DOMove(dropPos, 1f / moveSpeed)
+                        .SetEase(Ease.Linear)
+                        .OnComplete(() =>
+                        {
+                            boxAhead.transform.position = dropPos;
+                            boxAhead.TargetPos = dropPos;
+                            boxAhead.TeleportIfOnPortal();
+                        });
+                    boxAhead.TargetPos = dropPos;
 
                     canMove = true;
                 }
@@ -193,14 +197,19 @@ public class Player : MonoBehaviour, ITurnBased
             Vector3 dest = StageBuilder.Instance.WorldFromGrid(otherCell) + Vector3.up * StageBuilder.HEIGHT_OFFSET;
             if (!StageBuilder.Instance.IsValidGridPosition(dest)) return;
 
-            char occ = StageBuilder.Instance.GetGridCharType(dest);
-            if (occ == 'M')
+            bool boxOnDest = StageBuilder.Instance.TryGetMoveBoxAtPosition(dest, out var boxAtDest);
+            if (boxOnDest)
             {
                 // 目的地に箱がいる場合は、押せるなら押してからテレポート
                 Vector3 afterNext = dest + transform.forward * StageBuilder.HEIGHT_OFFSET;
                 if (!StageBuilder.Instance.IsValidGridPosition(afterNext)) return; // 押せないのでTP中止
+                if (StageBuilder.Instance.TryGetMoveBoxAtPosition(afterNext, out _)) return; // 押し先に箱
                 if (!StageBuilder.Instance.IsMatchingCellType(afterNext, 'N')) return; // 押せない
                 if (!StageBuilder.Instance.HasAnySupportBelow(afterNext)) return; // 支えがない
+
+                // 新規条件: 押す対象の箱の上に箱が乗っている場合は押せない
+                Vector3 aboveDestBox = dest + Vector3.up * StageBuilder.HEIGHT_OFFSET;
+                if (StageBuilder.Instance.TryGetMoveBoxAtPosition(aboveDestBox, out _)) return;
 
                 Vector3 dropPos = StageBuilder.Instance.FindDropPosition(afterNext, goalIsAir: true);
 
@@ -208,19 +217,16 @@ public class Player : MonoBehaviour, ITurnBased
                 StageBuilder.Instance.UpdateGridAtPosition(dest, 'N');
                 StageBuilder.Instance.UpdateGridAtPosition(dropPos, 'M');
 
-                if (StageBuilder.Instance.TryGetMoveBoxAtPosition(dest, out var boxAtDest))
-                {
-                    boxAtDest.transform.DOMove(dropPos, 1f / moveSpeed)
-                        .SetEase(Ease.Linear)
-                        .OnComplete(() =>
-                        {
-                            boxAtDest.transform.position = dropPos;
-                            boxAtDest.TargetPos = dropPos;
-                            boxAtDest.TeleportIfOnPortal();
-                        });
-                }
+                boxAtDest.transform.DOMove(dropPos, 1f / moveSpeed)
+                    .SetEase(Ease.Linear)
+                    .OnComplete(() =>
+                    {
+                        boxAtDest.transform.position = dropPos;
+                        boxAtDest.TargetPos = dropPos;
+                        boxAtDest.TeleportIfOnPortal();
+                    });
             }
-            else if (occ != 'N')
+            else if (StageBuilder.Instance.GetGridCharType(dest) != 'N')
             {
                 // 目的地が空でない場合はテレポートしない
                 return;
