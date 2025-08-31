@@ -54,21 +54,7 @@ public class StageSelectUI : MonoBehaviour
         admobUnitInterstitial = FindObjectOfType<AdmobUnitInterstitial>();
         admobUnitReward = FindObjectOfType<AdmobUnitReward>();
 
-        int clearedStage = PlayerPrefs.GetInt(PlayerPrefsManager.ClearedStageKey, 0);
-
-        for (int i = 0; i < stageSelectButtons.Length; i++)
-        {
-            bool isUnlocked = i <= clearedStage;
-            stageSelectButtons[i].SetActive(true);
-
-            var button = stageSelectButtons[i].GetComponent<Button>();
-            if (button != null)
-                button.interactable = isUnlocked;
-
-            var image = stageSelectButtons[i].GetComponent<Image>();
-            if (image != null)
-                image.color = new Color(image.color.r, image.color.g, image.color.b, isUnlocked ? 1f : 0.4f);
-        }
+        UpdateStageSelectButtons();
         StartCoroutine(AnimateStageButtons());
     }
 
@@ -107,6 +93,8 @@ public class StageSelectUI : MonoBehaviour
 
     public void SetClearUI()
     {
+        // ステージクリア時に進行状況を保存
+        SaveClearedStage(StageBuilder.Instance.stageNumber);
         CloseAllUI();
         admobUnitInterstitial.ShowInterstitial();
         clearUI.SetActive(true);
@@ -116,6 +104,8 @@ public class StageSelectUI : MonoBehaviour
     {
         CloseAllUI();
         stageSelectUI.SetActive(true);
+        // ステージ選択画面を表示するたびにアンロック状態を更新
+        UpdateStageSelectButtons();
         StageBuilder.Instance.DestroyStage();
         GameManager.Instance.IsStart = false;
     }
@@ -281,6 +271,8 @@ public class StageSelectUI : MonoBehaviour
                 {
                     Debug.Log("Reward type: " + reward.Type);
                     Debug.Log("Reward received: " + reward.Amount);
+                    // リワード視聴完了: 現在のステージをスキップ
+                    SkipCurrentStage();
                 }
             });
         }
@@ -290,15 +282,73 @@ public class StageSelectUI : MonoBehaviour
         }
     }
 
-    // デバッグ用: 最大にしている
+    // リワードで現在のステージをスキップ
+    private void SkipCurrentStage()
+    {
+        // 進行度を更新して次のステージを解放
+        int current = StageBuilder.Instance.stageNumber;
+        SaveClearedStage(current);
+
+        // リワードパネルを閉じる
+        rewardPanel.SetActive(false);
+
+        // 次のステージがある場合はロード、なければステージ選択に戻る
+        int nextIndex = current + 1;
+        int totalStages = stageSelectButtons != null ? stageSelectButtons.Length : 0;
+        if (nextIndex < totalStages)
+        {
+            StageBuilder.Instance.BuildNextStage();
+        }
+        else
+        {
+            SetStageSelectUI();
+        }
+    }
+
+    // クリア進行度を保存（クリアしたら次のステージを解放）
     public void SaveClearedStage(int stageNumber)
     {
-        int currentCleared = PlayerPrefs.GetInt(PlayerPrefsManager.ClearedStageKey, 0);
-        // if (stageNumber > currentCleared)
+        // 保存値は「解放済みの最大インデックス」として扱う
+        int currentUnlocked = PlayerPrefs.GetInt(PlayerPrefsManager.ClearedStageKey, 0);
+        int nextToUnlock = stageNumber + 1; // クリアしたら次のインデックスを解放
+
+        // 最大値を更新（戻さない）
+        int newUnlocked = Mathf.Max(currentUnlocked, nextToUnlock);
+
+        // 上限保護（ボタン数を超えないように）
+        int maxIndex = stageSelectButtons != null ? Mathf.Max(0, stageSelectButtons.Length - 1) : 0;
+        newUnlocked = Mathf.Min(newUnlocked, maxIndex);
+
+        if (newUnlocked != currentUnlocked)
         {
-            PlayerPrefs.SetInt(PlayerPrefsManager.ClearedStageKey, 10);
-            // PlayerPrefs.SetInt(ClearedStageKey, stageNumber);
+            PlayerPrefs.SetInt(PlayerPrefsManager.ClearedStageKey, newUnlocked);
             PlayerPrefs.Save();
         }
+    }
+
+    // ステージ選択ボタンの解放状態を反映
+    private void UpdateStageSelectButtons()
+    {
+        int unlockedIndex = PlayerPrefs.GetInt(PlayerPrefsManager.ClearedStageKey, 0);
+        for (int i = 0; i < stageSelectButtons.Length; i++)
+        {
+            bool isUnlocked = i <= unlockedIndex;
+            stageSelectButtons[i].SetActive(true);
+
+            var button = stageSelectButtons[i].GetComponent<Button>();
+            if (button != null) button.interactable = isUnlocked;
+
+            var image = stageSelectButtons[i].GetComponent<Image>();
+            if (image != null)
+                image.color = new Color(image.color.r, image.color.g, image.color.b, isUnlocked ? 1f : 0.4f);
+        }
+    }
+
+    // デバッグ用: クリア済みステージ情報(ClearedStageKey)を削除
+    public void ClearClearedStageKey()
+    {
+        PlayerPrefs.DeleteKey(PlayerPrefsManager.ClearedStageKey);
+        PlayerPrefs.Save();
+        Debug.Log("ClearedStageKey deleted.");
     }
 }

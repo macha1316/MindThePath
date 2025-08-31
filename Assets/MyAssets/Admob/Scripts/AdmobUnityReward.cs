@@ -5,11 +5,9 @@ using System;
 public class AdmobUnitReward : AdmobUnitBase
 {
     private RewardedAd rewardedAd;
-    private Supabase supabase;
 
     void Awake()
     {
-        supabase = FindObjectOfType<Supabase>();
     }
 
     public bool IsReady
@@ -105,9 +103,8 @@ public class AdmobUnitReward : AdmobUnitBase
         ad.OnAdFullScreenContentClosed += () =>
         {
             Debug.Log("Rewarded ad full screen content closed.");
+            // 次回に備えてロードのみ行い、画面の遷移は各コールバック側で制御
             LoadRewardAd();
-            StageSelectUI.Instance.ShowRewardPanel();
-            supabase.PlayVideo();
         };
         // Raised when the ad failed to open full screen content.
         ad.OnAdFullScreenContentFailed += (AdError error) =>
