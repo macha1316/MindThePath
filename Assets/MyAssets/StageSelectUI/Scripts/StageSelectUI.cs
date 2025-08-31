@@ -60,7 +60,17 @@ public class StageSelectUI : MonoBehaviour
 
     public void SelectStageUI(int stageNumber)
     {
-        SelectStageUI();
+        // ステージ開始用UI表示 + ステージ番号の反映
+        CloseAllUI();
+        startUI.SetActive(true);
+        stopUI.SetActive(true);
+        operatePlayerUI.SetActive(true);
+        cameraRotateUI.SetActive(true);
+        if (stageNumberText != null)
+        {
+            int displayNum = stageNumber + 1; // 0始まり→1始まり表記
+            stageNumberText.text = "ステージ" + displayNum.ToString();
+        }
     }
 
     private void CloseAllUI()
@@ -83,12 +93,9 @@ public class StageSelectUI : MonoBehaviour
 
     private void SelectStageUI()
     {
-        CloseAllUI();
-        startUI.SetActive(true);
-        stopUI.SetActive(true);
-        operatePlayerUI.SetActive(true);
-        cameraRotateUI.SetActive(true);
-        stageNumberText.text = "ステージ1";
+        // 引数なしの場合は現在のステージ番号を利用
+        int current = StageBuilder.Instance != null ? StageBuilder.Instance.stageNumber : 0;
+        SelectStageUI(current);
     }
 
     public void SetClearUI()
@@ -141,7 +148,11 @@ public class StageSelectUI : MonoBehaviour
         operatePlayerUI.SetActive(true);
         cameraRotateUI.SetActive(true);
         startUI.SetActive(true);
-        stageNumberText.text = "ステージ1";
+        if (stageNumberText != null)
+        {
+            int current = StageBuilder.Instance != null ? StageBuilder.Instance.stageNumber : 0;
+            stageNumberText.text = "ステージ" + (current + 1).ToString();
+        }
     }
 
     public void ClickTitle()
