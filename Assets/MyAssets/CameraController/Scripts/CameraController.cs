@@ -19,6 +19,7 @@ public class CameraController : MonoBehaviour
 
     public void SwitchView()
     {
+        if (StageBuilder.Instance.IsGenerating) return;
         GameManager.Instance.Is2DMode = !GameManager.Instance.Is2DMode;
         if (GameManager.Instance.Is2DMode)
         {

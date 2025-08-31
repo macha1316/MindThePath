@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Rendering;
 using DG.Tweening;
 using System.Collections;
 
@@ -32,6 +33,73 @@ public class StageBuilder : MonoBehaviour
     // コルーチンによるブロック生成管理用
     private int remainingBlocksToSpawn = 0;
     public bool IsGenerating { get; private set; } = false;
+
+    // 生成アニメーション設定（ぼこぼこ降ってくる感じ）
+    [Header("Spawn Animation")]
+    [SerializeField] private Vector2 spawnDropHeightRange = new Vector2(5f, 9f); // 下降開始の高さ範囲
+    [SerializeField] private Vector2 spawnDropDurationRange = new Vector2(0.25f, 0.6f); // 落下時間の範囲
+    [SerializeField] private float spawnFadeDuration = 0.35f; // フェード時間
+    [SerializeField] private Ease spawnDropEase = Ease.OutCubic; // 落下イージング
+    [SerializeField] private float spawnDelayRandom = 0.35f; // ランダムな遅延
+    [SerializeField] private float spawnNoiseScale = 0.15f; // ノイズスケール
+    [SerializeField] private float spawnNoiseAmplitude = 0.35f; // ノイズ遅延の強さ
+    [SerializeField] private float spawnRotJitter = 6f; // 落下中の傾き（度）
+    [SerializeField] private float spawnLandingSquash = 0.1f; // 着地時のつぶれ量
+    [SerializeField] private float spawnLandingSquashDuration = 0.08f; // つぶれ時間
+
+    // マテリアルの一時的な透明化制御用
+    private struct MaterialRenderState
+    {
+        public bool valid;
+        public bool hasMode; public float mode;
+        public bool hasSurface; public float surface;
+        public bool hasBlend; public float blend;
+        public bool hasSrcBlend; public int srcBlend;
+        public bool hasDstBlend; public int dstBlend;
+        public bool hasZWrite; public int zWrite;
+        public bool keywordAlphaTest;
+        public bool keywordAlphaBlend;
+        public bool keywordAlphaPremul;
+        public int renderQueue;
+    }
+
+    private MaterialRenderState MakeTransparent(Material mat)
+    {
+        var s = new MaterialRenderState { valid = true };
+        s.renderQueue = mat.renderQueue;
+        s.keywordAlphaTest = mat.IsKeywordEnabled("_ALPHATEST_ON");
+        s.keywordAlphaBlend = mat.IsKeywordEnabled("_ALPHABLEND_ON");
+        s.keywordAlphaPremul = mat.IsKeywordEnabled("_ALPHAPREMULTIPLY_ON");
+
+        if (mat.HasProperty("_Mode")) { s.hasMode = true; s.mode = mat.GetFloat("_Mode"); mat.SetFloat("_Mode", 2f); } // Standard: Fade
+        if (mat.HasProperty("_Surface")) { s.hasSurface = true; s.surface = mat.GetFloat("_Surface"); mat.SetFloat("_Surface", 1f); } // URP: Transparent
+        if (mat.HasProperty("_Blend")) { s.hasBlend = true; s.blend = mat.GetFloat("_Blend"); mat.SetFloat("_Blend", 0f); } // URP: Alpha blend
+        if (mat.HasProperty("_SrcBlend")) { s.hasSrcBlend = true; s.srcBlend = mat.GetInt("_SrcBlend"); mat.SetInt("_SrcBlend", (int)BlendMode.SrcAlpha); }
+        if (mat.HasProperty("_DstBlend")) { s.hasDstBlend = true; s.dstBlend = mat.GetInt("_DstBlend"); mat.SetInt("_DstBlend", (int)BlendMode.OneMinusSrcAlpha); }
+        if (mat.HasProperty("_ZWrite")) { s.hasZWrite = true; s.zWrite = mat.GetInt("_ZWrite"); mat.SetInt("_ZWrite", 0); }
+
+        mat.DisableKeyword("_ALPHATEST_ON");
+        mat.EnableKeyword("_ALPHABLEND_ON");
+        mat.DisableKeyword("_ALPHAPREMULTIPLY_ON");
+        mat.renderQueue = 3000; // Transparent queue
+        return s;
+    }
+
+    private void RestoreRenderState(Material mat, MaterialRenderState s)
+    {
+        if (!s.valid) return;
+        if (s.hasMode) mat.SetFloat("_Mode", s.mode);
+        if (s.hasSurface) mat.SetFloat("_Surface", s.surface);
+        if (s.hasBlend) mat.SetFloat("_Blend", s.blend);
+        if (s.hasSrcBlend) mat.SetInt("_SrcBlend", s.srcBlend);
+        if (s.hasDstBlend) mat.SetInt("_DstBlend", s.dstBlend);
+        if (s.hasZWrite) mat.SetInt("_ZWrite", s.zWrite);
+
+        if (s.keywordAlphaTest) mat.EnableKeyword("_ALPHATEST_ON"); else mat.DisableKeyword("_ALPHATEST_ON");
+        if (s.keywordAlphaBlend) mat.EnableKeyword("_ALPHABLEND_ON"); else mat.DisableKeyword("_ALPHABLEND_ON");
+        if (s.keywordAlphaPremul) mat.EnableKeyword("_ALPHAPREMULTIPLY_ON"); else mat.DisableKeyword("_ALPHAPREMULTIPLY_ON");
+        mat.renderQueue = s.renderQueue;
+    }
 
     // セル種別の定義（マジックナンバー回避）
     public static class Cell
@@ -139,7 +207,7 @@ public class StageBuilder : MonoBehaviour
         // gridData を初期化
         gridData = new char[colCount, totalHeight, rowCount];
 
-        int delayCounter = 0;
+        int delayCounter = 0; // 既存の直列感を弱めるため、下の遅延はノイズ＋ジッタ主体
         remainingBlocksToSpawn = 0;
 
         for (int height = 0; height < heightCount; height++)
@@ -159,7 +227,11 @@ public class StageBuilder : MonoBehaviour
                     if (cellTypeString[0] != 'N')
                     {
                         remainingBlocksToSpawn++;
-                        StartCoroutine(SpawnBlockWithDelay(cellTypeString, position, delayCounter * 0.01f));
+                        float n = Mathf.PerlinNoise(position.x * spawnNoiseScale, position.z * spawnNoiseScale); // 0..1
+                        float noiseDelay = n * spawnNoiseAmplitude; // 0..amp
+                        float jitter = UnityEngine.Random.Range(0f, spawnDelayRandom);
+                        float delay = noiseDelay + jitter;
+                        StartCoroutine(SpawnBlockWithDelay(cellTypeString, position, delay));
                         delayCounter++;
                     }
                     else
@@ -236,15 +308,11 @@ public class StageBuilder : MonoBehaviour
         }
         if (prefab != null)
         {
+            // ルートは最終位置に生成し、見た目は子のみを上から降ろす＆フェード
             GameObject obj = Instantiate(prefab, position, Quaternion.identity, stageRoot != null ? stageRoot.transform : null);
-            obj.transform.localScale = Vector3.zero;
-            obj.transform.DOScale(Vector3.one, 0.3f).SetEase(Ease.OutBack);
 
             Transform marker = obj.transform.Find("Marker");
-            if (marker != null)
-            {
-                marker.gameObject.SetActive(false);
-            }
+            if (marker != null) marker.gameObject.SetActive(false);
 
             if (cellType == 'P')
             {
@@ -256,10 +324,8 @@ public class StageBuilder : MonoBehaviour
                 MoveBox newM = obj.AddComponent<MoveBox>();
                 GameManager.Instance.GetMoveBox(newM);
             }
-            if (cellType == 'F')
-            {
-                obj.AddComponent<FragileBlock>();
-            }
+            if (cellType == 'F') obj.AddComponent<FragileBlock>();
+
             Vector3 dir = Vector3.forward;
             switch (dirChar)
             {
@@ -270,18 +336,90 @@ public class StageBuilder : MonoBehaviour
             }
             obj.transform.forward = dir;
 
+            // 子オブジェクト分類（Canvasは非表示、モデルは表示＆アニメ対象）
+            var modelChildren = new List<Transform>();
             foreach (Transform child in obj.transform)
             {
                 Canvas canvas = child.GetComponent<Canvas>();
                 if (canvas != null)
                 {
                     canvasObjects.Add(child.gameObject);
-                    child.gameObject.SetActive(false); // start hidden
+                    child.gameObject.SetActive(false);
                 }
                 else
                 {
                     modelObjects.Add(child.gameObject);
-                    child.gameObject.SetActive(true); // default visible
+                    child.gameObject.SetActive(true);
+                    modelChildren.Add(child);
+                }
+            }
+
+            // 空セルは演出不要
+            if (cellType == 'N') return;
+
+            // ぼこぼこ感: 子ごとに高さ/時間/回転をランダム化
+            foreach (var t in modelChildren)
+            {
+                float dropHeight = UnityEngine.Random.Range(spawnDropHeightRange.x, spawnDropHeightRange.y);
+                float dropDuration = UnityEngine.Random.Range(spawnDropDurationRange.x, spawnDropDurationRange.y);
+
+                Vector3 originalLocal = t.localPosition;
+                Vector3 originalScale = t.localScale;
+                Vector3 originalEuler = t.localEulerAngles;
+
+                // 落下開始位置 + 回転ジッタ
+                t.localPosition = originalLocal + Vector3.up * dropHeight;
+                Vector3 jitterEuler = originalEuler + new Vector3(
+                    UnityEngine.Random.Range(-spawnRotJitter, spawnRotJitter),
+                    0f,
+                    UnityEngine.Random.Range(-spawnRotJitter, spawnRotJitter)
+                );
+                t.localEulerAngles = jitterEuler;
+
+                // 落下と姿勢復帰
+                t.DOLocalMoveY(originalLocal.y, dropDuration).SetEase(spawnDropEase).OnComplete(() =>
+                {
+                    // 着地時のつぶれ（軽くバウンド感）
+                    if (spawnLandingSquash > 0f)
+                    {
+                        Vector3 squash = new Vector3(spawnLandingSquash, -spawnLandingSquash * 1.5f, spawnLandingSquash);
+                        t.DOScale(originalScale + squash, spawnLandingSquashDuration).SetLoops(2, LoopType.Yoyo);
+                    }
+                });
+                t.DOLocalRotate(originalEuler, dropDuration).SetEase(Ease.OutQuad);
+            }
+
+            // フェードイン（マテリアルを一時Transparentにしてα0→1）
+            var renderers = obj.GetComponentsInChildren<Renderer>(true);
+            foreach (var r in renderers)
+            {
+                var mats = r.materials;
+                for (int i = 0; i < mats.Length; i++)
+                {
+                    var mat = mats[i];
+                    var state = MakeTransparent(mat);
+
+                    if (mat.HasProperty("_BaseColor"))
+                    {
+                        Color c0 = mat.GetColor("_BaseColor");
+                        Color start = new Color(c0.r, c0.g, c0.b, 0f);
+                        Color end = new Color(c0.r, c0.g, c0.b, 1f);
+                        mat.SetColor("_BaseColor", start);
+                        mat.DOColor(end, "_BaseColor", spawnFadeDuration).OnComplete(() => RestoreRenderState(mat, state));
+                    }
+                    else if (mat.HasProperty("_Color"))
+                    {
+                        Color c0 = mat.color;
+                        Color start = new Color(c0.r, c0.g, c0.b, 0f);
+                        Color end = new Color(c0.r, c0.g, c0.b, 1f);
+                        mat.color = start;
+                        mat.DOColor(end, spawnFadeDuration).OnComplete(() => RestoreRenderState(mat, state));
+                    }
+                    else
+                    {
+                        // フェード不可なら設定を戻す
+                        RestoreRenderState(mat, state);
+                    }
                 }
             }
         }
