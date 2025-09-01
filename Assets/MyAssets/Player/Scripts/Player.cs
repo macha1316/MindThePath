@@ -25,6 +25,7 @@ public class Player : MonoBehaviour, ITurnBased
             if (!isMoving)
             {
                 UndoManager.Instance?.Undo();
+                AudioManager.Instance?.PlayUndoSound();
             }
             return;
         }
@@ -119,6 +120,7 @@ public class Player : MonoBehaviour, ITurnBased
                 CheckGoal();
 
                 if (animator != null) animator.SetTrigger("Walk");
+                AudioManager.Instance?.PlayMoveSound();
 
                 StageBuilder.Instance.UpdateGridAtPosition(targetPosition, 'P');
                 transform.DOMove(targetPosition, 1f / moveSpeed)

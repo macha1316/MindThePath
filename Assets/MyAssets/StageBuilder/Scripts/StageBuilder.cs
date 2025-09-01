@@ -126,6 +126,7 @@ public class StageBuilder : MonoBehaviour
         canvasObjects.Clear();
         modelObjects.Clear();
         AudioManager.Instance.SelectStageSound();
+        AudioManager.Instance?.PlayStageBuildSound();
         LoadStage(textAssets[stageNumber]);
 
         bool isFirstPlay = !PlayerPrefs.HasKey(PlayerPrefsManager.FirstPlayKey);

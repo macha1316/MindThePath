@@ -61,6 +61,7 @@ public class UndoManager : MonoBehaviour
     public void Undo()
     {
         if (history.Count == 0) return;
+        AudioManager.Instance?.PlayUndoSound();
         var gs = history.Pop();
 
         // Restore grid snapshot first (includes 'F' tiles)

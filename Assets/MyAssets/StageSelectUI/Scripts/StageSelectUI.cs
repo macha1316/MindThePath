@@ -109,6 +109,7 @@ public class StageSelectUI : MonoBehaviour
 
     public void SetStageSelectUI()
     {
+        AudioManager.Instance?.PlayClickSound();
         CloseAllUI();
         stageSelectUI.SetActive(true);
         // ステージ選択画面を表示するたびにアンロック状態を更新
@@ -119,12 +120,14 @@ public class StageSelectUI : MonoBehaviour
 
     public void ShowPauseUI()
     {
+        AudioManager.Instance?.PlayClickSound();
         CloseAllUI();
         pauseUI.SetActive(true);
     }
 
     public void ShowOptionUI()
     {
+        AudioManager.Instance?.PlayClickSound();
         CloseAllUI();
         optionUI.SetActive(true);
     }
@@ -143,6 +146,7 @@ public class StageSelectUI : MonoBehaviour
 
     public void HidePauseUI()
     {
+        AudioManager.Instance?.PlayClickSound();
         CloseAllUI();
         stopUI.SetActive(true);
         operatePlayerUI.SetActive(true);
@@ -157,6 +161,7 @@ public class StageSelectUI : MonoBehaviour
 
     public void ClickTitle()
     {
+        AudioManager.Instance?.PlayClickSound();
         CloseAllUI();
         stageSelectUI.SetActive(true);
         CameraController.Instance.titleCamera.Priority = 0;
@@ -164,6 +169,7 @@ public class StageSelectUI : MonoBehaviour
 
     public void ShowTutorialUI()
     {
+        AudioManager.Instance?.PlayClickSound();
         tutorialPageIndex = 1;
         tutorialPageText.text = tutorialPageIndex.ToString() + " / " + (tutorialPages.Length).ToString();
         tutorialBg.SetActive(true);
@@ -185,11 +191,13 @@ public class StageSelectUI : MonoBehaviour
 
     public void HideTutorialUI()
     {
+        AudioManager.Instance?.PlayClickSound();
         StartCoroutine(HideTutorialUIDeray());
     }
 
     public void NextTutorialPage()
     {
+        AudioManager.Instance?.PlayClickSound();
         for (int i = 0; i < tutorialPages.Length; i++)
         {
             if (tutorialPages[i].activeSelf)
@@ -214,6 +222,7 @@ public class StageSelectUI : MonoBehaviour
 
     public void PreviousTutorialPage()
     {
+        AudioManager.Instance?.PlayClickSound();
         for (int i = 0; i < tutorialPages.Length; i++)
         {
             if (tutorialPages[i].activeSelf)
@@ -262,18 +271,21 @@ public class StageSelectUI : MonoBehaviour
 
     public void ShowHintUI()
     {
+        AudioManager.Instance?.PlayClickSound();
         CloseAllUI();
         hintUI.SetActive(true);
     }
 
     public void ShowRewardPanel()
     {
+        AudioManager.Instance?.PlayClickSound();
         CloseAllUI();
         rewardPanel.SetActive(true);
     }
 
     public void HideRewardPanel()
     {
+        AudioManager.Instance?.PlayClickSound();
         // 明示的に再生中の動画/音声を停止・掃除
         var supabase = FindObjectOfType<Supabase>();
         if (supabase != null)
@@ -287,6 +299,7 @@ public class StageSelectUI : MonoBehaviour
 
     public void ShowRewardAd()
     {
+        AudioManager.Instance?.PlayClickSound();
         if (admobUnitReward != null && admobUnitReward.IsReady)
         {
             admobUnitReward.ShowRewardAd((reward) =>

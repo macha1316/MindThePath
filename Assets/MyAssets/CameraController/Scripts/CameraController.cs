@@ -21,6 +21,7 @@ public class CameraController : MonoBehaviour
     {
         if (StageBuilder.Instance.IsGenerating) return;
         GameManager.Instance.Is2DMode = !GameManager.Instance.Is2DMode;
+        AudioManager.Instance?.PlaySwitchDimensionSound();
         if (GameManager.Instance.Is2DMode)
         {
 
@@ -81,6 +82,7 @@ public class CameraController : MonoBehaviour
     public void RotateRight()
     {
         if (virtualCameras == null || virtualCameras.Length == 0) return;
+        AudioManager.Instance?.PlayClickSound();
 
         virtualCameras[CurrentIndex].Priority = 0;
         CurrentIndex = (CurrentIndex + 1) % virtualCameras.Length;
@@ -90,6 +92,7 @@ public class CameraController : MonoBehaviour
     public void RotateLeft()
     {
         if (virtualCameras == null || virtualCameras.Length == 0) return;
+        AudioManager.Instance?.PlayClickSound();
 
         virtualCameras[CurrentIndex].Priority = 0;
         CurrentIndex = (CurrentIndex - 1 + virtualCameras.Length) % virtualCameras.Length;
