@@ -330,6 +330,7 @@ public class StageBuilder : MonoBehaviour
                 GameManager.Instance.GetMoveBox(newM);
             }
             if (cellType == 'F') obj.AddComponent<FragileBlock>();
+            if (cellType == 'G') obj.AddComponent<GoalBlock>();
 
             Vector3 dir = Vector3.forward;
             switch (dirChar)

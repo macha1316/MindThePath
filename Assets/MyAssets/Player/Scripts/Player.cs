@@ -1,5 +1,6 @@
 using UnityEngine;
 using DG.Tweening;
+using System.Collections;
 
 public class Player : MonoBehaviour, ITurnBased
 {
@@ -13,6 +14,7 @@ public class Player : MonoBehaviour, ITurnBased
     private Vector3 targetPosition;
     public Vector3 Direction { get; set; } = Vector3.zero;
     private Vector3 lastSupportPos; // 直前に立っていた床（1段下）の座標
+    private bool isGoalCelebrating = false;
 
     void Start()
     {
@@ -152,11 +154,51 @@ public class Player : MonoBehaviour, ITurnBased
 
     private void CheckGoal()
     {
+        if (isGoalCelebrating) return;
         if (StageBuilder.Instance.IsMatchingCellType(targetPosition, 'G'))
         {
-            GameManager.Instance.IsGameClear = true;
-            StageSelectUI.Instance.SetClearUI();
+            StartCoroutine(GoalCelebrateThenClear());
         }
+    }
+
+    private IEnumerator GoalCelebrateThenClear()
+    {
+        isGoalCelebrating = true;
+        GameManager.Instance.IsGameClear = true;
+        // 入力抑制
+        isMoving = true;
+
+        // 近傍のGoalオブジェクトを削除（GoalBlockを付与している前提）
+        var goals = GameObject.FindObjectsOfType<GoalBlock>();
+        float bestDist = float.MaxValue; GoalBlock nearest = null;
+        foreach (var g in goals)
+        {
+            float d = Vector3.SqrMagnitude(g.transform.position - transform.position);
+            if (d < bestDist)
+            {
+                bestDist = d; nearest = g;
+            }
+        }
+        if (nearest != null && bestDist < (StageBuilder.BLOCK_SIZE * StageBuilder.BLOCK_SIZE * 4f))
+        {
+            GameObject.Destroy(nearest.gameObject);
+        }
+        ConfettiManager.Instance?.SpawnBurst();
+
+        yield return new WaitForSeconds(0.5f);
+
+        Vector3 pos = transform.position;
+        float jumpH = StageBuilder.HEIGHT_OFFSET * 0.9f;
+        // ちょい派手なジャンプ＋回転＋スカッシュ
+        Sequence seq = DOTween.Sequence();
+        seq.Append(transform.DOJump(pos, jumpH, 1, 0.45f).SetEase(Ease.OutCubic));
+        seq.Join(transform.DORotate(new Vector3(0f, 360f, 0f), 0.45f, RotateMode.WorldAxisAdd).SetEase(Ease.OutCubic));
+        seq.Join(transform.DOPunchScale(new Vector3(0.25f, -0.25f, 0.25f), 0.4f, 2, 0.6f));
+
+        yield return seq.WaitForCompletion();
+        yield return new WaitForSeconds(1f);
+
+        StageSelectUI.Instance.SetClearUI();
     }
 
     public void UpdateGridData()
