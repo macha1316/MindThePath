@@ -4,7 +4,11 @@ using DG.Tweening;
 public class Player : MonoBehaviour, ITurnBased
 {
     public float moveSpeed = 5f;
-    private Animator animator;
+    [Header("Jump Move Settings")]
+    [SerializeField] private float jumpPowerFactor = 0.6f; // HEIGHT_OFFSETに対する倍率
+    [SerializeField] private int jumpCount = 1;             // 1マスにつき何回ジャンプするか
+    [SerializeField] private float squashAmount = 0.08f;    // ぴょん時のつぶれ量（スケール）
+    [SerializeField] private float squashDuration = 0.06f;  // つぶれ時間
     private bool isMoving = false;
     private Vector3 targetPosition;
     public Vector3 Direction { get; set; } = Vector3.zero;
@@ -12,7 +16,6 @@ public class Player : MonoBehaviour, ITurnBased
 
     void Start()
     {
-        animator = GetComponent<Animator>();
         targetPosition = transform.position;
         StageBuilder.Instance.UpdateGridAtPosition(transform.position, 'P');
     }
@@ -32,7 +35,7 @@ public class Player : MonoBehaviour, ITurnBased
 
         if (isMoving)
         {
-            if (animator != null) animator.SetTrigger("Idle");
+            // 既に移動中は新しい入力を受け付けない（アニメ状態は維持）
             return;
         }
 
@@ -119,11 +122,21 @@ public class Player : MonoBehaviour, ITurnBased
                 transform.forward = Direction;
                 CheckGoal();
 
-                if (animator != null) animator.SetTrigger("Walk");
-                AudioManager.Instance?.PlayMoveSound();
-
                 StageBuilder.Instance.UpdateGridAtPosition(targetPosition, 'P');
-                transform.DOMove(targetPosition, 1f / moveSpeed)
+
+                float jumpPower = StageBuilder.HEIGHT_OFFSET * jumpPowerFactor;
+                var tween = transform.DOJump(targetPosition, jumpPower, Mathf.Max(1, jumpCount), 1f / moveSpeed)
+                    .OnStart(() =>
+                    {
+                        // 軽いつぶれ感
+                        if (squashAmount > 0f)
+                        {
+                            Vector3 s0 = transform.localScale;
+                            Vector3 s1 = new Vector3(s0.x + squashAmount, s0.y - squashAmount * 1.5f, s0.z + squashAmount);
+                            transform.DOScale(s1, squashDuration).SetLoops(2, LoopType.Yoyo);
+                        }
+                        AudioManager.Instance?.PlayMoveSound();
+                    })
                     .SetEase(Ease.Linear)
                     .OnComplete(() =>
                     {

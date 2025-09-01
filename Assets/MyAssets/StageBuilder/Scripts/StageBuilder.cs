@@ -47,6 +47,10 @@ public class StageBuilder : MonoBehaviour
     [SerializeField] private float spawnLandingSquash = 0.1f; // 着地時のつぶれ量
     [SerializeField] private float spawnLandingSquashDuration = 0.08f; // つぶれ時間
 
+    [Header("Block Colors")]
+    [SerializeField] private Color goalColor = Color.white;
+    [SerializeField] private Color moveBoxColor = new Color(0.55f, 0.33f, 0.13f); // 茶色
+
     // マテリアルの一時的な透明化制御用
     private struct MaterialRenderState
     {
@@ -352,6 +356,31 @@ public class StageBuilder : MonoBehaviour
                     modelObjects.Add(child.gameObject);
                     child.gameObject.SetActive(true);
                     modelChildren.Add(child);
+                }
+            }
+
+            // 生成時に色を指定（Goal=白, MoveBox=茶色）
+            if (cellType == 'G' || cellType == 'M')
+            {
+                Color tint = (cellType == 'G') ? goalColor : moveBoxColor;
+                var renderersForTint = obj.GetComponentsInChildren<Renderer>(true);
+                foreach (var r in renderersForTint)
+                {
+                    var mats = r.materials;
+                    for (int i = 0; i < mats.Length; i++)
+                    {
+                        var mat = mats[i];
+                        if (mat.HasProperty("_BaseColor"))
+                        {
+                            Color c = mat.GetColor("_BaseColor");
+                            mat.SetColor("_BaseColor", new Color(tint.r, tint.g, tint.b, c.a));
+                        }
+                        else if (mat.HasProperty("_Color"))
+                        {
+                            Color c = mat.color;
+                            mat.color = new Color(tint.r, tint.g, tint.b, c.a);
+                        }
+                    }
                 }
             }
 
