@@ -272,6 +272,19 @@ public class StageSelectUI : MonoBehaviour
         rewardPanel.SetActive(true);
     }
 
+    public void HideRewardPanel()
+    {
+        // 明示的に再生中の動画/音声を停止・掃除
+        var supabase = FindObjectOfType<Supabase>();
+        if (supabase != null)
+        {
+            supabase.StopVideo();
+            supabase.StopAudio();
+        }
+        CloseAllUI();
+        SelectStageUI();
+    }
+
     public void ShowRewardAd()
     {
         if (admobUnitReward != null && admobUnitReward.IsReady)
@@ -282,37 +295,13 @@ public class StageSelectUI : MonoBehaviour
                 {
                     Debug.Log("Reward type: " + reward.Type);
                     Debug.Log("Reward received: " + reward.Amount);
-                    // リワード視聴完了: 現在のステージをスキップ
-                    SkipCurrentStage();
+                    // 旧仕様復帰: 本体処理は広告閉じ時のハンドラ側で実行
                 }
             });
         }
         else
         {
             Debug.Log("Reward ad is not ready yet.");
-        }
-    }
-
-    // リワードで現在のステージをスキップ
-    private void SkipCurrentStage()
-    {
-        // 進行度を更新して次のステージを解放
-        int current = StageBuilder.Instance.stageNumber;
-        SaveClearedStage(current);
-
-        // リワードパネルを閉じる
-        rewardPanel.SetActive(false);
-
-        // 次のステージがある場合はロード、なければステージ選択に戻る
-        int nextIndex = current + 1;
-        int totalStages = stageSelectButtons != null ? stageSelectButtons.Length : 0;
-        if (nextIndex < totalStages)
-        {
-            StageBuilder.Instance.BuildNextStage();
-        }
-        else
-        {
-            SetStageSelectUI();
         }
     }
 
