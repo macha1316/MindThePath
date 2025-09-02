@@ -369,6 +369,8 @@ public class Player : MonoBehaviour, ITurnBased
             float shrinkT = 0.08f;
             float expandT = 0.12f;
             float arcT = 0.20f;
+            // サウンド
+            AudioManager.Instance?.PlayTeleportSound();
             transform.DOScale(s0 * 0.2f, shrinkT).OnComplete(() =>
             {
                 Vector3 start = transform.position;
