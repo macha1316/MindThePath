@@ -76,7 +76,10 @@ public class Player : MonoBehaviour, ITurnBased
                     if (!StageBuilder.Instance.IsValidGridPosition(afterNext)) return;
                     // 押し先に箱が既にある場合は押せない
                     if (StageBuilder.Instance.TryGetMoveBoxAtPosition(afterNext, out _)) return;
-                    if (!StageBuilder.Instance.IsMatchingCellType(afterNext, 'N')) return;
+                    // Teleport('A')を空きとして許可（押し先がテレポートでも可）
+                    bool afterNextIsEmpty = StageBuilder.Instance.IsMatchingCellType(afterNext, 'N') ||
+                                             StageBuilder.Instance.IsMatchingCellType(afterNext, 'A');
+                    if (!afterNextIsEmpty) return;
                     if (StageBuilder.Instance.IsMatchingCellType(nextDown, 'O')) return;
 
                     // 新規条件: 対象の箱の上にさらに箱がある場合は押せない
