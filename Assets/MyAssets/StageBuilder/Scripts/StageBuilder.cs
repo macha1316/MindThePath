@@ -474,14 +474,25 @@ public class StageBuilder : MonoBehaviour
     // Toggle view modes
     public void SwitchTo2DView()
     {
-        foreach (var obj in canvasObjects) obj.SetActive(true);
-        foreach (var obj in modelObjects) obj.SetActive(false);
+        PruneObjectLists();
+        foreach (var obj in canvasObjects) if (obj != null) obj.SetActive(true);
+        foreach (var obj in modelObjects) if (obj != null) obj.SetActive(false);
     }
 
     public void SwitchTo3DView()
     {
-        foreach (var obj in canvasObjects) obj.SetActive(false);
-        foreach (var obj in modelObjects) obj.SetActive(true);
+        PruneObjectLists();
+        foreach (var obj in canvasObjects) if (obj != null) obj.SetActive(false);
+        foreach (var obj in modelObjects) if (obj != null) obj.SetActive(true);
+    }
+
+    // 破棄済み参照を除去して安全にトグルできるようにする
+    private void PruneObjectLists()
+    {
+        if (canvasObjects != null)
+            canvasObjects.RemoveAll(go => go == null);
+        if (modelObjects != null)
+            modelObjects.RemoveAll(go => go == null);
     }
 
     public void ResetGridData()
@@ -766,6 +777,8 @@ public class StageBuilder : MonoBehaviour
             }
         }
         gridData = null;
+        canvasObjects.Clear();
+        modelObjects.Clear();
     }
 
     public char GetTopCellTypeAt(Vector3 position)
