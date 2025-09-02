@@ -108,7 +108,8 @@ public class Player : MonoBehaviour, ITurnBased
                     canMove = true;
                 }
                 else if (StageBuilder.Instance.IsValidGridPosition(next) &&
-                    !StageBuilder.Instance.IsAnyMatchingCellType(next, 'B', 'P', 'O') &&
+                    // F(Fragile) も“壁”として扱い、めり込みを防ぐ
+                    !StageBuilder.Instance.IsAnyMatchingCellType(next, 'B', 'P', 'O', 'F') &&
                     !StageBuilder.Instance.IsAnyMatchingCellType(nextDown, 'P', 'N', 'O'))
                 {
                     canMove = true;
@@ -238,6 +239,7 @@ public class Player : MonoBehaviour, ITurnBased
         {
             Destroy(nearest.gameObject);
         }
+        AudioManager.Instance?.PlayClearSounds();
         ConfettiManager.Instance?.SpawnBurst();
 
         yield return new WaitForSeconds(0.5f);
@@ -305,18 +307,13 @@ public class Player : MonoBehaviour, ITurnBased
         // グリッドの文字ではなくシーン上の TeleportBlock を参照して同座標判定
         var myCell = StageBuilder.Instance.GridFromPosition(here);
         TeleportBlock currentPortal = null;
-        float best = float.MaxValue;
         foreach (var p in FindObjectsOfType<TeleportBlock>())
         {
             var c = StageBuilder.Instance.GridFromPosition(p.transform.position);
-            if (c.x == myCell.x && c.z == myCell.z)
+            if (c.x == myCell.x && c.y == myCell.y && c.z == myCell.z)
             {
-                float d = Mathf.Abs(c.y - myCell.y);
-                if (d < best)
-                {
-                    best = d;
-                    currentPortal = p;
-                }
+                currentPortal = p;
+                break;
             }
         }
         if (currentPortal == null) return;

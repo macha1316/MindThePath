@@ -12,6 +12,7 @@ public class AudioManager : MonoBehaviour
     [SerializeField] private AudioClip stageBuildSound;
     [SerializeField] private AudioClip moveSound;
     [SerializeField] private AudioClip teleportSound;
+    [SerializeField] private AudioClip[] clearSounds;
     private AudioSource audioSource;
 
     public static AudioManager Instance;
@@ -68,6 +69,11 @@ public class AudioManager : MonoBehaviour
     public void PlayTeleportSound()
     {
         if (teleportSound != null) audioSource.PlayOneShot(teleportSound);
+    }
 
+    public void PlayClearSounds()
+    {
+        if (clearSounds[0] != null) audioSource.PlayOneShot(clearSounds[0]);
+        if (clearSounds[0] != null) audioSource.PlayOneShot(clearSounds[1]);
     }
 }

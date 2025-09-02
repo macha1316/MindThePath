@@ -25,18 +25,13 @@ public class MoveBox : MonoBehaviour, ITurnBased
 
         var myCell = StageBuilder.Instance.GridFromPosition(here);
         TeleportBlock currentPortal = null;
-        float best = float.MaxValue;
         foreach (var p in GameObject.FindObjectsOfType<TeleportBlock>())
         {
             var c = StageBuilder.Instance.GridFromPosition(p.transform.position);
-            if (c.x == myCell.x && c.z == myCell.z)
+            if (c.x == myCell.x && c.y == myCell.y && c.z == myCell.z)
             {
-                float d = Mathf.Abs(c.y - myCell.y);
-                if (d < best)
-                {
-                    best = d;
-                    currentPortal = p;
-                }
+                currentPortal = p;
+                break;
             }
         }
         if (currentPortal == null) return;
