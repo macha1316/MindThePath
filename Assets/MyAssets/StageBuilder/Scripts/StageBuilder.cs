@@ -50,6 +50,8 @@ public class StageBuilder : MonoBehaviour
     [Header("Block Colors")]
     [SerializeField] private Color goalColor = Color.white;
     [SerializeField] private Color moveBoxColor = new Color(0.55f, 0.33f, 0.13f); // 茶色
+    [SerializeField] private Color teleportColor = new Color(0.6f, 0.2f, 0.9f, 0.6f); // 紫っぽい
+    [SerializeField, Range(0f,1f)] private float teleportAlpha = 0.6f; // 半透明
 
     // マテリアルの一時的な透明化制御用
     private struct MaterialRenderState
@@ -330,6 +332,7 @@ public class StageBuilder : MonoBehaviour
                 GameManager.Instance.GetMoveBox(newM);
             }
             if (cellType == 'F') obj.AddComponent<FragileBlock>();
+            if (cellType == 'A') obj.AddComponent<TeleportBlock>();
             if (cellType == 'G') obj.AddComponent<GoalBlock>();
 
             Vector3 dir = Vector3.forward;
@@ -360,10 +363,10 @@ public class StageBuilder : MonoBehaviour
                 }
             }
 
-            // 生成時に色を指定（Goal=白, MoveBox=茶色）
-            if (cellType == 'G' || cellType == 'M')
+            // 生成時に色を指定（Goal=白, MoveBox=茶色, Teleport=紫半透明）
+            if (cellType == 'G' || cellType == 'M' || cellType == 'A')
             {
-                Color tint = (cellType == 'G') ? goalColor : moveBoxColor;
+                Color tint = (cellType == 'G') ? goalColor : (cellType == 'M' ? moveBoxColor : teleportColor);
                 var renderersForTint = obj.GetComponentsInChildren<Renderer>(true);
                 foreach (var r in renderersForTint)
                 {
@@ -374,12 +377,14 @@ public class StageBuilder : MonoBehaviour
                         if (mat.HasProperty("_BaseColor"))
                         {
                             Color c = mat.GetColor("_BaseColor");
-                            mat.SetColor("_BaseColor", new Color(tint.r, tint.g, tint.b, c.a));
+                            float a = (cellType == 'A') ? teleportAlpha : c.a;
+                            mat.SetColor("_BaseColor", new Color(tint.r, tint.g, tint.b, a));
                         }
                         else if (mat.HasProperty("_Color"))
                         {
                             Color c = mat.color;
-                            mat.color = new Color(tint.r, tint.g, tint.b, c.a);
+                            float a = (cellType == 'A') ? teleportAlpha : c.a;
+                            mat.color = new Color(tint.r, tint.g, tint.b, a);
                         }
                     }
                 }
@@ -429,27 +434,31 @@ public class StageBuilder : MonoBehaviour
                 {
                     var mat = mats[i];
                     var state = MakeTransparent(mat);
+                    bool keepTransparent = (cellType == 'A');
 
                     if (mat.HasProperty("_BaseColor"))
                     {
                         Color c0 = mat.GetColor("_BaseColor");
+                        // Teleportは半透明で終了
+                        float endA = keepTransparent ? teleportAlpha : 1f;
                         Color start = new Color(c0.r, c0.g, c0.b, 0f);
-                        Color end = new Color(c0.r, c0.g, c0.b, 1f);
+                        Color end = new Color(c0.r, c0.g, c0.b, endA);
                         mat.SetColor("_BaseColor", start);
-                        mat.DOColor(end, "_BaseColor", spawnFadeDuration).OnComplete(() => RestoreRenderState(mat, state));
+                        mat.DOColor(end, "_BaseColor", spawnFadeDuration).OnComplete(() => { if (!keepTransparent) RestoreRenderState(mat, state); });
                     }
                     else if (mat.HasProperty("_Color"))
                     {
                         Color c0 = mat.color;
+                        float endA = (cellType == 'A') ? teleportAlpha : 1f;
                         Color start = new Color(c0.r, c0.g, c0.b, 0f);
-                        Color end = new Color(c0.r, c0.g, c0.b, 1f);
+                        Color end = new Color(c0.r, c0.g, c0.b, endA);
                         mat.color = start;
-                        mat.DOColor(end, spawnFadeDuration).OnComplete(() => RestoreRenderState(mat, state));
+                        mat.DOColor(end, spawnFadeDuration).OnComplete(() => { if (!keepTransparent) RestoreRenderState(mat, state); });
                     }
                     else
                     {
                         // フェード不可なら設定を戻す
-                        RestoreRenderState(mat, state);
+                        if (!keepTransparent) RestoreRenderState(mat, state);
                     }
                 }
             }
@@ -673,6 +682,26 @@ public class StageBuilder : MonoBehaviour
     public bool TryFindOtherCell(char type, Vector3Int fromCell, out Vector3Int otherCell)
     {
         otherCell = default;
+
+        // 'A' はシーン上の TeleportBlock を信頼（グリッドが上書きされる可能性があるため）
+        if (type == Cell.Teleport)
+        {
+            TeleportBlock self = null;
+            TeleportBlock other = null;
+            foreach (var p in GameObject.FindObjectsOfType<TeleportBlock>())
+            {
+                var cell = GridFromPosition(p.transform.position);
+                if (cell == fromCell) self = p; else other = p;
+            }
+            if (self != null && other != null)
+            {
+                otherCell = GridFromPosition(other.transform.position);
+                return true;
+            }
+            return false;
+        }
+
+        // それ以外は従来通りgridDataから検索
         int xLen = gridData.GetLength(0);
         int yLen = gridData.GetLength(1);
         int zLen = gridData.GetLength(2);

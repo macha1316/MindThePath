@@ -41,10 +41,11 @@ public class Player : MonoBehaviour, ITurnBased
             return;
         }
 
-        if (Input.GetKeyDown(KeyCode.W)) Direction = Vector3.forward;
-        else if (Input.GetKeyDown(KeyCode.S)) Direction = Vector3.back;
-        else if (Input.GetKeyDown(KeyCode.A)) Direction = Vector3.left;
-        else if (Input.GetKeyDown(KeyCode.D)) Direction = Vector3.right;
+        // WASDをカメラの向きに追従させる
+        if (Input.GetKeyDown(KeyCode.W)) Direction = MapByCameraIndex(Vector3.forward);
+        else if (Input.GetKeyDown(KeyCode.S)) Direction = MapByCameraIndex(Vector3.back);
+        else if (Input.GetKeyDown(KeyCode.A)) Direction = MapByCameraIndex(Vector3.left);
+        else if (Input.GetKeyDown(KeyCode.D)) Direction = MapByCameraIndex(Vector3.right);
 
         if (Direction != Vector3.zero)
         {
@@ -152,6 +153,57 @@ public class Player : MonoBehaviour, ITurnBased
         }
     }
 
+    // カメラの現在インデックスに応じて、基準方向をワールド方向へマップ
+    private Vector3 MapByCameraIndex(Vector3 baseDir)
+    {
+        int idx = 0;
+        if (CameraController.Instance != null) idx = CameraController.Instance.CurrentIndex;
+
+        // idx=0 がデフォルト（カメラ+X右, +Z前）
+        // idxが90度回る毎に、WASDの基準方向を回転させる
+        if (baseDir == Vector3.forward)
+        {
+            switch (idx)
+            {
+                case 0: return Vector3.forward;
+                case 1: return Vector3.left;
+                case 2: return Vector3.back;
+                case 3: return Vector3.right;
+            }
+        }
+        else if (baseDir == Vector3.back)
+        {
+            switch (idx)
+            {
+                case 0: return Vector3.back;
+                case 1: return Vector3.right;
+                case 2: return Vector3.forward;
+                case 3: return Vector3.left;
+            }
+        }
+        else if (baseDir == Vector3.left)
+        {
+            switch (idx)
+            {
+                case 0: return Vector3.left;
+                case 1: return Vector3.back;
+                case 2: return Vector3.right;
+                case 3: return Vector3.forward;
+            }
+        }
+        else if (baseDir == Vector3.right)
+        {
+            switch (idx)
+            {
+                case 0: return Vector3.right;
+                case 1: return Vector3.forward;
+                case 2: return Vector3.left;
+                case 3: return Vector3.back;
+            }
+        }
+        return baseDir;
+    }
+
     private void CheckGoal()
     {
         if (isGoalCelebrating) return;
@@ -169,7 +221,7 @@ public class Player : MonoBehaviour, ITurnBased
         isMoving = true;
 
         // 近傍のGoalオブジェクトを削除（GoalBlockを付与している前提）
-        var goals = GameObject.FindObjectsOfType<GoalBlock>();
+        var goals = FindObjectsOfType<GoalBlock>();
         float bestDist = float.MaxValue; GoalBlock nearest = null;
         foreach (var g in goals)
         {
@@ -181,7 +233,7 @@ public class Player : MonoBehaviour, ITurnBased
         }
         if (nearest != null && bestDist < (StageBuilder.BLOCK_SIZE * StageBuilder.BLOCK_SIZE * 4f))
         {
-            GameObject.Destroy(nearest.gameObject);
+            Destroy(nearest.gameObject);
         }
         ConfettiManager.Instance?.SpawnBurst();
 
@@ -225,7 +277,7 @@ public class Player : MonoBehaviour, ITurnBased
 
         // 対応するFragileBlockオブジェクトを探して破棄
         var lastGrid = StageBuilder.Instance.GridFromPosition(lastSupportPos);
-        foreach (var frag in GameObject.FindObjectsOfType<FragileBlock>())
+        foreach (var frag in FindObjectsOfType<FragileBlock>())
         {
             var g = StageBuilder.Instance.GridFromPosition(frag.transform.position);
             if (g == lastGrid)
@@ -243,15 +295,34 @@ public class Player : MonoBehaviour, ITurnBased
 
     private void HandleTeleport()
     {
-        // プレイヤーの足元(1段下)がテレポート('A')なら、相方の'A'へ瞬間移動
-        Vector3 support = targetPosition + Vector3.down * StageBuilder.HEIGHT_OFFSET;
-        if (!StageBuilder.Instance.IsValidGridPosition(support)) return;
-        if (!StageBuilder.Instance.IsMatchingCellType(support, 'A')) return;
+        // 同じ座標にテレポート('A')がある場合、相方の'A'へ瞬間移動
+        Vector3 here = targetPosition;
+        if (!StageBuilder.Instance.IsValidGridPosition(here)) return;
 
-        var fromCell = StageBuilder.Instance.GridFromPosition(support);
+        // グリッドの文字ではなくシーン上の TeleportBlock を参照して同座標判定
+        var myCell = StageBuilder.Instance.GridFromPosition(here);
+        TeleportBlock currentPortal = null;
+        float best = float.MaxValue;
+        foreach (var p in FindObjectsOfType<TeleportBlock>())
+        {
+            var c = StageBuilder.Instance.GridFromPosition(p.transform.position);
+            if (c.x == myCell.x && c.z == myCell.z)
+            {
+                float d = Mathf.Abs(c.y - myCell.y);
+                if (d < best)
+                {
+                    best = d;
+                    currentPortal = p;
+                }
+            }
+        }
+        if (currentPortal == null) return;
+
+        var fromCell = StageBuilder.Instance.GridFromPosition(currentPortal.transform.position);
         if (StageBuilder.Instance.TryFindOtherCell('A', fromCell, out var otherCell))
         {
-            Vector3 dest = StageBuilder.Instance.WorldFromGrid(otherCell) + Vector3.up * StageBuilder.HEIGHT_OFFSET;
+            // 目的地は相方の'A'と同じ座標（同じセル）
+            Vector3 dest = StageBuilder.Instance.WorldFromGrid(otherCell);
             if (!StageBuilder.Instance.IsValidGridPosition(dest)) return;
 
             bool boxOnDest = StageBuilder.Instance.TryGetMoveBoxAtPosition(dest, out var boxAtDest);
@@ -283,19 +354,45 @@ public class Player : MonoBehaviour, ITurnBased
                         boxAtDest.TeleportIfOnPortal();
                     });
             }
-            else if (StageBuilder.Instance.GetGridCharType(dest) != 'N')
+            else
             {
-                // 目的地が空でない場合はテレポートしない
-                return;
+                // 目的地は 'N' または 'A' を許容（'A'は空扱い）
+                char occ = StageBuilder.Instance.GetGridCharType(dest);
+                if (!(occ == 'N' || occ == 'A')) return;
             }
 
-            // グリッド更新: 現在位置を空に、目的地をプレイヤーに
-            StageBuilder.Instance.UpdateGridAtPosition(targetPosition, 'N');
-            StageBuilder.Instance.UpdateGridAtPosition(dest, 'P');
+            // テレポート演出（縮小→小さく弧を描いて移動→拡大）
+            Vector3 s0 = transform.localScale;
+            float shrinkT = 0.08f;
+            float expandT = 0.12f;
+            float arcT = 0.20f;
+            transform.DOScale(s0 * 0.2f, shrinkT).OnComplete(() =>
+            {
+                Vector3 start = transform.position;
+                Vector3 dir = (dest - start);
+                Vector3 flat = new Vector3(dir.x, 0f, dir.z);
+                Vector3 side = Vector3.Cross(flat.sqrMagnitude > 1e-4f ? flat.normalized : Vector3.forward, Vector3.up);
+                float sideSign = Random.value < 0.5f ? -1f : 1f;
+                float sideMag = StageBuilder.BLOCK_SIZE * 0.2f;
+                Vector3 mid = Vector3.Lerp(start, dest, 0.5f)
+                              + Vector3.up * (StageBuilder.HEIGHT_OFFSET * 0.5f)
+                              + side * sideSign * sideMag;
 
-            // 瞬間移動
-            transform.position = dest;
-            targetPosition = dest;
+                var seq = DG.Tweening.DOTween.Sequence();
+                seq.Append(transform.DOMove(mid, arcT * 0.5f).SetEase(Ease.OutSine));
+                seq.Append(transform.DOMove(dest, arcT * 0.5f).SetEase(Ease.InSine));
+                seq.OnComplete(() =>
+                {
+                    // グリッド更新: 現在位置を空に、目的地をプレイヤーに
+                    StageBuilder.Instance.UpdateGridAtPosition(targetPosition, 'N');
+                    StageBuilder.Instance.UpdateGridAtPosition(dest, 'P');
+
+                    // 最終位置・拡大
+                    transform.position = dest;
+                    targetPosition = dest;
+                    transform.DOScale(s0, expandT).SetEase(Ease.OutBack);
+                });
+            });
         }
     }
 }
