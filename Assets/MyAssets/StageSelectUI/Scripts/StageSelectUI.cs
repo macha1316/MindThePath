@@ -42,6 +42,7 @@ public class StageSelectUI : MonoBehaviour
 
         CloseAllUI();
         titleUI.SetActive(true);
+        EnsureFloatingBg(titleUI, 48); // タイトルは少しリッチに
         if (titleText != null)
         {
             var rect = titleText.GetComponent<RectTransform>();
@@ -112,6 +113,7 @@ public class StageSelectUI : MonoBehaviour
         AudioManager.Instance?.PlayClickSound();
         CloseAllUI();
         stageSelectUI.SetActive(true);
+        EnsureFloatingBg(stageSelectUI, 36); // ステージ選択は控えめに
         // ステージ選択画面を表示するたびにアンロック状態を更新
         UpdateStageSelectButtons();
         StageBuilder.Instance.DestroyStage();
@@ -164,6 +166,7 @@ public class StageSelectUI : MonoBehaviour
         AudioManager.Instance?.PlayClickSound();
         CloseAllUI();
         stageSelectUI.SetActive(true);
+        EnsureFloatingBg(stageSelectUI, 36);
         CameraController.Instance.titleCamera.Priority = 0;
     }
 
@@ -363,5 +366,36 @@ public class StageSelectUI : MonoBehaviour
         PlayerPrefs.DeleteKey(PlayerPrefsManager.ClearedStageKey);
         PlayerPrefs.Save();
         Debug.Log("ClearedStageKey deleted.");
+    }
+
+    // 背景のフローティングUI（軽量装飾）を確保・生成
+    private void EnsureFloatingBg(GameObject panel, int particleCount)
+    {
+        if (panel == null) return;
+        var t = panel.transform;
+        var existing = t.Find("BG_Floating");
+        if (existing != null)
+        {
+            var bg = existing.GetComponent<UIFloatingBackground>();
+            if (bg != null) bg.SetCount(particleCount);
+            existing.SetAsFirstSibling();
+            return;
+        }
+
+        // 非アクティブで作成してから設定→有効化
+        var go = new GameObject("BG_Floating", typeof(RectTransform));
+        go.transform.SetParent(t, false);
+        go.transform.SetAsFirstSibling();
+        var rt = go.GetComponent<RectTransform>();
+        rt.anchorMin = Vector2.zero;
+        rt.anchorMax = Vector2.one;
+        rt.pivot = new Vector2(0.5f, 0.5f);
+        rt.offsetMin = Vector2.zero;
+        rt.offsetMax = Vector2.zero;
+
+        go.SetActive(false);
+        var comp = go.AddComponent<UIFloatingBackground>();
+        comp.SetCount(particleCount);
+        go.SetActive(true);
     }
 }
