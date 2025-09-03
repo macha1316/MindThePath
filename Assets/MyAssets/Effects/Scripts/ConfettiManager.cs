@@ -5,6 +5,9 @@ public class ConfettiManager : MonoBehaviour
 {
     public static ConfettiManager Instance;
 
+    [Header("Prefab")]
+    [SerializeField] private GameObject confettiPrefab; // 任意（設定時はPrefabをInstantiate）
+
     [Header("Default Confetti Settings")]
     [SerializeField] private int defaultCount = 42;
     [SerializeField, Min(0.05f)] private float defaultSpeed = 1.4f; // 基本インパルス倍率（大きいほど速く遠く）
@@ -79,9 +82,10 @@ public class ConfettiManager : MonoBehaviour
 
         for (int i = 0; i < count; i++)
         {
-            var go = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            GameObject go;
+            go = Instantiate(confettiPrefab, origin, Quaternion.identity);
+
             go.name = "ConfettiCube";
-            go.transform.position = origin;
             go.transform.localScale = Vector3.one * Random.Range(sizeRange.x, sizeRange.y);
 
             // カラー
@@ -95,7 +99,7 @@ public class ConfettiManager : MonoBehaviour
             }
 
             // Collider（既定でBoxCollider付き）設定
-            var col = go.GetComponent<BoxCollider>();
+            var col = go.GetComponent<Collider>();
             if (col != null)
             {
                 col.sharedMaterial = pm;
@@ -103,7 +107,8 @@ public class ConfettiManager : MonoBehaviour
 
             if (usePhysics)
             {
-                var rb = go.AddComponent<Rigidbody>();
+                var rb = go.GetComponent<Rigidbody>();
+                if (rb == null) rb = go.AddComponent<Rigidbody>();
                 rb.useGravity = true;
                 rb.mass = 0.02f;
                 rb.linearDamping = 0.05f;

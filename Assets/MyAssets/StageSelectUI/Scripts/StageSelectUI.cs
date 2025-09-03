@@ -55,7 +55,7 @@ public class StageSelectUI : MonoBehaviour
         admobUnitReward = FindObjectOfType<AdmobUnitReward>();
 
         UpdateStageSelectButtons();
-        StartCoroutine(AnimateStageButtons());
+        // StartCoroutine(AnimateStageButtons());
     }
 
     public void SelectStageUI(int stageNumber)
@@ -244,30 +244,30 @@ public class StageSelectUI : MonoBehaviour
         }
     }
 
-    IEnumerator AnimateStageButtons()
-    {
-        for (int i = 0; i < stageSelectButtons.Length; i++)
-        {
-            var button = stageSelectButtons[i];
-            if (button != null)
-            {
-                var rect = button.GetComponent<RectTransform>();
-                Vector2 originalPos = rect.anchoredPosition;
+    // IEnumerator AnimateStageButtons()
+    // {
+    //     for (int i = 0; i < stageSelectButtons.Length; i++)
+    //     {
+    //         var button = stageSelectButtons[i];
+    //         if (button != null)
+    //         {
+    //             var rect = button.GetComponent<RectTransform>();
+    //             Vector2 originalPos = rect.anchoredPosition;
 
-                // 1回だけ上下動させる
-                rect.DOAnchorPosY(originalPos.y + 10f, 0.25f)
-                    .SetEase(Ease.InOutSine)
-                    .OnComplete(() =>
-                    {
-                        rect.DOAnchorPosY(originalPos.y, 0.25f).SetEase(Ease.InOutSine);
-                    });
-            }
-            yield return new WaitForSeconds(0.05f);
-        }
+    //             // 1回だけ上下動させる
+    //             rect.DOAnchorPosY(originalPos.y + 10f, 0.25f)
+    //                 .SetEase(Ease.InOutSine)
+    //                 .OnComplete(() =>
+    //                 {
+    //                     rect.DOAnchorPosY(originalPos.y, 0.25f).SetEase(Ease.InOutSine);
+    //                 });
+    //         }
+    //         yield return new WaitForSeconds(0.05f);
+    //     }
 
-        yield return new WaitForSeconds(3f);
-        StartCoroutine(AnimateStageButtons());
-    }
+    //     yield return new WaitForSeconds(3f);
+    //     StartCoroutine(AnimateStageButtons());
+    // }
 
     public void ShowHintUI()
     {

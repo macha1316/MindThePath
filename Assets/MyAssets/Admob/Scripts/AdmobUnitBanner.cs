@@ -6,13 +6,6 @@ using GoogleMobileAds.Api;
 public class AdmobUnitBanner : AdmobUnitBase
 {
     private BannerView bannerView;
-#if UNITY_ANDROID
-    private string bannerUnitId = "ca-app-pub-3940256099942544/6300978111";
-#elif UNITY_IPHONE
-    private string bannerUnitId = "ca-app-pub-3940256099942544/2934735716";
-#else
-    private string bannerUnitId = "unused";
-#endif
 
     protected override void Initialize()
     {
@@ -29,9 +22,9 @@ public class AdmobUnitBanner : AdmobUnitBase
         }
 
         bannerView = new BannerView(
-            bannerUnitId,
+            UnitID,
             AdSize.Banner,
-            AdPosition.Top);
+            AdPosition.Bottom);
 
         bannerView.OnBannerAdLoaded += () =>
         {
