@@ -26,8 +26,8 @@ public class StageBuilder : MonoBehaviour
     private char[,,] gridData;
     public int stageNumber = 0;
 
-    // UIPrefab
-    [SerializeField] string[] textAssets;
+    // ステージCSV（Inspectorに直接CSV(TextAsset)を割り当て）
+    [SerializeField] TextAsset[] textAssets;
     public GameObject stageRoot; // ステージ親
 
     // コルーチンによるブロック生成管理用
@@ -51,7 +51,7 @@ public class StageBuilder : MonoBehaviour
     [SerializeField] private Color goalColor = Color.white;
     [SerializeField] private Color moveBoxColor = new Color(0.55f, 0.33f, 0.13f); // 茶色
     [SerializeField] private Color teleportColor = new Color(0.6f, 0.2f, 0.9f, 0.6f); // 紫っぽい
-    [SerializeField, Range(0f,1f)] private float teleportAlpha = 0.6f; // 半透明
+    [SerializeField, Range(0f, 1f)] private float teleportAlpha = 0.6f; // 半透明
 
     // マテリアルの一時的な透明化制御用
     private struct MaterialRenderState
@@ -167,12 +167,11 @@ public class StageBuilder : MonoBehaviour
         if (Instance == null) Instance = this;
     }
 
-    void LoadStage(string filePath)
+    void LoadStage(TextAsset csvFile)
     {
-        TextAsset csvFile = Resources.Load<TextAsset>(filePath);
         if (csvFile == null)
         {
-            Debug.LogError($"CSVファイルが見つかりません: {filePath}");
+            Debug.LogError("CSV TextAsset is null.");
             return;
         }
 
