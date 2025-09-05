@@ -23,7 +23,7 @@ public class AudioManager : MonoBehaviour
 
     void Start()
     {
-        audioSource = gameObject.AddComponent<AudioSource>();
+        audioSource = gameObject.GetComponent<AudioSource>();
     }
 
     public void PlayRotateSound()
