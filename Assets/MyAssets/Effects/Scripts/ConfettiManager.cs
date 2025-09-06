@@ -22,7 +22,8 @@ public class ConfettiManager : MonoBehaviour
     [SerializeField, Min(0)] private float torqueImpulse = 2.0f;
     [SerializeField] private PhysicsMaterial confettiMaterial; // 任意（未設定ならランタイム生成）
     [SerializeField] private Vector2 lifeTimeRange = new Vector2(1.8f, 3.2f);
-    [SerializeField] private Vector3 origin = new Vector3(0, 0, 0);
+    [SerializeField] private Vector3 origin = new Vector3(10, 15, 8);
+    [SerializeField] private Vector3 origin2 = new Vector3(10, 15, 15);
     [SerializeField] private Vector3 mainDirection = new Vector3(0, 0, 0);
 
 
@@ -39,6 +40,8 @@ public class ConfettiManager : MonoBehaviour
     public void SpawnBurst()
     {
         SpawnBurst(origin, mainDirection, defaultCount, defaultSpeed, defaultSpread, defaultArcDeg, defaultSizeRange);
+        SpawnBurst(origin2, mainDirection, defaultCount, defaultSpeed, defaultSpread, defaultArcDeg, defaultSizeRange);
+
     }
 
     public void SpawnBurst(
