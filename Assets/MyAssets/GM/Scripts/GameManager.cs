@@ -40,12 +40,15 @@ public class GameManager : MonoBehaviour
         players = new List<Player>();
         boxes = new List<MoveBox>();
         IsStart = false;
+        // Reset clear state when (re)starting a stage
+        IsGameClear = false;
     }
 
     // スマホ対応（カメラの向きに応じてプレイヤーの移動方向を変える）
     public int currentIndex = 0;
     public void MoveRight()
     {
+        UndoManager.Instance?.RecordForCurrentInput();
         switch (CameraController.Instance.CurrentIndex)
         {
             case 0: players[0].Direction = Vector3.right; break;
@@ -56,6 +59,7 @@ public class GameManager : MonoBehaviour
     }
     public void MoveLeft()
     {
+        UndoManager.Instance?.RecordForCurrentInput();
         switch (CameraController.Instance.CurrentIndex)
         {
             case 0: players[0].Direction = Vector3.left; break;
@@ -66,6 +70,7 @@ public class GameManager : MonoBehaviour
     }
     public void MoveUp()
     {
+        UndoManager.Instance?.RecordForCurrentInput();
         switch (CameraController.Instance.CurrentIndex)
         {
             case 0: players[0].Direction = Vector3.forward; break;
@@ -76,6 +81,7 @@ public class GameManager : MonoBehaviour
     }
     public void MoveDown()
     {
+        UndoManager.Instance?.RecordForCurrentInput();
         switch (CameraController.Instance.CurrentIndex)
         {
             case 0: players[0].Direction = Vector3.back; break;

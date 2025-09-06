@@ -15,11 +15,17 @@ public class Player : MonoBehaviour, ITurnBased
     public Vector3 Direction { get; set; } = Vector3.zero;
     private Vector3 lastSupportPos; // 直前に立っていた床（1段下）の座標
     private bool isGoalCelebrating = false;
+    public bool IsOnGoal { get; private set; } = false;
+    // 2P補助: 同一ターン内に一度だけ再試行（先頭が退いたあとに追従するため）
+    private bool hasRetriedThisTurn = false;
+    private bool retryScheduled = false;
+    private Vector3 retryDirection = Vector3.zero;
 
     void Start()
     {
         targetPosition = transform.position;
         StageBuilder.Instance.UpdateGridAtPosition(transform.position, 'P');
+        StageBuilder.Instance.RefreshGoalVisibilityForPlayers();
     }
 
     void Update()
@@ -41,11 +47,18 @@ public class Player : MonoBehaviour, ITurnBased
             return;
         }
 
-        // WASDをカメラの向きに追従させる
-        if (Input.GetKeyDown(KeyCode.W)) Direction = MapByCameraIndex(Vector3.forward);
-        else if (Input.GetKeyDown(KeyCode.S)) Direction = MapByCameraIndex(Vector3.back);
-        else if (Input.GetKeyDown(KeyCode.A)) Direction = MapByCameraIndex(Vector3.left);
-        else if (Input.GetKeyDown(KeyCode.D)) Direction = MapByCameraIndex(Vector3.right);
+        // 直前の入力でプレイヤーに塞がれていた場合、1フレーム後に同方向を再試行
+        if (retryScheduled)
+        {
+            Direction = retryDirection;
+            retryScheduled = false;
+        }
+
+        // WASDをカメラの向きに追従させる（入力フレームで一度だけUndo記録）
+        if (Input.GetKeyDown(KeyCode.W)) { if (!isMoving) UndoManager.Instance?.RecordForCurrentInput(); Direction = MapByCameraIndex(Vector3.forward); hasRetriedThisTurn = false; }
+        else if (Input.GetKeyDown(KeyCode.S)) { if (!isMoving) UndoManager.Instance?.RecordForCurrentInput(); Direction = MapByCameraIndex(Vector3.back); hasRetriedThisTurn = false; }
+        else if (Input.GetKeyDown(KeyCode.A)) { if (!isMoving) UndoManager.Instance?.RecordForCurrentInput(); Direction = MapByCameraIndex(Vector3.left); hasRetriedThisTurn = false; }
+        else if (Input.GetKeyDown(KeyCode.D)) { if (!isMoving) UndoManager.Instance?.RecordForCurrentInput(); Direction = MapByCameraIndex(Vector3.right); hasRetriedThisTurn = false; }
 
         if (Direction != Vector3.zero)
         {
@@ -58,7 +71,21 @@ public class Player : MonoBehaviour, ITurnBased
                 if (StageBuilder.Instance.IsValidGridPosition(next))
                 {
                     Vector3 topPos = StageBuilder.Instance.GetTopCellPosition(next);
-                    if (StageBuilder.Instance.IsAnyMatchingCellType(topPos, 'B', 'M', 'F', 'A'))
+                    // 先頭がPで塞がれているなら、次フレームに一度だけ再試行
+                    if (StageBuilder.Instance.IsMatchingCellType(topPos, 'P'))
+                    {
+                        if (!hasRetriedThisTurn)
+                        {
+                            hasRetriedThisTurn = true;
+                            retryScheduled = true;
+                            retryDirection = Direction;
+                        }
+                    }
+                    else if (StageBuilder.Instance.HasGoalInColumn(next))
+                    {
+                        // 2D仕様: ゴール列は通過不可
+                    }
+                    else if (StageBuilder.Instance.IsAnyMatchingCellType(topPos, 'B', 'M', 'F', 'A'))
                     {
                         next = topPos + Vector3.up * StageBuilder.HEIGHT_OFFSET;
                         canMove = true;
@@ -114,13 +141,20 @@ public class Player : MonoBehaviour, ITurnBased
                 {
                     canMove = true;
                 }
+                else
+                {
+                    // 2P時に前方がプレイヤーで塞がれている場合は、1回だけ同方向を再試行
+                    if (!hasRetriedThisTurn && StageBuilder.Instance.IsMatchingCellType(next, 'P'))
+                    {
+                        hasRetriedThisTurn = true;
+                        retryScheduled = true;
+                        retryDirection = Direction;
+                    }
+                }
             }
 
             if (canMove)
             {
-                // Snapshot current state for Undo
-                UndoManager.Instance?.Record();
-
                 // 今立っている床（1段下）を記録（移動後に消滅処理するため）
                 lastSupportPos = transform.position + Vector3.down * StageBuilder.HEIGHT_OFFSET;
                 StageBuilder.Instance.UpdateGridAtPosition(transform.position, 'N');
@@ -151,6 +185,8 @@ public class Player : MonoBehaviour, ITurnBased
                         isMoving = false;
                         HandleFragileFloorDisappear();
                         HandleTeleport();
+                        StageBuilder.Instance.RefreshGoalVisibilityForPlayers();
+                        CheckGoal();
                     });
             }
             Direction = Vector3.zero;
@@ -210,10 +246,49 @@ public class Player : MonoBehaviour, ITurnBased
 
     private void CheckGoal()
     {
-        if (isGoalCelebrating) return;
-        if (StageBuilder.Instance.IsMatchingCellType(targetPosition, 'G'))
+        // 二重発火防止（どちらかが開始したら以後無視）
+        if (GameManager.Instance.IsGameClear) return;
+
+        // グリッド上書きに依存しないゴール判定（実際の現在位置で判定）
+        bool onGoal = StageBuilder.Instance.TryGetGoalCellForPlayer(transform.position, out _);
+        IsOnGoal = onGoal;
+
+        int playerCount = FindObjectsOfType<Player>().Length;
+        if (playerCount <= 1)
         {
-            StartCoroutine(GoalCelebrateThenClear());
+            if (!isGoalCelebrating && onGoal)
+            {
+                StartCoroutine(GoalCelebrateThenClear());
+            }
+            return;
+        }
+
+        if (!onGoal || isGoalCelebrating) return;
+        bool allOnGoal = true;
+        var allPlayers = FindObjectsOfType<Player>();
+        foreach (var p in allPlayers)
+        {
+            bool pOnGoal = StageBuilder.Instance.TryGetGoalCellForPlayer(p.transform.position, out _);
+            p.IsOnGoal = pOnGoal;
+            if (!pOnGoal) { allOnGoal = false; break; }
+        }
+        if (allOnGoal)
+        {
+            // 全員同時にクリアアニメーションを実行する
+            GameManager.Instance.IsGameClear = true;
+            foreach (var p in allPlayers)
+            {
+                if (p == this)
+                {
+                    // 1人分だけ従来の総合クリア処理（UI/SE含む）を担当
+                    p.StartCoroutine(p.GoalCelebrateThenClear());
+                }
+                else
+                {
+                    // 他のプレイヤーも同時に演出のみ再生
+                    p.StartCoroutine(p.GoalCelebrateOnlyAnimation());
+                }
+            }
         }
     }
 
@@ -256,6 +331,23 @@ public class Player : MonoBehaviour, ITurnBased
         yield return new WaitForSeconds(1f);
 
         StageSelectUI.Instance.SetClearUI();
+    }
+
+    // もう片方のプレイヤー用：演出のみ（UIやゴール破壊はしない）
+    private IEnumerator GoalCelebrateOnlyAnimation()
+    {
+        isGoalCelebrating = true;
+        isMoving = true;
+        yield return new WaitForSeconds(0.5f);
+
+        Vector3 pos = transform.position;
+        float jumpH = StageBuilder.HEIGHT_OFFSET * 0.9f;
+        Sequence seq = DOTween.Sequence();
+        seq.Append(transform.DOJump(pos, jumpH, 1, 0.45f).SetEase(Ease.OutCubic));
+        seq.Join(transform.DORotate(new Vector3(0f, 360f, 0f), 0.45f, RotateMode.WorldAxisAdd).SetEase(Ease.OutCubic));
+        seq.Join(transform.DOPunchScale(new Vector3(0.25f, -0.25f, 0.25f), 0.4f, 2, 0.6f));
+        yield return seq.WaitForCompletion();
+        yield return null;
     }
 
     public void UpdateGridData()
@@ -393,6 +485,9 @@ public class Player : MonoBehaviour, ITurnBased
                     transform.position = dest;
                     targetPosition = dest;
                     transform.DOScale(s0, expandT).SetEase(Ease.OutBack);
+                    // テレポート後のゴール可視制御と同時ゴール判定
+                    StageBuilder.Instance.RefreshGoalVisibilityForPlayers();
+                    CheckGoal();
                 });
             });
         }

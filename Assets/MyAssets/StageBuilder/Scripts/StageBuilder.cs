@@ -13,6 +13,11 @@ public class StageBuilder : MonoBehaviour
     public const float BLOCK_SIZE = 2.0f;
     public const float HEIGHT_OFFSET = 2.0f;
 
+    // Goal cells registry (static layout independent of dynamic 'P' overwrites)
+    private readonly System.Collections.Generic.HashSet<Vector3Int> goalCells = new System.Collections.Generic.HashSet<Vector3Int>();
+    private readonly System.Collections.Generic.Dictionary<Vector3Int, GoalBlock> goalBlocks = new System.Collections.Generic.Dictionary<Vector3Int, GoalBlock>();
+    private readonly System.Collections.Generic.HashSet<Vector3Int> hiddenGoalCells = new System.Collections.Generic.HashSet<Vector3Int>();
+
     // デバッグ用
     [SerializeField] string csvFileName = "Stages/Stage1";
     [SerializeField] GameObject blockPrefab;
@@ -205,6 +210,9 @@ public class StageBuilder : MonoBehaviour
 
     void GenerateStage(List<string[]> layers)
     {
+        goalCells.Clear();
+        goalBlocks.Clear();
+        hiddenGoalCells.Clear();
         int heightCount = layers.Count;
         int rowCount = layers[0].Length;
         int colCount = layers[0][0].Split(',').Length;
@@ -332,7 +340,15 @@ public class StageBuilder : MonoBehaviour
             }
             if (cellType == 'F') obj.AddComponent<FragileBlock>();
             if (cellType == 'A') obj.AddComponent<TeleportBlock>();
-            if (cellType == 'G') obj.AddComponent<GoalBlock>();
+            if (cellType == 'G')
+            {
+                // Ensure GoalBlock is attached and register in goal maps
+                var gb = obj.GetComponent<GoalBlock>();
+                if (gb == null) gb = obj.AddComponent<GoalBlock>();
+                var cell = GridFromPosition(position);
+                goalCells.Add(cell);
+                goalBlocks[cell] = gb;
+            }
 
             Vector3 dir = Vector3.forward;
             switch (dirChar)
@@ -752,6 +768,97 @@ public class StageBuilder : MonoBehaviour
             Mathf.RoundToInt(pos.y / HEIGHT_OFFSET),
             Mathf.RoundToInt(pos.z / BLOCK_SIZE)
         );
+    }
+
+    // === Goal helpers ===
+    public bool IsGoalCell(Vector3 worldPos)
+    {
+        var cell = GridFromPosition(worldPos);
+        return goalCells.Contains(cell);
+    }
+
+    public bool TryGetGoalCellForPlayer(Vector3 playerWorldPos, out Vector3Int goalCell)
+    {
+        var cell = GridFromPosition(playerWorldPos);
+        if (goalCells.Contains(cell)) { goalCell = cell; return true; }
+        var below = new Vector3Int(cell.x, cell.y - 1, cell.z);
+        if (goalCells.Contains(below)) { goalCell = below; return true; }
+        goalCell = default;
+        return false;
+    }
+
+    // 2D用: 指定のXZ列のどこかにゴールが存在するか
+    public bool HasGoalInColumn(Vector3 worldPos)
+    {
+        int col = Mathf.RoundToInt(worldPos.x / BLOCK_SIZE);
+        int row = Mathf.RoundToInt(worldPos.z / BLOCK_SIZE);
+        foreach (var cell in goalCells)
+        {
+            if (cell.x == col && cell.z == row) return true;
+        }
+        return false;
+    }
+
+    private static void SetRenderersEnabled(GameObject go, bool enabled)
+    {
+        if (go == null) return;
+        var renderers = go.GetComponentsInChildren<Renderer>(true);
+        foreach (var r in renderers) r.enabled = enabled;
+    }
+
+    private void PlayPuniAnimation(Transform t)
+    {
+        if (t == null) return;
+        var original = t.localScale;
+        float squash = 0.85f;
+        float dur = 0.12f;
+        t.DOKill();
+        t.localScale = original * squash;
+        t.DOScale(original, dur).SetEase(Ease.OutBack);
+    }
+
+    public void RefreshGoalVisibilityForPlayers()
+    {
+        // Build set of cells to hide this frame (occupied by players)
+        var toHide = new System.Collections.Generic.HashSet<Vector3Int>();
+        foreach (var p in GameObject.FindObjectsOfType<Player>())
+        {
+            if (TryGetGoalCellForPlayer(p.transform.position, out var cell))
+            {
+                toHide.Add(cell);
+            }
+        }
+
+        // Update visibility with state tracking for show/hide transitions
+        foreach (var kv in goalBlocks)
+        {
+            var cell = kv.Key;
+            var gb = kv.Value;
+            if (gb == null) continue;
+
+            bool shouldHide = toHide.Contains(cell);
+            bool isHidden = hiddenGoalCells.Contains(cell);
+
+            if (shouldHide)
+            {
+                SetRenderersEnabled(gb.gameObject, false);
+                hiddenGoalCells.Add(cell);
+            }
+            else
+            {
+                if (isHidden)
+                {
+                    // Becoming visible again -> play puni animation
+                    SetRenderersEnabled(gb.gameObject, true);
+                    PlayPuniAnimation(gb.transform);
+                    hiddenGoalCells.Remove(cell);
+                }
+                else
+                {
+                    SetRenderersEnabled(gb.gameObject, true);
+                }
+            }
+        }
     }
 
     public void BuildNextStage()

@@ -5,6 +5,8 @@ using UnityEngine;
 public class UndoManager : MonoBehaviour
 {
     public static UndoManager Instance;
+    // Prevent double-recording when two players react to the same input frame
+    private int lastRecordedInputFrame = -1;
 
     private void Awake()
     {
@@ -18,10 +20,16 @@ public class UndoManager : MonoBehaviour
         public Vector3 targetPos;
     }
 
+    private class PlayerState
+    {
+        public int id;
+        public Vector3 pos;
+        public Vector3 forward;
+    }
+
     private class GameState
     {
-        public Vector3 playerPos;
-        public Vector3 playerForward;
+        public List<PlayerState> players;
         public bool isGameClear;
         public List<MoveBoxState> boxes;
         public char[,,] gridSnapshot;
@@ -32,17 +40,24 @@ public class UndoManager : MonoBehaviour
     public void Clear()
     {
         history.Clear();
+        lastRecordedInputFrame = -1;
     }
 
     public void Record()
     {
-        var player = FindObjectOfType<Player>();
-        if (player == null) return;
+        var players = FindObjectsOfType<Player>()
+            .OrderBy(p => p.GetInstanceID())
+            .ToList();
+        if (players.Count == 0) return;
 
         var gs = new GameState
         {
-            playerPos = player.transform.position,
-            playerForward = player.transform.forward,
+            players = players.Select(p => new PlayerState
+            {
+                id = p.GetInstanceID(),
+                pos = p.transform.position,
+                forward = p.transform.forward
+            }).ToList(),
             isGameClear = GameManager.Instance.IsGameClear,
             boxes = FindObjectsOfType<MoveBox>()
                 .OrderBy(b => b.GetInstanceID())
@@ -58,6 +73,15 @@ public class UndoManager : MonoBehaviour
         history.Push(gs);
     }
 
+    // Record only once per input frame (use with KeyDown/UI input)
+    public void RecordForCurrentInput()
+    {
+        int f = Time.frameCount;
+        if (lastRecordedInputFrame == f) return;
+        Record();
+        lastRecordedInputFrame = f;
+    }
+
     public void Undo()
     {
         if (history.Count == 0) return;
@@ -68,13 +92,20 @@ public class UndoManager : MonoBehaviour
         StageBuilder.Instance.SetGridData(gs.gridSnapshot);
         StageBuilder.Instance.RebuildFragilesFromGrid();
 
-        // Restore player
-        var player = FindObjectOfType<Player>();
-        if (player != null)
+        // Restore players (by instance id ordering)
+        var playersNow = FindObjectsOfType<Player>().OrderBy(p => p.GetInstanceID()).ToList();
+        foreach (var p in playersNow)
         {
-            player.TeleportTo(gs.playerPos);
-            player.transform.forward = gs.playerForward;
+            var s = gs.players.FirstOrDefault(x => x.id == p.GetInstanceID());
+            if (s != null)
+            {
+                p.TeleportTo(s.pos);
+                p.transform.forward = s.forward;
+            }
         }
+
+        // Refresh goal visibility after players are restored
+        StageBuilder.Instance.RefreshGoalVisibilityForPlayers();
 
         // Restore boxes (by instance id ordering)
         var boxes = FindObjectsOfType<MoveBox>().OrderBy(b => b.GetInstanceID()).ToList();
@@ -99,4 +130,3 @@ public class UndoManager : MonoBehaviour
         }
     }
 }
-
