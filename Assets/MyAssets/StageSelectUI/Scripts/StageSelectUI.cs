@@ -21,6 +21,8 @@ public class StageSelectUI : MonoBehaviour
     [SerializeField] GameObject hintUI;
     [SerializeField] GameObject rewardPanel;
     [SerializeField] TextMeshProUGUI stageNumberText;
+    [Header("Input Mode")]
+    [SerializeField] Toggle swipeMoveToggle; // ON: swipe, OFF: UI buttons
 
     // Tutorial UI
     [SerializeField] GameObject tutorialBg;
@@ -57,6 +59,7 @@ public class StageSelectUI : MonoBehaviour
 
         UpdateStageSelectButtons();
         // StartCoroutine(AnimateStageButtons());
+        InitInputModeToggle();
     }
 
     public void SelectStageUI(int stageNumber)
@@ -65,7 +68,7 @@ public class StageSelectUI : MonoBehaviour
         CloseAllUI();
         startUI.SetActive(true);
         stopUI.SetActive(true);
-        operatePlayerUI.SetActive(true);
+        ApplyOperatePlayerUIVisibility();
         cameraRotateUI.SetActive(true);
         if (stageNumberText != null)
         {
@@ -134,6 +137,61 @@ public class StageSelectUI : MonoBehaviour
         optionUI.SetActive(true);
     }
 
+    // ==== Input Mode (Swipe vs UI buttons) ====
+    private void InitInputModeToggle()
+    {
+        bool useSwipe = PlayerPrefs.GetInt(PlayerPrefsManager.UseSwipeMoveKey, 1) == 1;
+        if (swipeMoveToggle != null)
+        {
+            swipeMoveToggle.SetIsOnWithoutNotify(useSwipe);
+            swipeMoveToggle.onValueChanged.AddListener(OnSwipeMoveToggleChanged);
+        }
+        ApplySwipeControllerEnabled(useSwipe);
+        ApplyOperatePlayerUIVisibility();
+    }
+
+    private void OnDestroy()
+    {
+        if (swipeMoveToggle != null)
+        {
+            swipeMoveToggle.onValueChanged.RemoveListener(OnSwipeMoveToggleChanged);
+        }
+    }
+
+    private void OnSwipeMoveToggleChanged(bool useSwipe)
+    {
+        PlayerPrefs.SetInt(PlayerPrefsManager.UseSwipeMoveKey, useSwipe ? 1 : 0);
+        PlayerPrefs.Save();
+        ApplySwipeControllerEnabled(useSwipe);
+    }
+
+    private void ApplyOperatePlayerUIVisibility()
+    {
+        bool useSwipe = PlayerPrefs.GetInt(PlayerPrefsManager.UseSwipeMoveKey, 1) == 1;
+        if (operatePlayerUI != null)
+        {
+            operatePlayerUI.SetActive(!useSwipe);
+        }
+    }
+
+    private void ApplySwipeControllerEnabled(bool enable)
+    {
+        var ctrl = FindObjectOfType<SwipeInputController>();
+        if (ctrl == null)
+        {
+            // 必要なら自動追加（このUIに付与）
+            if (enable)
+            {
+                ctrl = gameObject.AddComponent<SwipeInputController>();
+            }
+            else
+            {
+                return;
+            }
+        }
+        ctrl.enabled = enable;
+    }
+
     public void ShowCameraRotateUI()
     {
         cameraRotateUI.SetActive(true);
@@ -151,7 +209,7 @@ public class StageSelectUI : MonoBehaviour
         AudioManager.Instance?.PlayClickSound();
         CloseAllUI();
         stopUI.SetActive(true);
-        operatePlayerUI.SetActive(true);
+        ApplyOperatePlayerUIVisibility();
         cameraRotateUI.SetActive(true);
         startUI.SetActive(true);
         if (stageNumberText != null)
