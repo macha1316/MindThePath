@@ -13,7 +13,7 @@ public class UIFloatingBackground : MonoBehaviour
     [SerializeField] private Vector2 speedYRange = new Vector2(12f, 36f); // px/sec
     [SerializeField] private Vector2 driftXRange = new Vector2(-10f, 10f); // px/sec
     [SerializeField] private Vector2 rotSpeedRange = new Vector2(-15f, 15f); // deg/sec
-    [SerializeField] private Vector2 alphaRange = new Vector2(0.1f, 0.25f);
+    [SerializeField] private Vector2 alphaRange = new Vector2(0.4f, 0.8f);
     [SerializeField] private float spawnPadding = 40f; // beyond rect to wrap
     [SerializeField] private bool pastelHSV = true; // use HSV palette
 
