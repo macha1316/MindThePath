@@ -104,7 +104,8 @@ public class UndoManager : MonoBehaviour
             }
         }
 
-        // Refresh goal visibility after players are restored
+        // Refresh goal visibility and switch/onoff after players are restored
+        StageBuilder.Instance.RefreshSwitchAndOnOff();
         StageBuilder.Instance.RefreshGoalVisibilityForPlayers();
 
         // Restore boxes (by instance id ordering)

@@ -85,7 +85,7 @@ public class Player : MonoBehaviour, ITurnBased
                     {
                         // 2D仕様: ゴール列は通過不可
                     }
-                    else if (StageBuilder.Instance.IsAnyMatchingCellType(topPos, 'B', 'M', 'F', 'A'))
+                    else if (StageBuilder.Instance.IsAnyMatchingCellType(topPos, 'B', 'M', 'F', 'A', 'S') || StageBuilder.Instance.IsOnOffBlockSolidAt(topPos))
                     {
                         next = topPos + Vector3.up * StageBuilder.HEIGHT_OFFSET;
                         canMove = true;
@@ -105,7 +105,8 @@ public class Player : MonoBehaviour, ITurnBased
                     if (StageBuilder.Instance.TryGetMoveBoxAtPosition(afterNext, out _)) return;
                     // Teleport('A')を空きとして許可（押し先がテレポートでも可）
                     bool afterNextIsEmpty = StageBuilder.Instance.IsMatchingCellType(afterNext, 'N') ||
-                                             StageBuilder.Instance.IsMatchingCellType(afterNext, 'A');
+                                             StageBuilder.Instance.IsMatchingCellType(afterNext, 'A') ||
+                                             StageBuilder.Instance.IsOnOffBlockEmptyAt(afterNext);
                     if (!afterNextIsEmpty) return;
                     if (StageBuilder.Instance.IsMatchingCellType(nextDown, 'O')) return;
 
@@ -129,15 +130,18 @@ public class Player : MonoBehaviour, ITurnBased
                             boxAhead.transform.position = dropPos;
                             boxAhead.TargetPos = dropPos;
                             boxAhead.TeleportIfOnPortal();
+                            StageBuilder.Instance.RefreshSwitchAndOnOff();
                         });
                     boxAhead.TargetPos = dropPos;
 
                     canMove = true;
                 }
                 else if (StageBuilder.Instance.IsValidGridPosition(next) &&
-                    // F(Fragile) も“壁”として扱い、めり込みを防ぐ
-                    !StageBuilder.Instance.IsAnyMatchingCellType(next, 'B', 'P', 'O', 'F') &&
-                    !StageBuilder.Instance.IsAnyMatchingCellType(nextDown, 'P', 'N', 'O'))
+                    // F(Fragile)/S(Switch) も“壁”として扱い、めり込みを防ぐ
+                    !StageBuilder.Instance.IsAnyMatchingCellType(next, 'B', 'P', 'O', 'F', 'S') &&
+                    !StageBuilder.Instance.IsOnOffBlockSolidAt(next) &&
+                    !StageBuilder.Instance.IsAnyMatchingCellType(nextDown, 'P', 'N', 'O') &&
+                    !StageBuilder.Instance.IsOnOffBlockEmptyAt(nextDown))
                 {
                     canMove = true;
                 }
@@ -185,6 +189,7 @@ public class Player : MonoBehaviour, ITurnBased
                         isMoving = false;
                         HandleFragileFloorDisappear();
                         HandleTeleport();
+                        StageBuilder.Instance.RefreshSwitchAndOnOff();
                         StageBuilder.Instance.RefreshGoalVisibilityForPlayers();
                         CheckGoal();
                     });
@@ -424,7 +429,11 @@ public class Player : MonoBehaviour, ITurnBased
                 Vector3 afterNext = dest + transform.forward * StageBuilder.HEIGHT_OFFSET;
                 if (!StageBuilder.Instance.IsValidGridPosition(afterNext)) return; // 押せないのでTP中止
                 if (StageBuilder.Instance.TryGetMoveBoxAtPosition(afterNext, out _)) return; // 押し先に箱
-                if (!StageBuilder.Instance.IsMatchingCellType(afterNext, 'N')) return; // 押せない
+                // 押し先は N/A/H(OFF) を許容
+                bool afterEmpty = StageBuilder.Instance.IsMatchingCellType(afterNext, 'N') ||
+                                  StageBuilder.Instance.IsMatchingCellType(afterNext, 'A') ||
+                                  StageBuilder.Instance.IsOnOffBlockEmptyAt(afterNext);
+                if (!afterEmpty) return; // 押せない
                 if (!StageBuilder.Instance.HasAnySupportBelow(afterNext)) return; // 支えがない
 
                 // 新規条件: 押す対象の箱の上に箱が乗っている場合は押せない
@@ -448,9 +457,10 @@ public class Player : MonoBehaviour, ITurnBased
             }
             else
             {
-                // 目的地は 'N' または 'A' を許容（'A'は空扱い）
+                // 目的地は 'N' または 'A' または H(OFF) を許容（'A'は空扱い）
                 char occ = StageBuilder.Instance.GetGridCharType(dest);
-                if (!(occ == 'N' || occ == 'A')) return;
+                bool destEmpty = (occ == 'N' || occ == 'A' || StageBuilder.Instance.IsOnOffBlockEmptyAt(dest));
+                if (!destEmpty) return;
             }
 
             // テレポート演出（縮小→小さく弧を描いて移動→拡大）
@@ -486,6 +496,7 @@ public class Player : MonoBehaviour, ITurnBased
                     targetPosition = dest;
                     transform.DOScale(s0, expandT).SetEase(Ease.OutBack);
                     // テレポート後のゴール可視制御と同時ゴール判定
+                    StageBuilder.Instance.RefreshSwitchAndOnOff();
                     StageBuilder.Instance.RefreshGoalVisibilityForPlayers();
                     CheckGoal();
                 });

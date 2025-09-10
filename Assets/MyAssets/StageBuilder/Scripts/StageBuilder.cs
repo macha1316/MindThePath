@@ -28,6 +28,8 @@ public class StageBuilder : MonoBehaviour
     [SerializeField] GameObject moveBoxPrefab;
     [SerializeField] GameObject lavaPrefab;
     [SerializeField] GameObject teleportPrefab; // 'A' テレポート床
+    [SerializeField] GameObject switchPrefab;   // 'S' スイッチ
+    [SerializeField] GameObject onOffBlockPrefab; // 'H' ON/OFFブロック
     private char[,,] gridData;
     public int stageNumber = 0;
 
@@ -38,6 +40,10 @@ public class StageBuilder : MonoBehaviour
     // コルーチンによるブロック生成管理用
     private int remainingBlocksToSpawn = 0;
     public bool IsGenerating { get; private set; } = false;
+
+    // スイッチ/ONOFF管理
+    private readonly System.Collections.Generic.HashSet<Vector3Int> switchCells = new System.Collections.Generic.HashSet<Vector3Int>();
+    private readonly System.Collections.Generic.Dictionary<Vector3Int, OnOffBlock> onOffBlocks = new System.Collections.Generic.Dictionary<Vector3Int, OnOffBlock>();
 
     // 生成アニメーション設定（ぼこぼこ降ってくる感じ）
     [Header("Spawn Animation")]
@@ -123,6 +129,8 @@ public class StageBuilder : MonoBehaviour
         public const char Fragile = 'F';
         public const char Lava = 'O';
         public const char Teleport = 'A';
+        public const char Switch = 'S';
+        public const char OnOff = 'H';
     }
 
     // Stage情報をロード & UIをStage情報に合わせて出す
@@ -213,6 +221,8 @@ public class StageBuilder : MonoBehaviour
         goalCells.Clear();
         goalBlocks.Clear();
         hiddenGoalCells.Clear();
+        switchCells.Clear();
+        onOffBlocks.Clear();
         int heightCount = layers.Count;
         int rowCount = layers[0].Length;
         int colCount = layers[0][0].Split(',').Length;
@@ -284,6 +294,8 @@ public class StageBuilder : MonoBehaviour
             if (remainingBlocksToSpawn == 0)
             {
                 IsGenerating = false;
+                // ステージ生成完了時点でスイッチ/ONOFF状態を初期反映
+                RefreshSwitchAndOnOff();
             }
         }
     }
@@ -319,6 +331,12 @@ public class StageBuilder : MonoBehaviour
             case 'O':
                 prefab = lavaPrefab;
                 break;
+            case 'S':
+                prefab = switchPrefab != null ? switchPrefab : blockPrefab;
+                break;
+            case 'H':
+                prefab = onOffBlockPrefab != null ? onOffBlockPrefab : blockPrefab;
+                break;
         }
         if (prefab != null)
         {
@@ -340,6 +358,8 @@ public class StageBuilder : MonoBehaviour
             }
             if (cellType == 'F') obj.AddComponent<FragileBlock>();
             if (cellType == 'A') obj.AddComponent<TeleportBlock>();
+            if (cellType == 'S') obj.AddComponent<SwitchBlock>();
+            if (cellType == 'H') obj.AddComponent<OnOffBlock>();
             if (cellType == 'G')
             {
                 // Ensure GoalBlock is attached and register in goal maps
@@ -477,6 +497,21 @@ public class StageBuilder : MonoBehaviour
                     }
                 }
             }
+
+            // スイッチ/ONOFFの登録
+            var s = GridFromPosition(position);
+            if (cellType == Cell.Switch)
+            {
+                switchCells.Add(s);
+            }
+            else if (cellType == Cell.OnOff)
+            {
+                var hob = obj.GetComponent<OnOffBlock>();
+                if (hob != null)
+                {
+                    onOffBlocks[s] = hob;
+                }
+            }
         }
     }
 
@@ -492,6 +527,8 @@ public class StageBuilder : MonoBehaviour
         PruneObjectLists();
         foreach (var obj in canvasObjects) if (obj != null) obj.SetActive(true);
         foreach (var obj in modelObjects) if (obj != null) obj.SetActive(false);
+        // 2D表示へ切り替え後、ON/OFFの見た目も再反映
+        RefreshSwitchAndOnOff();
     }
 
     public void SwitchTo3DView()
@@ -499,6 +536,8 @@ public class StageBuilder : MonoBehaviour
         PruneObjectLists();
         foreach (var obj in canvasObjects) if (obj != null) obj.SetActive(false);
         foreach (var obj in modelObjects) if (obj != null) obj.SetActive(true);
+        // 3D表示へ切り替え後、ON/OFFの見た目も再反映
+        RefreshSwitchAndOnOff();
     }
 
     // 破棄済み参照を除去して安全にトグルできるようにする
@@ -518,8 +557,8 @@ public class StageBuilder : MonoBehaviour
             {
                 for (int c = 0; c < gridData.GetLength(0); c++)
                 {
-                    // ブロック（B）、ゴール（G）、溶岩（O）、消える床（F）、テレポート（A）を保持し、それ以外をリセット
-                    if (gridData[c, h, r] != 'B' && gridData[c, h, r] != 'G' && gridData[c, h, r] != 'O' && gridData[c, h, r] != 'F' && gridData[c, h, r] != 'A')
+                    // 固定ギミック（B,G,O,F,A,S,H）を保持し、それ以外をリセット
+                    if (gridData[c, h, r] != 'B' && gridData[c, h, r] != 'G' && gridData[c, h, r] != 'O' && gridData[c, h, r] != 'F' && gridData[c, h, r] != 'A' && gridData[c, h, r] != 'S' && gridData[c, h, r] != 'H')
                     {
                         gridData[c, h, r] = 'N';
                     }
@@ -666,7 +705,8 @@ public class StageBuilder : MonoBehaviour
         {
             Vector3 below = pos + Vector3.down * HEIGHT_OFFSET;
             char t = GetGridCharType(below);
-            bool canFall = (t == Cell.Empty) || (goalIsAir && t == Cell.Goal);
+            bool isOffH = (t == Cell.OnOff) && !AnySwitchPressed();
+            bool canFall = (t == Cell.Empty) || isOffH || (goalIsAir && t == Cell.Goal);
             if (!canFall) break;
             pos = below;
         }
@@ -679,7 +719,9 @@ public class StageBuilder : MonoBehaviour
         Vector3 check = worldPos + Vector3.down * HEIGHT_OFFSET;
         while (IsValidGridPosition(check))
         {
-            if (GetGridCharType(check) != Cell.Empty)
+            char t = GetGridCharType(check);
+            bool isOffH = (t == Cell.OnOff) && !AnySwitchPressed();
+            if (t != Cell.Empty && !isOffH)
             {
                 return true;
             }
@@ -768,6 +810,68 @@ public class StageBuilder : MonoBehaviour
             Mathf.RoundToInt(pos.y / HEIGHT_OFFSET),
             Mathf.RoundToInt(pos.z / BLOCK_SIZE)
         );
+    }
+
+    // === Switch / OnOff helpers ===
+    public bool AnySwitchPressed()
+    {
+        foreach (var s in switchCells)
+        {
+            var above = new Vector3Int(s.x, s.y + 1, s.z);
+            if (IsCellOccupiedByPlayerOrBox(above)) return true;
+        }
+        return false;
+    }
+
+    private bool IsCellOccupiedByPlayerOrBox(Vector3Int cell)
+    {
+        foreach (var p in GameObject.FindObjectsOfType<Player>())
+        {
+            if (GridFromPosition(p.transform.position) == cell) return true;
+        }
+        foreach (var b in GameObject.FindObjectsOfType<MoveBox>())
+        {
+            if (GridFromPosition(b.transform.position) == cell) return true;
+        }
+        return false;
+    }
+
+    public bool IsOnOffBlockSolidAt(Vector3 worldPos)
+    {
+        var c = GridFromPosition(worldPos);
+        if (!IsInsideGridIndices(c)) return false;
+        if (gridData[c.x, c.y, c.z] != Cell.OnOff) return false;
+        return AnySwitchPressed();
+    }
+
+    public bool IsOnOffBlockEmptyAt(Vector3 worldPos)
+    {
+        var c = GridFromPosition(worldPos);
+        if (!IsInsideGridIndices(c)) return false;
+        if (gridData[c.x, c.y, c.z] != Cell.OnOff) return false;
+        return !AnySwitchPressed();
+    }
+
+    private bool IsInsideGridIndices(Vector3Int c)
+    {
+        return c.x >= 0 && c.x < gridData.GetLength(0) && c.y >= 0 && c.y < gridData.GetLength(1) && c.z >= 0 && c.z < gridData.GetLength(2);
+    }
+
+    public void RefreshSwitchAndOnOff()
+    {
+        bool on = AnySwitchPressed();
+        // クリーンアップしながら反映
+        var keys = new List<Vector3Int>(onOffBlocks.Keys);
+        foreach (var k in keys)
+        {
+            var b = onOffBlocks[k];
+            if (b == null)
+            {
+                onOffBlocks.Remove(k);
+                continue;
+            }
+            b.SetSolid(on);
+        }
     }
 
     // === Goal helpers ===
@@ -895,6 +999,11 @@ public class StageBuilder : MonoBehaviour
         for (int height = gridData.GetLength(1) - 1; height >= 0; height--)
         {
             char cell = gridData[col, height, row];
+            // H(OFF) は空気として無視
+            if (cell == Cell.OnOff && !AnySwitchPressed())
+            {
+                continue;
+            }
             if (cell != 'N')
             {
                 return cell;
@@ -911,6 +1020,11 @@ public class StageBuilder : MonoBehaviour
         for (int height = gridData.GetLength(1) - 1; height >= 0; height--)
         {
             char cell = gridData[col, height, row];
+            // H(OFF) は空気として無視
+            if (cell == Cell.OnOff && !AnySwitchPressed())
+            {
+                continue;
+            }
             if (cell != 'N')
             {
                 return new Vector3(col * BLOCK_SIZE, height * HEIGHT_OFFSET, row * BLOCK_SIZE);
@@ -955,6 +1069,14 @@ public class StageBuilder : MonoBehaviour
                     else if (cell == 'A')
                     {
                         Gizmos.color = Color.cyan;
+                    }
+                    else if (cell == 'S')
+                    {
+                        Gizmos.color = Color.blue;
+                    }
+                    else if (cell == 'H')
+                    {
+                        Gizmos.color = AnySwitchPressed() ? new Color(0.2f, 0.8f, 0.2f) : new Color(0.2f, 0.2f, 0.2f);
                     }
                     else
                     {

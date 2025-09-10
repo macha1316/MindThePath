@@ -41,10 +41,10 @@ public class MoveBox : MonoBehaviour, ITurnBased
         {
             Vector3 dest = StageBuilder.Instance.WorldFromGrid(otherCell);
 
-            // 目的地が占有されていないことを確認（'A'は空扱い）
+            // 目的地が占有されていないことを確認（'A'とH(OFF)は空扱い）
             if (!StageBuilder.Instance.IsValidGridPosition(dest)) return;
             char occ = StageBuilder.Instance.GetGridCharType(dest);
-            if (!(occ == 'N' || occ == 'A')) return;
+            if (!((occ == 'N' || occ == 'A') || StageBuilder.Instance.IsOnOffBlockEmptyAt(dest))) return;
 
             // 縮小→小さく弧を描いて移動→拡大の演出
             Vector3 s0 = transform.localScale;
@@ -78,6 +78,7 @@ public class MoveBox : MonoBehaviour, ITurnBased
                     TargetPos = dest;
                     transform.position = dest;
                     transform.DOScale(s0, expandT).SetEase(Ease.OutBack);
+                    StageBuilder.Instance.RefreshSwitchAndOnOff();
                 });
             });
         }

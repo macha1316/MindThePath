@@ -4,17 +4,17 @@ B,B,B,B,B,B,B,B,B
 B,B,B,B,B,B,B,B,B
 B,B,B,B,B,B,B,B,B
 B,B,B,B,B,B,B,B,B
-B,B,B,B,B,B,B,B,B
+B,B,S,B,B,B,B,B,B
 B,B,B,B,B,B,B,B,B
 B,B,B,B,B,B,B,B,B
 
 N,N,N,N,N,N,N,N,N
-N,N,N,N,G,N,N,N,N
 N,N,N,N,N,N,N,N,N
 N,N,N,N,N,N,N,N,N
-B,B,B,B,B,B,B,B,B
 N,N,N,N,N,N,N,N,N
+N,N,N,N,N,N,H,N,N
 N,N,N,N,N,N,N,N,N
+N,N,M,M,N,N,N,N,N
 N,N,N,N,P,N,N,N,N
 N,N,N,N,N,N,N,N,N
 
@@ -22,7 +22,17 @@ N,N,N,N,N,N,N,N,N
 N,N,N,N,N,N,N,N,N
 N,N,N,N,N,N,N,N,N
 N,N,N,N,N,N,N,N,N
+N,N,B,B,B,B,N,B,N
 N,N,N,N,N,N,N,N,N
+N,N,N,N,N,N,N,N,N
+N,N,N,N,N,N,N,N,N
+N,N,N,N,N,N,N,N,N
+
+N,N,N,N,N,N,N,N,N
+N,N,N,N,N,N,N,N,N
+N,N,N,N,N,N,N,N,N
+N,N,N,N,N,N,N,N,N
+N,N,N,N,N,N,N,G,N
 N,N,N,N,N,N,N,N,N
 N,N,N,N,N,N,N,N,N
 N,N,N,N,N,N,N,N,N
