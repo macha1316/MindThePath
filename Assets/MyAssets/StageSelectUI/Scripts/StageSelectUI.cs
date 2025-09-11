@@ -38,6 +38,12 @@ public class StageSelectUI : MonoBehaviour
 
     public static StageSelectUI Instance;
 
+    // iOS In-App Review settings
+    // 0-based indices: 7(=8), 15(=16), 23(=24)
+    private static readonly int[] ReviewThresholds = new int[] { 7, 15, 23 };
+    private const string ReviewRequestedCountKey = "ReviewRequestedCount_v2"; // how many times we've requested
+    private const string ReviewRequestedLegacyKey = "ReviewRequested_v1";     // v1 single-shot flag (migrated to count=1)
+
     private void Awake()
     {
         if (Instance == null) Instance = this;
@@ -106,6 +112,8 @@ public class StageSelectUI : MonoBehaviour
     {
         // ステージクリア時に進行状況を保存
         SaveClearedStage(StageBuilder.Instance.stageNumber);
+        // iOS: 指定ステージ（8/16/24到達）でレビュー依頼（各1回）
+        MaybeRequestReviewAfterClear(StageBuilder.Instance.stageNumber);
         CloseAllUI();
         admobUnitInterstitial.ShowInterstitial();
         clearUI.SetActive(true);
@@ -147,7 +155,6 @@ public class StageSelectUI : MonoBehaviour
             swipeMoveToggle.onValueChanged.AddListener(OnSwipeMoveToggleChanged);
         }
         ApplySwipeControllerEnabled(useSwipe);
-        ApplyOperatePlayerUIVisibility();
     }
 
     private void OnDestroy()
@@ -398,6 +405,33 @@ public class StageSelectUI : MonoBehaviour
             PlayerPrefs.SetInt(PlayerPrefsManager.ClearedStageKey, newUnlocked);
             PlayerPrefs.Save();
         }
+    }
+
+    private void MaybeRequestReviewAfterClear(int clearedStageIndex)
+    {
+        // Migrate legacy single-shot flag to count=1
+        int count = PlayerPrefs.GetInt(ReviewRequestedCountKey, 0);
+        if (count == 0 && PlayerPrefs.GetInt(ReviewRequestedLegacyKey, 0) == 1)
+        {
+            count = 1;
+            PlayerPrefs.SetInt(ReviewRequestedCountKey, count);
+            PlayerPrefs.Save();
+        }
+
+        // Already requested at all thresholds
+        if (count >= ReviewThresholds.Length) return;
+
+        // Not yet reached next threshold
+        int nextThreshold = ReviewThresholds[count];
+        if (clearedStageIndex < nextThreshold) return;
+
+#if UNITY_IOS && !UNITY_EDITOR
+        try { UnityEngine.iOS.Device.RequestStoreReview(); } catch { }
+#endif
+        // Mark this threshold as requested
+        count++;
+        PlayerPrefs.SetInt(ReviewRequestedCountKey, count);
+        PlayerPrefs.Save();
     }
 
     // ステージ選択ボタンの解放状態を反映

@@ -14,9 +14,9 @@ public class StageBuilder : MonoBehaviour
     public const float HEIGHT_OFFSET = 2.0f;
 
     // Goal cells registry (static layout independent of dynamic 'P' overwrites)
-    private readonly System.Collections.Generic.HashSet<Vector3Int> goalCells = new System.Collections.Generic.HashSet<Vector3Int>();
-    private readonly System.Collections.Generic.Dictionary<Vector3Int, GoalBlock> goalBlocks = new System.Collections.Generic.Dictionary<Vector3Int, GoalBlock>();
-    private readonly System.Collections.Generic.HashSet<Vector3Int> hiddenGoalCells = new System.Collections.Generic.HashSet<Vector3Int>();
+    private readonly HashSet<Vector3Int> goalCells = new HashSet<Vector3Int>();
+    private readonly Dictionary<Vector3Int, GoalBlock> goalBlocks = new Dictionary<Vector3Int, GoalBlock>();
+    private readonly HashSet<Vector3Int> hiddenGoalCells = new HashSet<Vector3Int>();
 
     // デバッグ用
     [SerializeField] string csvFileName = "Stages/Stage1";
@@ -42,8 +42,8 @@ public class StageBuilder : MonoBehaviour
     public bool IsGenerating { get; private set; } = false;
 
     // スイッチ/ONOFF管理
-    private readonly System.Collections.Generic.HashSet<Vector3Int> switchCells = new System.Collections.Generic.HashSet<Vector3Int>();
-    private readonly System.Collections.Generic.Dictionary<Vector3Int, OnOffBlock> onOffBlocks = new System.Collections.Generic.Dictionary<Vector3Int, OnOffBlock>();
+    private readonly HashSet<Vector3Int> switchCells = new HashSet<Vector3Int>();
+    private readonly Dictionary<Vector3Int, OnOffBlock> onOffBlocks = new Dictionary<Vector3Int, OnOffBlock>();
     // ON/OFFの前回状態（OFF→ON遷移検出用）
     private bool? lastOnOffOn = null;
 
@@ -138,6 +138,11 @@ public class StageBuilder : MonoBehaviour
     // Stage情報をロード & UIをStage情報に合わせて出す
     public void CreateStage(int stageNumberProp)
     {
+        CameraController.Instance.SwitchTo3DView();
+        CameraController.Instance.CurrentIndex = 1;
+        CameraController.Instance.RotateLeft();
+        GameManager.Instance.Is2DMode = false;
+
         stageNumber = stageNumberProp;
         StageSelectUI.Instance.SelectStageUI(stageNumber);
         GameManager.Instance.SetGameStop();
@@ -611,7 +616,7 @@ public class StageBuilder : MonoBehaviour
     {
         // Map existing fragile objects by grid cell
         var existing = new Dictionary<Vector3Int, FragileBlock>();
-        foreach (var frag in GameObject.FindObjectsOfType<FragileBlock>())
+        foreach (var frag in FindObjectsOfType<FragileBlock>())
         {
             var g = GridFromPosition(frag.transform.position);
             existing[g] = frag;
@@ -710,7 +715,7 @@ public class StageBuilder : MonoBehaviour
             // Prefer actual actor presence over grid char (which we may avoid overriding on static tiles)
             if (val == 'P') return true;
             var cell = new Vector3Int(col, height, row);
-            foreach (var p in GameObject.FindObjectsOfType<Player>())
+            foreach (var p in FindObjectsOfType<Player>())
             {
                 if (GridFromPosition(p.transform.position) == cell) return true;
             }
@@ -777,7 +782,7 @@ public class StageBuilder : MonoBehaviour
     public bool TryGetMoveBoxAtPosition(Vector3 worldPosition, out MoveBox found)
     {
         var targetCell = GridFromPosition(worldPosition);
-        foreach (var box in GameObject.FindObjectsOfType<MoveBox>())
+        foreach (var box in FindObjectsOfType<MoveBox>())
         {
             if (GridFromPosition(box.transform.position) == targetCell)
             {
@@ -799,7 +804,7 @@ public class StageBuilder : MonoBehaviour
         {
             TeleportBlock self = null;
             TeleportBlock other = null;
-            foreach (var p in GameObject.FindObjectsOfType<TeleportBlock>())
+            foreach (var p in FindObjectsOfType<TeleportBlock>())
             {
                 var cell = GridFromPosition(p.transform.position);
                 if (cell == fromCell) self = p; else other = p;
@@ -868,11 +873,11 @@ public class StageBuilder : MonoBehaviour
 
     private bool IsCellOccupiedByPlayerOrBox(Vector3Int cell)
     {
-        foreach (var p in GameObject.FindObjectsOfType<Player>())
+        foreach (var p in FindObjectsOfType<Player>())
         {
             if (GridFromPosition(p.transform.position) == cell) return true;
         }
-        foreach (var b in GameObject.FindObjectsOfType<MoveBox>())
+        foreach (var b in FindObjectsOfType<MoveBox>())
         {
             if (GridFromPosition(b.transform.position) == cell) return true;
         }
@@ -939,7 +944,7 @@ public class StageBuilder : MonoBehaviour
                 }
 
                 // Player を押し上げ
-                foreach (var p in GameObject.FindObjectsOfType<Player>())
+                foreach (var p in FindObjectsOfType<Player>())
                 {
                     if (GridFromPosition(p.transform.position) == cell)
                     {
@@ -977,7 +982,7 @@ public class StageBuilder : MonoBehaviour
 
                 // Player を1段下げる
                 Vector3Int aboveCell = new Vector3Int(cell.x, cell.y + 1, cell.z);
-                foreach (var p in GameObject.FindObjectsOfType<Player>())
+                foreach (var p in FindObjectsOfType<Player>())
                 {
                     if (GridFromPosition(p.transform.position) == aboveCell)
                     {
@@ -1045,8 +1050,8 @@ public class StageBuilder : MonoBehaviour
     public void RefreshGoalVisibilityForPlayers()
     {
         // Build set of cells to hide this frame (occupied by players)
-        var toHide = new System.Collections.Generic.HashSet<Vector3Int>();
-        foreach (var p in GameObject.FindObjectsOfType<Player>())
+        var toHide = new HashSet<Vector3Int>();
+        foreach (var p in FindObjectsOfType<Player>())
         {
             if (TryGetGoalCellForPlayer(p.transform.position, out var cell))
             {
@@ -1123,7 +1128,7 @@ public class StageBuilder : MonoBehaviour
             // 優先: 実体の箱/プレイヤーがいればそれを返す
             Vector3 worldAtCell = new Vector3(col * BLOCK_SIZE, height * HEIGHT_OFFSET, row * BLOCK_SIZE);
             if (TryGetMoveBoxAtPosition(worldAtCell, out _)) return 'M';
-            foreach (var p in GameObject.FindObjectsOfType<Player>())
+            foreach (var p in FindObjectsOfType<Player>())
             {
                 if (GridFromPosition(p.transform.position) == cellPos) return 'P';
             }
@@ -1154,7 +1159,7 @@ public class StageBuilder : MonoBehaviour
 
             // 優先: 実体の箱/プレイヤーがいればその位置を返す
             if (TryGetMoveBoxAtPosition(worldAtCell, out _)) return worldAtCell;
-            foreach (var p in GameObject.FindObjectsOfType<Player>())
+            foreach (var p in FindObjectsOfType<Player>())
             {
                 if (GridFromPosition(p.transform.position) == cellPos) return worldAtCell;
             }
