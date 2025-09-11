@@ -104,7 +104,7 @@ public class UndoManager : MonoBehaviour
             }
         }
 
-        // Refresh goal visibility and switch/onoff after players are restored
+        // Refresh goal visibility and ON/OFF once (players only at this point)
         StageBuilder.Instance.RefreshSwitchAndOnOff();
         StageBuilder.Instance.RefreshGoalVisibilityForPlayers();
 
@@ -129,5 +129,8 @@ public class UndoManager : MonoBehaviour
         {
             it.UpdateGridData();
         }
+
+        // Final refresh: ON/OFF must reflect both players and boxes after full restore
+        StageBuilder.Instance.RefreshSwitchAndOnOff();
     }
 }

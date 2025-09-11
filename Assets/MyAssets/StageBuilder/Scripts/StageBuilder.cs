@@ -44,6 +44,8 @@ public class StageBuilder : MonoBehaviour
     // スイッチ/ONOFF管理
     private readonly System.Collections.Generic.HashSet<Vector3Int> switchCells = new System.Collections.Generic.HashSet<Vector3Int>();
     private readonly System.Collections.Generic.Dictionary<Vector3Int, OnOffBlock> onOffBlocks = new System.Collections.Generic.Dictionary<Vector3Int, OnOffBlock>();
+    // ON/OFFの前回状態（OFF→ON遷移検出用）
+    private bool? lastOnOffOn = null;
 
     // 生成アニメーション設定（ぼこぼこ降ってくる感じ）
     [Header("Spawn Animation")]
@@ -223,6 +225,7 @@ public class StageBuilder : MonoBehaviour
         hiddenGoalCells.Clear();
         switchCells.Clear();
         onOffBlocks.Clear();
+        lastOnOffOn = null; // ステージ生成時は遷移扱いにしない
         int heightCount = layers.Count;
         int rowCount = layers[0].Length;
         int colCount = layers[0][0].Split(',').Length;
@@ -660,6 +663,25 @@ public class StageBuilder : MonoBehaviour
         int height = Mathf.RoundToInt(worldPosition.y / HEIGHT_OFFSET);
         int row = Mathf.RoundToInt(worldPosition.z / BLOCK_SIZE);
 
+        // Avoid overwriting static tiles like 'H' with dynamic actors ('P'/'M').
+        // This preserves tile identity so H continues to work after stepping on it.
+        char current = gridData[col, height, row];
+        bool isStaticTile =
+            current == Cell.Block || current == Cell.Goal || current == Cell.Lava ||
+            current == Cell.Fragile || current == Cell.Teleport || current == Cell.Switch ||
+            current == Cell.OnOff;
+
+        if ((type == 'P' || type == 'M') && isStaticTile)
+        {
+            // Keep static tile; rely on runtime checks for occupancy instead of grid char here
+            return;
+        }
+        if (type == 'N' && isStaticTile)
+        {
+            // Do not erase static tiles when clearing dynamic occupants
+            return;
+        }
+
         gridData[col, height, row] = type;
     }
 
@@ -682,7 +704,26 @@ public class StageBuilder : MonoBehaviour
         int height = Mathf.RoundToInt(pos.y / HEIGHT_OFFSET);
         int row = Mathf.RoundToInt(pos.z / BLOCK_SIZE);
 
-        return gridData[col, height, row] == cellType;
+        char val = gridData[col, height, row];
+        if (cellType == 'P')
+        {
+            // Prefer actual actor presence over grid char (which we may avoid overriding on static tiles)
+            if (val == 'P') return true;
+            var cell = new Vector3Int(col, height, row);
+            foreach (var p in GameObject.FindObjectsOfType<Player>())
+            {
+                if (GridFromPosition(p.transform.position) == cell) return true;
+            }
+            return false;
+        }
+        if (cellType == 'M')
+        {
+            if (val == 'M') return true;
+            // Consider a MoveBox occupying this cell even if grid char was not overwritten
+            Vector3 world = new Vector3(col * BLOCK_SIZE, height * HEIGHT_OFFSET, row * BLOCK_SIZE);
+            return TryGetMoveBoxAtPosition(world, out _);
+        }
+        return val == cellType;
     }
 
     // 複数のセルタイプを確認 一つでもマッチすればtrue
@@ -705,7 +746,8 @@ public class StageBuilder : MonoBehaviour
         {
             Vector3 below = pos + Vector3.down * HEIGHT_OFFSET;
             char t = GetGridCharType(below);
-            bool isOffH = (t == Cell.OnOff) && !AnySwitchPressed();
+            bool hasOnOffHere = onOffBlocks.ContainsKey(GridFromPosition(below));
+            bool isOffH = hasOnOffHere && !AnySwitchPressed();
             bool canFall = (t == Cell.Empty) || isOffH || (goalIsAir && t == Cell.Goal);
             if (!canFall) break;
             pos = below;
@@ -720,7 +762,8 @@ public class StageBuilder : MonoBehaviour
         while (IsValidGridPosition(check))
         {
             char t = GetGridCharType(check);
-            bool isOffH = (t == Cell.OnOff) && !AnySwitchPressed();
+            bool hasOnOffHere = onOffBlocks.ContainsKey(GridFromPosition(check));
+            bool isOffH = hasOnOffHere && !AnySwitchPressed();
             if (t != Cell.Empty && !isOffH)
             {
                 return true;
@@ -840,7 +883,7 @@ public class StageBuilder : MonoBehaviour
     {
         var c = GridFromPosition(worldPos);
         if (!IsInsideGridIndices(c)) return false;
-        if (gridData[c.x, c.y, c.z] != Cell.OnOff) return false;
+        if (!onOffBlocks.ContainsKey(c)) return false;
         return AnySwitchPressed();
     }
 
@@ -848,7 +891,7 @@ public class StageBuilder : MonoBehaviour
     {
         var c = GridFromPosition(worldPos);
         if (!IsInsideGridIndices(c)) return false;
-        if (gridData[c.x, c.y, c.z] != Cell.OnOff) return false;
+        if (!onOffBlocks.ContainsKey(c)) return false;
         return !AnySwitchPressed();
     }
 
@@ -860,6 +903,7 @@ public class StageBuilder : MonoBehaviour
     public void RefreshSwitchAndOnOff()
     {
         bool on = AnySwitchPressed();
+        bool wasOn = lastOnOffOn.HasValue ? lastOnOffOn.Value : on; // 初回は遷移なし
         // クリーンアップしながら反映
         var keys = new List<Vector3Int>(onOffBlocks.Keys);
         foreach (var k in keys)
@@ -872,6 +916,83 @@ public class StageBuilder : MonoBehaviour
             }
             b.SetSolid(on);
         }
+
+        // OFF→ON になった瞬間、Hセル内のプレイヤー/箱を1段押し上げる
+        if (!wasOn && on)
+        {
+            // スイッチONサウンド
+            AudioManager.Instance?.PlaySwitchSound();
+
+            foreach (var cell in onOffBlocks.Keys)
+            {
+                Vector3 basePos = WorldFromGrid(cell);
+                Vector3 upPos = basePos + Vector3.up * HEIGHT_OFFSET;
+
+                // MoveBox を押し上げ
+                if (TryGetMoveBoxAtPosition(basePos, out var box))
+                {
+                    // グリッド更新（下はH=静的なので消さない／上は'Ｎ'前提）
+                    UpdateGridAtPosition(upPos, 'M');
+                    box.transform.position = upPos;
+                    box.TargetPos = upPos;
+                    box.TeleportIfOnPortal();
+                }
+
+                // Player を押し上げ
+                foreach (var p in GameObject.FindObjectsOfType<Player>())
+                {
+                    if (GridFromPosition(p.transform.position) == cell)
+                    {
+                        // 上が空想定だが、グリッド整合のため上をPに
+                        UpdateGridAtPosition(upPos, 'P');
+                        p.TeleportTo(upPos);
+                    }
+                }
+            }
+
+            // 押し上げ後の可視/見た目の整合
+            RefreshGoalVisibilityForPlayers();
+        }
+        // ON→OFF になった瞬間、Hセルの上にいるプレイヤー/箱を1段落とす
+        else if (wasOn && !on)
+        {
+            // スイッチONサウンド
+            AudioManager.Instance?.PlayOffSwitchSound();
+            foreach (var cell in onOffBlocks.Keys)
+            {
+                Vector3 basePos = WorldFromGrid(cell);
+                Vector3 upPos = basePos + Vector3.up * HEIGHT_OFFSET;
+
+                // MoveBox を1段下げる
+                if (TryGetMoveBoxAtPosition(upPos, out var box))
+                {
+                    // 上セルをクリア（静的ならSkipされるが、通常は'N'）
+                    UpdateGridAtPosition(upPos, 'N');
+                    // 下はH(OFF)=空気なので、そのセルへ移動
+                    UpdateGridAtPosition(basePos, 'M'); // Hは静的なので実体で扱う
+                    box.transform.position = basePos;
+                    box.TargetPos = basePos;
+                    box.TeleportIfOnPortal();
+                }
+
+                // Player を1段下げる
+                Vector3Int aboveCell = new Vector3Int(cell.x, cell.y + 1, cell.z);
+                foreach (var p in GameObject.FindObjectsOfType<Player>())
+                {
+                    if (GridFromPosition(p.transform.position) == aboveCell)
+                    {
+                        UpdateGridAtPosition(upPos, 'N');
+                        UpdateGridAtPosition(basePos, 'P');
+                        p.TeleportTo(basePos);
+                    }
+                }
+            }
+
+            // 落下後の可視整合
+            RefreshGoalVisibilityForPlayers();
+        }
+
+        lastOnOffOn = on;
     }
 
     // === Goal helpers ===
@@ -998,9 +1119,18 @@ public class StageBuilder : MonoBehaviour
 
         for (int height = gridData.GetLength(1) - 1; height >= 0; height--)
         {
+            var cellPos = new Vector3Int(col, height, row);
+            // 優先: 実体の箱/プレイヤーがいればそれを返す
+            Vector3 worldAtCell = new Vector3(col * BLOCK_SIZE, height * HEIGHT_OFFSET, row * BLOCK_SIZE);
+            if (TryGetMoveBoxAtPosition(worldAtCell, out _)) return 'M';
+            foreach (var p in GameObject.FindObjectsOfType<Player>())
+            {
+                if (GridFromPosition(p.transform.position) == cellPos) return 'P';
+            }
+
             char cell = gridData[col, height, row];
-            // H(OFF) は空気として無視
-            if (cell == Cell.OnOff && !AnySwitchPressed())
+            // H(OFF) は空気として無視（gridDataの上書き有無に依らず、レジストリで判定）
+            if (onOffBlocks.ContainsKey(cellPos) && !AnySwitchPressed())
             {
                 continue;
             }
@@ -1019,15 +1149,25 @@ public class StageBuilder : MonoBehaviour
 
         for (int height = gridData.GetLength(1) - 1; height >= 0; height--)
         {
+            var cellPos = new Vector3Int(col, height, row);
+            Vector3 worldAtCell = new Vector3(col * BLOCK_SIZE, height * HEIGHT_OFFSET, row * BLOCK_SIZE);
+
+            // 優先: 実体の箱/プレイヤーがいればその位置を返す
+            if (TryGetMoveBoxAtPosition(worldAtCell, out _)) return worldAtCell;
+            foreach (var p in GameObject.FindObjectsOfType<Player>())
+            {
+                if (GridFromPosition(p.transform.position) == cellPos) return worldAtCell;
+            }
+
             char cell = gridData[col, height, row];
-            // H(OFF) は空気として無視
-            if (cell == Cell.OnOff && !AnySwitchPressed())
+            // H(OFF) は空気として無視（gridDataの上書き有無に依らず、レジストリで判定）
+            if (onOffBlocks.ContainsKey(cellPos) && !AnySwitchPressed())
             {
                 continue;
             }
             if (cell != 'N')
             {
-                return new Vector3(col * BLOCK_SIZE, height * HEIGHT_OFFSET, row * BLOCK_SIZE);
+                return worldAtCell;
             }
         }
 
