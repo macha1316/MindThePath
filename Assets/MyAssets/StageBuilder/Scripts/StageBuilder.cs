@@ -709,26 +709,7 @@ public class StageBuilder : MonoBehaviour
         int height = Mathf.RoundToInt(pos.y / HEIGHT_OFFSET);
         int row = Mathf.RoundToInt(pos.z / BLOCK_SIZE);
 
-        char val = gridData[col, height, row];
-        if (cellType == 'P')
-        {
-            // Prefer actual actor presence over grid char (which we may avoid overriding on static tiles)
-            if (val == 'P') return true;
-            var cell = new Vector3Int(col, height, row);
-            foreach (var p in FindObjectsOfType<Player>())
-            {
-                if (GridFromPosition(p.transform.position) == cell) return true;
-            }
-            return false;
-        }
-        if (cellType == 'M')
-        {
-            if (val == 'M') return true;
-            // Consider a MoveBox occupying this cell even if grid char was not overwritten
-            Vector3 world = new Vector3(col * BLOCK_SIZE, height * HEIGHT_OFFSET, row * BLOCK_SIZE);
-            return TryGetMoveBoxAtPosition(world, out _);
-        }
-        return val == cellType;
+        return gridData[col, height, row] == cellType;
     }
 
     // 複数のセルタイプを確認 一つでもマッチすればtrue
@@ -1154,25 +1135,15 @@ public class StageBuilder : MonoBehaviour
 
         for (int height = gridData.GetLength(1) - 1; height >= 0; height--)
         {
-            var cellPos = new Vector3Int(col, height, row);
-            Vector3 worldAtCell = new Vector3(col * BLOCK_SIZE, height * HEIGHT_OFFSET, row * BLOCK_SIZE);
-
-            // 優先: 実体の箱/プレイヤーがいればその位置を返す
-            if (TryGetMoveBoxAtPosition(worldAtCell, out _)) return worldAtCell;
-            foreach (var p in FindObjectsOfType<Player>())
-            {
-                if (GridFromPosition(p.transform.position) == cellPos) return worldAtCell;
-            }
-
             char cell = gridData[col, height, row];
-            // H(OFF) は空気として無視（gridDataの上書き有無に依らず、レジストリで判定）
-            if (onOffBlocks.ContainsKey(cellPos) && !AnySwitchPressed())
+            // H(OFF) は空気として無視
+            if (cell == Cell.OnOff && !AnySwitchPressed())
             {
                 continue;
             }
             if (cell != 'N')
             {
-                return worldAtCell;
+                return new Vector3(col * BLOCK_SIZE, height * HEIGHT_OFFSET, row * BLOCK_SIZE);
             }
         }
 
