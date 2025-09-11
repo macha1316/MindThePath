@@ -7,6 +7,8 @@ public class UndoManager : MonoBehaviour
     public static UndoManager Instance;
     // Prevent double-recording when two players react to the same input frame
     private int lastRecordedInputFrame = -1;
+    // Prevent multiple undo executions within the same input frame
+    private int lastUndoneInputFrame = -1;
 
     private void Awake()
     {
@@ -41,6 +43,7 @@ public class UndoManager : MonoBehaviour
     {
         history.Clear();
         lastRecordedInputFrame = -1;
+        lastUndoneInputFrame = -1;
     }
 
     public void Record()
@@ -80,6 +83,15 @@ public class UndoManager : MonoBehaviour
         if (lastRecordedInputFrame == f) return;
         Record();
         lastRecordedInputFrame = f;
+    }
+
+    // Undo only once per input frame (use with KeyDown/UI input)
+    public void UndoForCurrentInput()
+    {
+        int f = Time.frameCount;
+        if (lastUndoneInputFrame == f) return;
+        Undo();
+        lastUndoneInputFrame = f;
     }
 
     public void Undo()

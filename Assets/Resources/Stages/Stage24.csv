@@ -1,22 +1,22 @@
-B,B,B,B,B,B,B,B,B
-B,B,B,B,B,B,B,B,B
-B,B,B,B,B,B,B,B,B
-B,B,B,B,B,B,B,B,B
-B,B,B,B,B,B,B,B,B
-B,B,B,B,B,B,B,B,B
-B,B,B,B,B,B,B,B,B
-B,B,B,B,B,B,B,B,B
-B,B,B,B,B,B,B,B,B
+B,B,B,B,N,B,B,B,B
+B,B,B,B,N,B,B,B,B
+N,N,N,N,N,N,N,H,N
+N,N,N,N,N,N,N,H,N
+N,N,N,N,N,N,N,H,N
+B,B,B,B,N,B,B,B,B
+B,B,B,B,N,B,B,B,B
+B,B,B,B,N,B,B,B,B
+S,B,B,B,N,B,B,B,B
 
-N,N,N,N,N,N,N,N,N
-N,N,N,N,G,N,N,N,N
-N,N,N,N,N,N,N,N,N
-N,N,N,N,N,N,N,N,N
-B,B,B,B,B,B,B,B,B
+N,G,N,N,H,N,N,N,N
+N,G,N,N,H,N,N,N,N
 N,N,N,N,N,N,N,N,N
 N,N,N,N,N,N,N,N,N
-N,N,N,N,P,N,N,N,N
 N,N,N,N,N,N,N,N,N
+N,N,N,N,N,N,S,N,N
+N,G,N,N,N,N,N,N,N
+N,N,N,N,N,P,P,P,N
+N,N,A,N,N,N,A,N,N
 
 N,N,N,N,N,N,N,N,N
 N,N,N,N,N,N,N,N,N

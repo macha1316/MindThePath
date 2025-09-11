@@ -12,7 +12,20 @@ public class Player : MonoBehaviour, ITurnBased
     [SerializeField] private float squashDuration = 0.06f;  // つぶれ時間
     private bool isMoving = false;
     private Vector3 targetPosition;
-    public Vector3 Direction { get; set; } = Vector3.zero;
+    private Vector3 _direction = Vector3.zero;
+    public Vector3 Direction
+    {
+        get => _direction;
+        set
+        {
+            _direction = value;
+            // 外部（スワイプ等）から入力された際も、同一ターン内再試行フラグをリセット
+            if (_direction != Vector3.zero)
+            {
+                hasRetriedThisTurn = false;
+            }
+        }
+    }
     private Vector3 lastSupportPos; // 直前に立っていた床（1段下）の座標
     private bool isGoalCelebrating = false;
     public bool IsOnGoal { get; private set; } = false;
@@ -35,8 +48,7 @@ public class Player : MonoBehaviour, ITurnBased
         {
             if (!isMoving)
             {
-                UndoManager.Instance?.Undo();
-                AudioManager.Instance?.PlayUndoSound();
+                UndoManager.Instance?.UndoForCurrentInput();
             }
             return;
         }

@@ -153,8 +153,7 @@ public class SwipeInputController : MonoBehaviour
         {
             if (DOTween.IsTweening(p.transform)) return;
         }
-        UndoManager.Instance?.Undo();
-        AudioManager.Instance?.PlayUndoSound();
+        UndoManager.Instance?.UndoForCurrentInput();
     }
 
     // Same mapping logic as Player.MapByCameraIndex

@@ -681,10 +681,16 @@ public class StageBuilder : MonoBehaviour
             // Keep static tile; rely on runtime checks for occupancy instead of grid char here
             return;
         }
-        if (type == 'N' && isStaticTile)
+        if (type == 'N')
         {
-            // Do not erase static tiles when clearing dynamic occupants
-            return;
+            // Allow fragile tiles to be consumed -> become 'N'
+            if (current == Cell.Fragile)
+            {
+                gridData[col, height, row] = 'N';
+                return;
+            }
+            // Do not erase other static tiles when clearing dynamic occupants
+            if (isStaticTile) return;
         }
 
         gridData[col, height, row] = type;
@@ -939,37 +945,61 @@ public class StageBuilder : MonoBehaviour
             // 押し上げ後の可視/見た目の整合
             RefreshGoalVisibilityForPlayers();
         }
-        // ON→OFF になった瞬間、Hセルの上にいるプレイヤー/箱を1段落とす
+        // ON→OFF になった瞬間、H列上にいるプレイヤー/箱を床まで落とす（床が無ければ消滅）
         else if (wasOn && !on)
         {
-            // スイッチONサウンド
+            // スイッチOFFサウンド
             AudioManager.Instance?.PlayOffSwitchSound();
+
+            var players = GameObject.FindObjectsOfType<Player>();
             foreach (var cell in onOffBlocks.Keys)
             {
-                Vector3 basePos = WorldFromGrid(cell);
-                Vector3 upPos = basePos + Vector3.up * HEIGHT_OFFSET;
-
-                // MoveBox を1段下げる
-                if (TryGetMoveBoxAtPosition(upPos, out var box))
+                int topY = gridData.GetLength(1) - 1;
+                for (int y = topY; y >= cell.y; y--)
                 {
-                    // 上セルをクリア（静的ならSkipされるが、通常は'N'）
-                    UpdateGridAtPosition(upPos, 'N');
-                    // 下はH(OFF)=空気なので、そのセルへ移動
-                    UpdateGridAtPosition(basePos, 'M'); // Hは静的なので実体で扱う
-                    box.transform.position = basePos;
-                    box.TargetPos = basePos;
-                    box.TeleportIfOnPortal();
-                }
+                    Vector3 columnPos = new Vector3(cell.x * BLOCK_SIZE, y * HEIGHT_OFFSET, cell.z * BLOCK_SIZE);
 
-                // Player を1段下げる
-                Vector3Int aboveCell = new Vector3Int(cell.x, cell.y + 1, cell.z);
-                foreach (var p in FindObjectsOfType<Player>())
-                {
-                    if (GridFromPosition(p.transform.position) == aboveCell)
+                    // MoveBox を落下
+                    if (TryGetMoveBoxAtPosition(columnPos, out var box))
                     {
-                        UpdateGridAtPosition(upPos, 'N');
-                        UpdateGridAtPosition(basePos, 'P');
-                        p.TeleportTo(basePos);
+                        Vector3 dropPos = FindDropPosition(columnPos, goalIsAir: true);
+                        // いまのセルの動的占有をクリア（必要に応じて）
+                        UpdateGridAtPosition(columnPos, 'N');
+                        if (!HasAnySupportBelow(dropPos))
+                        {
+                            if (box != null) Destroy(box.gameObject);
+                        }
+                        else
+                        {
+                            UpdateGridAtPosition(dropPos, 'M');
+                            if (box != null)
+                            {
+                                box.transform.position = dropPos;
+                                box.TargetPos = dropPos;
+                                box.TeleportIfOnPortal();
+                            }
+                        }
+                    }
+
+                    // Player を落下
+                    var gridCheck = new Vector3Int(cell.x, y, cell.z);
+                    foreach (var p in players)
+                    {
+                        if (p == null) continue;
+                        if (GridFromPosition(p.transform.position) == gridCheck)
+                        {
+                            Vector3 dropPos = FindDropPosition(columnPos, goalIsAir: true);
+                            UpdateGridAtPosition(columnPos, 'N');
+                            if (!HasAnySupportBelow(dropPos))
+                            {
+                                Destroy(p.gameObject);
+                            }
+                            else
+                            {
+                                UpdateGridAtPosition(dropPos, 'P');
+                                p.TeleportTo(dropPos);
+                            }
+                        }
                     }
                 }
             }

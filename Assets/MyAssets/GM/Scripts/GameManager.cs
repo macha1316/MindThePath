@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using UnityEngine;
+using DG.Tweening;
 
 public class GameManager : MonoBehaviour
 {
@@ -49,45 +50,81 @@ public class GameManager : MonoBehaviour
     public void MoveRight()
     {
         UndoManager.Instance?.RecordForCurrentInput();
-        switch (CameraController.Instance.CurrentIndex)
-        {
-            case 0: players[0].Direction = Vector3.right; break;
-            case 1: players[0].Direction = Vector3.forward; break;
-            case 2: players[0].Direction = Vector3.left; break;
-            case 3: players[0].Direction = Vector3.back; break;
-        }
+        var ps = FindObjectsOfType<Player>();
+        foreach (var p in ps) { if (DOTween.IsTweening(p.transform)) return; }
+        Vector3 dir = MapByCameraIndex(Vector3.right);
+        foreach (var p in ps) p.Direction = dir;
     }
     public void MoveLeft()
     {
         UndoManager.Instance?.RecordForCurrentInput();
-        switch (CameraController.Instance.CurrentIndex)
-        {
-            case 0: players[0].Direction = Vector3.left; break;
-            case 1: players[0].Direction = Vector3.back; break;
-            case 2: players[0].Direction = Vector3.right; break;
-            case 3: players[0].Direction = Vector3.forward; break;
-        }
+        var ps = FindObjectsOfType<Player>();
+        foreach (var p in ps) { if (DOTween.IsTweening(p.transform)) return; }
+        Vector3 dir = MapByCameraIndex(Vector3.left);
+        foreach (var p in ps) p.Direction = dir;
     }
     public void MoveUp()
     {
         UndoManager.Instance?.RecordForCurrentInput();
-        switch (CameraController.Instance.CurrentIndex)
-        {
-            case 0: players[0].Direction = Vector3.forward; break;
-            case 1: players[0].Direction = Vector3.left; break;
-            case 2: players[0].Direction = Vector3.back; break;
-            case 3: players[0].Direction = Vector3.right; break;
-        }
+        var ps = FindObjectsOfType<Player>();
+        foreach (var p in ps) { if (DOTween.IsTweening(p.transform)) return; }
+        Vector3 dir = MapByCameraIndex(Vector3.forward);
+        foreach (var p in ps) p.Direction = dir;
     }
     public void MoveDown()
     {
         UndoManager.Instance?.RecordForCurrentInput();
-        switch (CameraController.Instance.CurrentIndex)
+        var ps = FindObjectsOfType<Player>();
+        foreach (var p in ps) { if (DOTween.IsTweening(p.transform)) return; }
+        Vector3 dir = MapByCameraIndex(Vector3.back);
+        foreach (var p in ps) p.Direction = dir;
+    }
+
+    // Camera-relative mapping consistent with Player/SwipeInputController
+    private Vector3 MapByCameraIndex(Vector3 baseDir)
+    {
+        int idx = 0;
+        if (CameraController.Instance != null) idx = CameraController.Instance.CurrentIndex;
+        if (baseDir == Vector3.forward)
         {
-            case 0: players[0].Direction = Vector3.back; break;
-            case 1: players[0].Direction = Vector3.right; break;
-            case 2: players[0].Direction = Vector3.forward; break;
-            case 3: players[0].Direction = Vector3.left; break;
+            switch (idx)
+            {
+                case 0: return Vector3.forward;
+                case 1: return Vector3.left;
+                case 2: return Vector3.back;
+                case 3: return Vector3.right;
+            }
         }
+        else if (baseDir == Vector3.back)
+        {
+            switch (idx)
+            {
+                case 0: return Vector3.back;
+                case 1: return Vector3.right;
+                case 2: return Vector3.forward;
+                case 3: return Vector3.left;
+            }
+        }
+        else if (baseDir == Vector3.left)
+        {
+            switch (idx)
+            {
+                case 0: return Vector3.left;
+                case 1: return Vector3.back;
+                case 2: return Vector3.right;
+                case 3: return Vector3.forward;
+            }
+        }
+        else if (baseDir == Vector3.right)
+        {
+            switch (idx)
+            {
+                case 0: return Vector3.right;
+                case 1: return Vector3.forward;
+                case 2: return Vector3.left;
+                case 3: return Vector3.back;
+            }
+        }
+        return baseDir;
     }
 }
