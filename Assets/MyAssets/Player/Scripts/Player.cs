@@ -95,10 +95,7 @@ public class Player : MonoBehaviour, ITurnBased
                             retryDirection = Direction;
                         }
                     }
-                    else if (StageBuilder.Instance.HasGoalInColumn(next))
-                    {
-                        // 2D仕様: ゴール列は通過不可
-                    }
+                    // 2Dでは列全体のゴール存在でブロックせず、最上段セルの種類で判定
                     else if (StageBuilder.Instance.IsAnyMatchingCellType(topPos, 'B', 'M', 'F', 'A', 'S') || StageBuilder.Instance.IsOnOffBlockSolidAt(topPos))
                     {
                         next = topPos + Vector3.up * StageBuilder.HEIGHT_OFFSET;
