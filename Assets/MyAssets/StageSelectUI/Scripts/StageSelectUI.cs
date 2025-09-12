@@ -9,6 +9,7 @@ public class StageSelectUI : MonoBehaviour
     [SerializeField] GameObject stageSelectUI;
     [SerializeField] GameObject startUI;
     [SerializeField] GameObject clearUI;
+    [SerializeField] GameObject lastClearUI;
     [SerializeField] GameObject pauseUI;
     [SerializeField] GameObject optionUI;
     [SerializeField] GameObject stopUI;
@@ -64,7 +65,6 @@ public class StageSelectUI : MonoBehaviour
         admobUnitReward = FindObjectOfType<AdmobUnitReward>();
 
         UpdateStageSelectButtons();
-        // StartCoroutine(AnimateStageButtons());
         InitInputModeToggle();
     }
 
@@ -90,6 +90,7 @@ public class StageSelectUI : MonoBehaviour
         operatePlayerUI.SetActive(false);
         stageSelectUI.SetActive(false);
         clearUI.SetActive(false);
+        lastClearUI.SetActive(false);
         pauseUI.SetActive(false);
         optionUI.SetActive(false);
         cameraRotateUI.SetActive(false);
@@ -120,7 +121,14 @@ public class StageSelectUI : MonoBehaviour
         {
             admobUnitInterstitial.ShowInterstitial();
         }
-        clearUI.SetActive(true);
+        if (StageBuilder.Instance.stageNumber != 23)
+        {
+            clearUI.SetActive(true);
+        }
+        else
+        {
+            lastClearUI.SetActive(true);
+        }
     }
 
     public void SetStageSelectUI()
