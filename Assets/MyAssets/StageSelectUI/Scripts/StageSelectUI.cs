@@ -115,7 +115,11 @@ public class StageSelectUI : MonoBehaviour
         // iOS: 指定ステージ（8/16/24到達）でレビュー依頼（各1回）
         MaybeRequestReviewAfterClear(StageBuilder.Instance.stageNumber);
         CloseAllUI();
-        admobUnitInterstitial.ShowInterstitial();
+        // 指定ステージ(1,8,16,24)ではインタースティシャルを表示しない
+        if (!ShouldSkipInterstitialOnClear(StageBuilder.Instance.stageNumber))
+        {
+            admobUnitInterstitial.ShowInterstitial();
+        }
         clearUI.SetActive(true);
     }
 
@@ -248,6 +252,7 @@ public class StageSelectUI : MonoBehaviour
         }
         tutorialPages[0].SetActive(true);
         previousPageButton.SetActive(false);
+        nextPageButton.SetActive(true);
     }
 
     IEnumerator HideTutorialUIDeray()
@@ -311,31 +316,6 @@ public class StageSelectUI : MonoBehaviour
             }
         }
     }
-
-    // IEnumerator AnimateStageButtons()
-    // {
-    //     for (int i = 0; i < stageSelectButtons.Length; i++)
-    //     {
-    //         var button = stageSelectButtons[i];
-    //         if (button != null)
-    //         {
-    //             var rect = button.GetComponent<RectTransform>();
-    //             Vector2 originalPos = rect.anchoredPosition;
-
-    //             // 1回だけ上下動させる
-    //             rect.DOAnchorPosY(originalPos.y + 10f, 0.25f)
-    //                 .SetEase(Ease.InOutSine)
-    //                 .OnComplete(() =>
-    //                 {
-    //                     rect.DOAnchorPosY(originalPos.y, 0.25f).SetEase(Ease.InOutSine);
-    //                 });
-    //         }
-    //         yield return new WaitForSeconds(0.05f);
-    //     }
-
-    //     yield return new WaitForSeconds(3f);
-    //     StartCoroutine(AnimateStageButtons());
-    // }
 
     public void ShowHintUI()
     {
@@ -432,6 +412,14 @@ public class StageSelectUI : MonoBehaviour
         count++;
         PlayerPrefs.SetInt(ReviewRequestedCountKey, count);
         PlayerPrefs.Save();
+    }
+
+    // クリア時にインタースティシャルを出さないステージ判定
+    // 引数: 0始まりのステージインデックス（0=ステージ1）
+    private bool ShouldSkipInterstitialOnClear(int clearedStageIndex)
+    {
+        // 1, 8, 16, 24（1始まり）をスキップ → 0, 7, 15, 23（0始まり）
+        return clearedStageIndex == 0 || clearedStageIndex == 7 || clearedStageIndex == 15 || clearedStageIndex == 23;
     }
 
     // ステージ選択ボタンの解放状態を反映

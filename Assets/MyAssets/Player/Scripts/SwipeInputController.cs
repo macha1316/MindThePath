@@ -12,7 +12,7 @@ public class SwipeInputController : MonoBehaviour
     [SerializeField] private float doubleTapMaxDistance = 40f; // pixels
     [Tooltip("If true, swipes/double-taps are detected even over UI/Canvas")]
     [SerializeField] private bool allowOverUI = true;
-    [Tooltip("Prevent Undo when the tap happens over UI elements")] 
+    [Tooltip("Prevent Undo when the tap happens over UI elements")]
     [SerializeField] private bool suppressUndoOverUI = true;
 
     private Vector2 startPos;
@@ -22,7 +22,7 @@ public class SwipeInputController : MonoBehaviour
 
     private float lastTapTime = -10f;
     private Vector2 lastTapPos;
-    
+
 
     private CameraController Cam => CameraController.Instance;
 
@@ -134,12 +134,7 @@ public class SwipeInputController : MonoBehaviour
         if (worldDir == Vector3.zero) return;
         // Avoid input during tweening if any player is animating
         var players = FindObjectsOfType<Player>();
-        foreach (var p in players)
-        {
-            if (DOTween.IsTweening(p.transform)) return;
-        }
 
-        UndoManager.Instance?.RecordForCurrentInput();
         foreach (var p in players)
         {
             p.Direction = worldDir;

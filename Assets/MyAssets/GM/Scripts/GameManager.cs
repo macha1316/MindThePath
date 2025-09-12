@@ -49,33 +49,25 @@ public class GameManager : MonoBehaviour
     public int currentIndex = 0;
     public void MoveRight()
     {
-        UndoManager.Instance?.RecordForCurrentInput();
         var ps = FindObjectsOfType<Player>();
-        foreach (var p in ps) { if (DOTween.IsTweening(p.transform)) return; }
         Vector3 dir = MapByCameraIndex(Vector3.right);
         foreach (var p in ps) p.Direction = dir;
     }
     public void MoveLeft()
     {
-        UndoManager.Instance?.RecordForCurrentInput();
         var ps = FindObjectsOfType<Player>();
-        foreach (var p in ps) { if (DOTween.IsTweening(p.transform)) return; }
         Vector3 dir = MapByCameraIndex(Vector3.left);
         foreach (var p in ps) p.Direction = dir;
     }
     public void MoveUp()
     {
-        UndoManager.Instance?.RecordForCurrentInput();
         var ps = FindObjectsOfType<Player>();
-        foreach (var p in ps) { if (DOTween.IsTweening(p.transform)) return; }
         Vector3 dir = MapByCameraIndex(Vector3.forward);
         foreach (var p in ps) p.Direction = dir;
     }
     public void MoveDown()
     {
-        UndoManager.Instance?.RecordForCurrentInput();
         var ps = FindObjectsOfType<Player>();
-        foreach (var p in ps) { if (DOTween.IsTweening(p.transform)) return; }
         Vector3 dir = MapByCameraIndex(Vector3.back);
         foreach (var p in ps) p.Direction = dir;
     }

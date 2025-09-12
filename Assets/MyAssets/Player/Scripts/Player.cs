@@ -62,18 +62,20 @@ public class Player : MonoBehaviour, ITurnBased
         // 直前の入力でプレイヤーに塞がれていた場合、1フレーム後に同方向を再試行
         if (retryScheduled)
         {
-            Direction = retryDirection;
+            // 内部の再試行時はフラグをリセットしないため、プロパティではなく直接代入
+            _direction = retryDirection;
             retryScheduled = false;
         }
 
-        // WASDをカメラの向きに追従させる（入力フレームで一度だけUndo記録）
-        if (Input.GetKeyDown(KeyCode.W)) { if (!isMoving) UndoManager.Instance?.RecordForCurrentInput(); Direction = MapByCameraIndex(Vector3.forward); hasRetriedThisTurn = false; }
-        else if (Input.GetKeyDown(KeyCode.S)) { if (!isMoving) UndoManager.Instance?.RecordForCurrentInput(); Direction = MapByCameraIndex(Vector3.back); hasRetriedThisTurn = false; }
-        else if (Input.GetKeyDown(KeyCode.A)) { if (!isMoving) UndoManager.Instance?.RecordForCurrentInput(); Direction = MapByCameraIndex(Vector3.left); hasRetriedThisTurn = false; }
-        else if (Input.GetKeyDown(KeyCode.D)) { if (!isMoving) UndoManager.Instance?.RecordForCurrentInput(); Direction = MapByCameraIndex(Vector3.right); hasRetriedThisTurn = false; }
+        // WASDをカメラの向きに追従させる（記録は実際に動く直前に行う）
+        if (Input.GetKeyDown(KeyCode.W)) { if (!isMoving) Direction = MapByCameraIndex(Vector3.forward); hasRetriedThisTurn = false; }
+        else if (Input.GetKeyDown(KeyCode.S)) { if (!isMoving) Direction = MapByCameraIndex(Vector3.back); hasRetriedThisTurn = false; }
+        else if (Input.GetKeyDown(KeyCode.A)) { if (!isMoving) Direction = MapByCameraIndex(Vector3.left); hasRetriedThisTurn = false; }
+        else if (Input.GetKeyDown(KeyCode.D)) { if (!isMoving) Direction = MapByCameraIndex(Vector3.right); hasRetriedThisTurn = false; }
 
         if (Direction != Vector3.zero)
         {
+            Debug.Log("処理");
             Vector3 next = transform.position + Direction * StageBuilder.HEIGHT_OFFSET;
 
             bool canMove = false;
@@ -132,6 +134,8 @@ public class Player : MonoBehaviour, ITurnBased
                     // 既存挙動に合わせて、Goal('G')は空気として扱い更に下まで落下
                     Vector3 dropPos = StageBuilder.Instance.FindDropPosition(afterNext, goalIsAir: true);
 
+                    // 実際に変更が発生する直前にUndo記録（同一フレームは1回だけ）
+                    UndoManager.Instance?.RecordForCurrentInput();
                     StageBuilder.Instance.UpdateGridAtPosition(next, 'N');
                     StageBuilder.Instance.UpdateGridAtPosition(dropPos, 'M');
 
@@ -171,6 +175,8 @@ public class Player : MonoBehaviour, ITurnBased
 
             if (canMove)
             {
+                // 最初の状態変更の直前（プレイヤー移動や2D移動時）にUndo記録
+                UndoManager.Instance?.RecordForCurrentInput();
                 // 今立っている床（1段下）を記録（移動後に消滅処理するため）
                 lastSupportPos = transform.position + Vector3.down * StageBuilder.HEIGHT_OFFSET;
                 StageBuilder.Instance.UpdateGridAtPosition(transform.position, 'N');
