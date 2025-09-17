@@ -79,7 +79,7 @@ public class StageSelectUI : MonoBehaviour
         if (stageNumberText != null)
         {
             int displayNum = stageNumber + 1; // 0始まり→1始まり表記
-            stageNumberText.text = "ステージ" + displayNum.ToString();
+            stageNumberText.text = "STAGE" + displayNum.ToString();
         }
     }
 
