@@ -160,7 +160,7 @@ public class StageSelectUI : MonoBehaviour
     // ==== Input Mode (Swipe vs UI buttons) ====
     private void InitInputModeToggle()
     {
-        bool useSwipe = PlayerPrefs.GetInt(PlayerPrefsManager.UseSwipeMoveKey, 1) == 1;
+        bool useSwipe = PlayerPrefs.GetInt(PlayerPrefsManager.UseSwipeMoveKey, 0) == 1;
         if (swipeMoveToggle != null)
         {
             swipeMoveToggle.SetIsOnWithoutNotify(useSwipe);
@@ -186,7 +186,7 @@ public class StageSelectUI : MonoBehaviour
 
     private void ApplyOperatePlayerUIVisibility()
     {
-        bool useSwipe = PlayerPrefs.GetInt(PlayerPrefsManager.UseSwipeMoveKey, 1) == 1;
+        bool useSwipe = PlayerPrefs.GetInt(PlayerPrefsManager.UseSwipeMoveKey, 0) == 1;
         if (operatePlayerUI != null)
         {
             operatePlayerUI.SetActive(!useSwipe);
